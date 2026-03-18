@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.cert
+*.crt
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Prisma generated (regenerate with prisma generate)
+backend/node_modules/
+backend/dist/
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Claude local settings
+.claude/settings.local.json

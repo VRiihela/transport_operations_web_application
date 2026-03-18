@@ -1,0 +1,32 @@
+{
+  "title": "Authentication and Role-Based Access Control",
+  "profile": "Node/TypeScript Backend",
+  "repo": "work_management_system",
+  "tech": "Node.js, TypeScript, Express, PostgreSQL, JWT, Zod, Vitest",
+  "keyConstraints": "TypeScript strict, JWT with refresh token strategy, server-side validation with Zod, no trust of frontend input",
+  "description": "Implement secure authentication and role-based access control (RBAC) for a small transport company work management system. Users sign in with email and password. There are three roles: Admin, Dispatcher, and Driver. Drivers may only access their own assigned jobs. Dispatchers and Admins can access operational dashboards and all jobs. Use JWT access tokens (short-lived) and refresh tokens (long-lived, stored securely). Passwords must be hashed with bcrypt. All auth-related routes must be protected against common attacks.",
+  "acceptanceCriteria": [
+    "Users can sign in with email and password and receive a JWT access token and refresh token",
+    "Access tokens expire after 15 minutes; refresh tokens expire after 7 days",
+    "Refresh token endpoint issues a new access token and rotates the refresh token",
+    "Sign-out invalidates the refresh token",
+    "Passwords are hashed with bcrypt (minimum cost factor 12)",
+    "Role-based middleware enforces access: Admin and Dispatcher can access all jobs, Driver can only access own assigned jobs",
+    "All inputs (email, password) are validated server-side with Zod",
+    "Auth errors return generic messages (no user enumeration)",
+    "Tokens are not stored in localStorage — refresh token is httpOnly cookie",
+    "Protected routes return 401 if no valid token, 403 if insufficient role",
+    "Auth middleware exported and applied to protected routes",
+    "Rate limiter applied to /api/login and /api/refresh",
+    "Auth routes registered in Express app (POST /api/login, POST /api/refresh, POST /api/logout)"
+  ],
+  "relevantFilePaths": [
+    "backend/src/routes/auth.ts",
+    "backend/src/middleware/authenticate.ts",
+    "backend/src/middleware/authorize.ts",
+    "backend/src/models/user.ts",
+    "backend/src/services/tokenService.ts",
+    "backend/src/db/schema.sql"
+  ],
+  "securityConsiderations": "Prevent user enumeration via timing-safe comparison. Enforce rate limiting on login endpoint. Refresh tokens must be rotated on each use (detect reuse). Do not expose stack traces in error responses. Secrets (JWT_SECRET, REFRESH_SECRET) must come from environment variables, never hardcoded. Audit log on login success and failure."
+}

@@ -1,0 +1,16 @@
+{
+  "name": "orchestrator",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "tsx orchestrator.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  }
+}

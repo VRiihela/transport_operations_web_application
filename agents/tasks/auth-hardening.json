@@ -1,0 +1,33 @@
+{
+  "title": "Auth Hardening - Rate Limiting, Audit Logging and Token Cleanup",
+  "profile": "Node/TypeScript Backend",
+  "repo": "work_management_system",
+  "tech": "Node.js, TypeScript, Express, Prisma, express-rate-limit, Vitest",
+  "keyConstraints": "TypeScript strict, no external logging service — write to DB and stdout, cleanup job must be safe to run repeatedly",
+  "description": "Harden the authentication system with three additions: rate limiting on auth endpoints to prevent brute force, audit logging of all auth events to the database, and an automated cleanup job for expired refresh tokens. These are security requirements from the original spec that were deferred from the routes task to keep scope manageable.",
+  "acceptanceCriteria": [
+    "Rate limiter applied to POST /api/auth/login: max 10 requests per 15 minutes per IP",
+    "Rate limiter applied to POST /api/auth/refresh: max 30 requests per 15 minutes per IP",
+    "Rate limit responses return 429 with a clear message and Retry-After header",
+    "AuditLog Prisma model has id, event (LOGIN_SUCCESS/LOGIN_FAILURE/LOGOUT/TOKEN_REFRESH/TOKEN_REUSE_DETECTED), userId (nullable), ip, userAgent, createdAt",
+    "Auth events written to AuditLog table on every login attempt (success and failure), logout, refresh, and token reuse detection",
+    "Audit log entries never contain passwords or raw tokens",
+    "cleanupExpiredTokens() deletes RefreshToken rows where expiresAt < now and revokedAt is not null",
+    "Cleanup function safe to call repeatedly (idempotent)",
+    "Cleanup can be triggered manually via npm script: npm run cleanup:tokens",
+    "All new behaviour has Vitest unit tests",
+    "AuditEvent enum values used everywhere — no string literals like 'LOGIN_SUCCESS'",
+    "Metadata object validated for max size before DB insert (e.g. 1KB limit)",
+    "auth.routes.ts fully updated with audit logging on all auth events including error cases",
+    "Vitest tests implemented and passing — not just file structure, actual test cases covering login success, login failure, token reuse detection, and rate limiting"
+  ],
+  "relevantFilePaths": [
+    "backend/src/middleware/rateLimiter.ts",
+    "backend/src/services/audit.service.ts",
+    "backend/src/jobs/cleanupTokens.ts",
+    "backend/src/routes/auth.routes.ts",
+    "backend/prisma/schema.prisma",
+    "backend/package.json"
+  ],
+  "securityConsiderations": "Audit log must capture IP from X-Forwarded-For if behind a proxy, but validate it — don't trust blindly. Failed login attempts should log the email attempted (for ops visibility) but never the password. Token reuse detection events are HIGH severity and should be clearly marked in the log."
+}

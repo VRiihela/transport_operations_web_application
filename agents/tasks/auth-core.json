@@ -1,0 +1,27 @@
+{
+  "title": "Auth Core - Service, Model and Environment Setup",
+  "profile": "Node/TypeScript Backend",
+  "repo": "work_management_system",
+  "tech": "Node.js, TypeScript, Express, PostgreSQL, Prisma, bcrypt, JWT, Zod, Vitest",
+  "keyConstraints": "TypeScript strict, server-side validation with Zod, no trust of frontend input, Prisma for all DB queries",
+  "description": "Implement the core authentication foundation: Prisma User model with roles, AuthService with real database queries, bcrypt password hashing, JWT token generation and verification utilities, and startup environment variable validation. No routes or middleware in this task — just the service layer and data model.",
+  "acceptanceCriteria": [
+    "Prisma User model has id, email, passwordHash, role (Admin/Dispatcher/Driver), createdAt, updatedAt",
+    "Prisma RefreshToken model has id, token (hashed), userId, expiresAt, revokedAt, createdAt",
+    "AuthService.login(email, password) queries real DB, verifies bcrypt hash, returns user or throws",
+    "AuthService.createTokenPair(userId, role) returns signed JWT access token (15min) and refresh token (7 days)",
+    "AuthService.verifyAccessToken(token) verifies and returns decoded payload or throws",
+    "AuthService.rotateRefreshToken(token) validates token against DB, revokes old, issues new, detects reuse",
+    "AuthService.revokeRefreshToken(token) marks token as revoked in DB",
+    "Startup validation checks JWT_SECRET, JWT_REFRESH_SECRET, DATABASE_URL are set — crashes with clear message if missing",
+    "Passwords never stored or logged in plain text",
+    "All DB operations use Prisma — no raw SQL"
+  ],
+  "relevantFilePaths": [
+    "backend/prisma/schema.prisma",
+    "backend/src/services/auth.service.ts",
+    "backend/src/utils/jwt.ts",
+    "backend/src/utils/env.ts"
+  ],
+  "securityConsiderations": "Refresh tokens must be stored hashed in DB (SHA-256), not plain. Token reuse detection: if a revoked refresh token is presented, revoke the entire token family. bcrypt cost factor minimum 12."
+}

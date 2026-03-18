@@ -1,0 +1,27 @@
+{
+  "title": "Auth Routes and Middleware",
+  "profile": "Node/TypeScript Backend",
+  "repo": "work_management_system",
+  "tech": "Node.js, TypeScript, Express, JWT, Zod, Vitest",
+  "keyConstraints": "TypeScript strict, Zod for request validation, httpOnly cookies for refresh token, no trust of frontend input",
+  "description": "Implement all auth-related Express routes and middleware. Builds on top of AuthService from auth-core task. Routes handle login, token refresh, and logout. Middleware handles JWT verification for protected routes and RBAC enforcement per role. Refresh tokens are stored and sent via httpOnly cookies only.",
+  "acceptanceCriteria": [
+    "POST /api/auth/login accepts { email, password }, validates with Zod, returns access token in body and refresh token in httpOnly cookie",
+    "POST /api/auth/refresh reads refresh token from httpOnly cookie, rotates it, returns new access token in body and new refresh token in httpOnly cookie",
+    "POST /api/auth/logout revokes refresh token and clears the httpOnly cookie",
+    "authenticateToken middleware verifies JWT access token from Authorization header, attaches user to req",
+    "requireRole(...roles) middleware checks req.user.role against allowed roles, returns 403 if not allowed",
+    "Drivers are blocked from any route not explicitly allowed for Driver role",
+    "All login errors return generic 401 message — no indication of whether email or password was wrong",
+    "Zod validates all request bodies before they reach route handlers",
+    "Routes registered under /api/auth in Express app"
+  ],
+  "relevantFilePaths": [
+    "backend/src/services/auth.service.ts",
+    "backend/src/routes/auth.routes.ts",
+    "backend/src/middleware/authenticate.ts",
+    "backend/src/middleware/requireRole.ts",
+    "backend/src/app.ts"
+  ],
+  "securityConsiderations": "httpOnly + Secure + SameSite=Strict on refresh token cookie. Access token only in response body, never in cookie. CSRF: SameSite=Strict on cookie mitigates most risk — document this decision. 401 responses must not reveal which field failed."
+}
