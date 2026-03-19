@@ -1,0 +1,55 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0.875rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.headerTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.userInfo {
+  font-size: 0.875rem;
+  color: #555;
+}
+
+.logoutButton {
+  padding: 0.375rem 0.75rem;
+  background: transparent;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  color: #374151;
+  transition: background 0.15s;
+}
+
+.logoutButton:hover {
+  background: #f3f4f6;
+}
+
+.main {
+  flex: 1;
+  padding: 1.5rem 1.25rem;
+}
+
+.placeholder {
+  color: #9ca3af;
+  font-size: 0.9rem;
+}
