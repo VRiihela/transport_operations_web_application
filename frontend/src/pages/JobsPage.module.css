@@ -1,78 +1,388 @@
+/* ── Layout ──────────────────────────────────────────────── */
 .container {
-  min-height: 100vh;
-  background-color: #f8f9fa;
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 2rem;
-  background-color: white;
-  border-bottom: 1px solid #dee2e6;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
 }
 
-.title {
-  color: #333;
-  font-size: 2rem;
-  font-weight: 600;
+.heading {
   margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1a1a2e;
 }
+
+.headerActions {
+  display: flex;
+  gap: 0.625rem;
+  align-items: center;
+}
+
+/* ── Buttons ─────────────────────────────────────────────── */
+.createButton {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  padding: 0.6rem 1.25rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.createButton:hover { background: #1d4ed8; }
 
 .logoutButton {
-  background-color: #dc3545;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
+  background: transparent;
+  color: #555;
+  border: 1px solid #d1d5db;
+  padding: 0.6rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
   cursor: pointer;
-  font-weight: 500;
-  transition: background-color 0.3s ease;
+  transition: background 0.15s;
 }
+.logoutButton:hover { background: #f3f4f6; }
 
-.logoutButton:hover {
-  background-color: #c82333;
-}
-
-.main {
-  padding: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.actions {
-  margin-bottom: 2rem;
-}
-
-.createButton {
-  background-color: #28a745;
-  color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
+.assignButton {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  padding: 0.35rem 0.75rem;
   border-radius: 4px;
+  font-size: 0.8rem;
   cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+.assignButton:hover:not(:disabled) { background: #e5e7eb; }
+.assignButton:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.statusButton {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+  padding: 0.35rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+.statusButton:hover:not(:disabled) { background: #dbeafe; }
+.statusButton:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.submitButton {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  padding: 0.65rem 1.5rem;
+  border-radius: 6px;
+  font-size: 0.95rem;
   font-weight: 500;
-  font-size: 1rem;
-  transition: background-color 0.3s ease;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.submitButton:hover:not(:disabled) { background: #1d4ed8; }
+.submitButton:disabled { background: #93c5fd; cursor: not-allowed; }
+
+.cancelButton {
+  background: transparent;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
+  padding: 0.65rem 1.25rem;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.cancelButton:hover { background: #f3f4f6; }
+
+/* ── Error banner ────────────────────────────────────────── */
+.errorBanner {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  padding: 0.875rem 1rem;
+  border-radius: 6px;
+  margin-bottom: 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
 }
 
-.createButton:hover {
-  background-color: #218838;
+.errorDismiss {
+  background: none;
+  border: none;
+  color: #b91c1c;
+  font-size: 1.25rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0 0.25rem;
+  flex-shrink: 0;
 }
 
-.jobList {
-  background-color: white;
-  padding: 2rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  border: 1px solid #dee2e6;
-}
-
-.placeholder {
+/* ── Loading / empty ─────────────────────────────────────── */
+.loadingState {
   text-align: center;
-  color: #6c757d;
-  font-size: 1.1rem;
+  padding: 5rem 2rem;
+  color: #9ca3af;
+  font-size: 1rem;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #9ca3af;
+  background: #fff;
+  border-radius: 8px;
+  border: 1px dashed #e5e7eb;
+}
+
+/* ── Table ───────────────────────────────────────────────── */
+.tableContainer {
+  overflow-x: auto;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  font-size: 0.9rem;
+}
+
+.th {
+  background: #f9fafb;
+  color: #374151;
+  font-weight: 600;
+  text-align: left;
+  padding: 0.75rem 1rem;
+  border-bottom: 2px solid #e5e7eb;
+  white-space: nowrap;
+}
+
+.tr:hover { background: #fafafa; }
+
+.td {
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid #f3f4f6;
+  vertical-align: top;
+}
+
+.jobTitle {
+  font-weight: 500;
+  color: #111827;
+}
+
+.jobDescription {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin-top: 0.2rem;
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jobLocation {
+  font-size: 0.78rem;
+  color: #9ca3af;
+  margin-top: 0.15rem;
+}
+
+.unassigned {
+  color: #9ca3af;
+  font-style: italic;
+  font-size: 0.875rem;
+}
+
+/* ── Status badges ───────────────────────────────────────── */
+.statusBadge {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  border-radius: 99px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+
+.statusDRAFT {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+.statusASSIGNED {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.statusINPROGRESS {
+  background: #fefce8;
+  color: #92400e;
+}
+
+.statusCOMPLETED {
+  background: #f0fdf4;
+  color: #166534;
+}
+
+/* ── Action group ────────────────────────────────────────── */
+.actionGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  align-items: flex-start;
+}
+
+.assignContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.driverSelect {
+  padding: 0.35rem 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  background: #fff;
+  cursor: pointer;
+  min-width: 150px;
+}
+.driverSelect:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* ── Modal ───────────────────────────────────────────────── */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 1rem;
+}
+
+.modalContent {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modalTitle {
   margin: 0;
-  padding: 2rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.modalClose {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #9ca3af;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0 0.25rem;
+  transition: color 0.15s;
+}
+.modalClose:hover { color: #374151; }
+
+/* ── Form ────────────────────────────────────────────────── */
+.form {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.formLabel {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.required {
+  color: #ef4444;
+}
+
+.formInput,
+.formTextarea {
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  outline: none;
+}
+
+.formInput:focus,
+.formTextarea:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.formTextarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.inputError {
+  border-color: #ef4444;
+}
+.inputError:focus {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
+}
+
+.fieldError {
+  font-size: 0.8rem;
+  color: #ef4444;
+}
+
+.formActions {
+  display: flex;
+  gap: 0.75rem;
+  padding-top: 0.25rem;
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .container { padding: 1rem; }
+  .th:nth-child(4),
+  .td:nth-child(4) { display: none; }
+  .jobDescription { max-width: 160px; }
 }
