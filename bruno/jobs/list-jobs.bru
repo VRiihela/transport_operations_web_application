@@ -1,0 +1,30 @@
+meta {
+  name: List Jobs
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/jobs
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+params:query {
+  ~status: DRAFT
+  ~page: 1
+  ~limit: 10
+}
+
+docs {
+  Query params (all optional):
+  - status: DRAFT | ASSIGNED | IN_PROGRESS | COMPLETED
+  - page: page number (default 1)
+  - limit: results per page (default 10)
+
+  Drivers only see jobs assigned to them.
+}

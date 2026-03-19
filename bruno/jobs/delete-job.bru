@@ -1,0 +1,20 @@
+meta {
+  name: Delete Job
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{baseUrl}}/api/jobs/{{jobId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+docs {
+  Soft-delete: sets deletedAt timestamp. Admin only.
+  Deleted jobs no longer appear in list/get responses.
+}

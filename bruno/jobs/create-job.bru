@@ -1,0 +1,31 @@
+meta {
+  name: Create Job
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/jobs
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+body:json {
+  {
+    "title": "Deliver cargo to Helsinki",
+    "description": "3 pallets, fragile",
+    "location": "Helsinki, Mannerheimintie 1",
+    "scheduledAt": "2026-03-25T08:00:00Z",
+    "notes": "Call recipient 30 min before arrival"
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    bru.setVar("jobId", res.body.data.id);
+  }
+}

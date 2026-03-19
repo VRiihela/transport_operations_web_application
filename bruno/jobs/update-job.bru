@@ -1,0 +1,29 @@
+meta {
+  name: Update Job
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/api/jobs/{{jobId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+body:json {
+  {
+    "status": "ASSIGNED"
+  }
+}
+
+docs {
+  All fields optional. Valid status transitions:
+  DRAFT → ASSIGNED
+  ASSIGNED → IN_PROGRESS
+  IN_PROGRESS → COMPLETED
+  COMPLETED → (terminal, no further transitions)
+}
