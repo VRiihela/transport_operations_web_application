@@ -1,0 +1,28 @@
+{
+    "title": "Job Model and CRUD API",
+    "profile": "Node/TypeScript Backend",
+    "repo": "work_management_system",
+    "tech": "Node.js, TypeScript, Express, PostgreSQL, Prisma, Zod, Vitest",
+    "keyConstraints": "TypeScript strict, Zod for all request validation, Prisma for all DB queries, JWT auth already implemented, RBAC middleware already exists (authenticateToken, requireRole)",
+    "description": "Implement the core Job model and REST API for a transport company work management system. A job represents a task or delivery assignment. Dispatchers and Admins can create, update, and manage all jobs. Drivers can only view their own assigned jobs. Jobs have a clear status lifecycle: draft → assigned → in_progress → completed. All endpoints are protected by existing JWT auth middleware.",
+    "acceptanceCriteria": [
+      "Prisma Job model has: id, title, description (optional), status (DRAFT/ASSIGNED/IN_PROGRESS/COMPLETED), assignedDriverId (optional FK to User), scheduledAt (DateTime, optional), location (optional string), notes (optional string), createdById (FK to User), createdAt, updatedAt",
+      "POST /api/jobs — Admin and Dispatcher only — creates a job with status DRAFT",
+      "GET /api/jobs — Admin and Dispatcher see all jobs, Driver sees only their assigned jobs",
+      "GET /api/jobs/:id — Admin and Dispatcher can get any job, Driver can only get their own assigned job (403 otherwise)",
+      "PATCH /api/jobs/:id — Admin and Dispatcher only — update any job field including status and assignedDriverId",
+      "DELETE /api/jobs/:id — Admin only — soft delete (add deletedAt field, filter from queries)",
+      "Status transitions are validated: DRAFT can go to ASSIGNED, ASSIGNED can go to IN_PROGRESS or DRAFT, IN_PROGRESS can go to COMPLETED only",
+      "All request bodies validated with Zod before reaching route handlers",
+      "All endpoints return consistent JSON shape: { data: ... } for success, { error: string } for failure",
+      "Vitest tests cover: create job, list jobs as dispatcher, list jobs as driver (only own), status transition validation, unauthorized access returns 403"
+    ],
+    "relevantFilePaths": [
+      "backend/prisma/schema.prisma",
+      "backend/src/middleware/authenticate.ts",
+      "backend/src/middleware/requireRole.ts",
+      "backend/src/routes/auth.routes.ts",
+      "backend/src/app.ts"
+    ],
+    "securityConsiderations": "Drivers must never see jobs assigned to other drivers — enforce at query level in Prisma, not just in application logic. createdById must be set from the authenticated JWT token, never from the request body. deletedAt soft delete must be filtered in all list and get queries so deleted jobs are never returned."
+  }

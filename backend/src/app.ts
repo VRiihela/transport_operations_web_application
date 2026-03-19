@@ -2,6 +2,7 @@ import express from 'express';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import { authRoutes } from './routes/auth.routes';
+import { jobRoutes } from './routes/job.routes';
 
 const app = express();
 
@@ -19,5 +20,6 @@ app.use(
 );
 
 app.use('/api/auth', authRoutes);
+app.use('/api/jobs', jobRoutes);
 
 export { app };

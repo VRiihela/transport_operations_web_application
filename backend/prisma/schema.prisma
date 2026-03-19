@@ -21,15 +21,25 @@ enum AuditEvent {
   TOKEN_REUSE_DETECTED
 }
 
+enum JobStatus {
+  DRAFT
+  ASSIGNED
+  IN_PROGRESS
+  COMPLETED
+}
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
   passwordHash String
+  name         String?
   role         UserRole
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   refreshTokens RefreshToken[]
+  assignedJobs  Job[]          @relation("AssignedJobs")
+  createdJobs   Job[]          @relation("CreatedJobs")
 
   @@map("users")
 }
@@ -60,4 +70,27 @@ model AuditLog {
   createdAt DateTime   @default(now())
 
   @@map("audit_logs")
+}
+
+model Job {
+  id               String    @id @default(cuid())
+  title            String    @db.VarChar(255)
+  description      String?
+  status           JobStatus @default(DRAFT)
+  assignedDriverId String?
+  scheduledAt      DateTime?
+  location         String?   @db.VarChar(255)
+  notes            String?
+  createdById      String
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  deletedAt        DateTime?
+
+  assignedDriver User? @relation("AssignedJobs", fields: [assignedDriverId], references: [id])
+  createdBy      User  @relation("CreatedJobs", fields: [createdById], references: [id])
+
+  @@index([status])
+  @@index([assignedDriverId])
+  @@index([createdById])
+  @@map("jobs")
 }
