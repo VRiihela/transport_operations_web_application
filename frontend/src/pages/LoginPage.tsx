@@ -1,13 +1,13 @@
-import { useState, FormEvent } from 'react';
-import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import React, { useState, FormEvent } from 'react';
+import { useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import styles from '../styles/LoginPage.module.css';
+import styles from './LoginPage.module.css';
 
-export function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+const LoginPage: React.FC = () => {
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>('');
 
   const { user, login } = useAuth();
   const navigate = useNavigate();
@@ -17,63 +17,80 @@ export function LoginPage() {
 
   if (user) return <Navigate to={from} replace />;
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
+
+    if (!email || !password) {
+      setError('Please fill in all fields');
+      return;
+    }
+
+    setLoading(true);
     setError('');
-    setIsSubmitting(true);
 
     try {
       await login(email, password);
       navigate(from, { replace: true });
     } catch {
-      setError('Invalid email or password');
+      setError('Invalid login credentials');
     } finally {
-      setIsSubmitting(false);
+      setLoading(false);
     }
   };
 
   return (
     <div className={styles.container}>
-      <div className={styles.loginBox}>
-        <h1 className={styles.title}>FleetFlow</h1>
-        <p className={styles.subtitle}>Work Management System</p>
-        <form onSubmit={handleSubmit} className={styles.form}>
-          <div className={styles.field}>
-            <label htmlFor="email" className={styles.label}>Email</label>
+      <div className={styles.loginForm}>
+        <h1 className={styles.title}>Login</h1>
+
+        <form onSubmit={handleSubmit} className={styles.form} noValidate>
+          <div className={styles.formGroup}>
+            <label htmlFor="email" className={styles.label}>
+              Email
+            </label>
             <input
-              id="email"
               type="email"
+              id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className={styles.input}
-              disabled={isSubmitting}
               required
               autoComplete="email"
             />
           </div>
-          <div className={styles.field}>
-            <label htmlFor="password" className={styles.label}>Password</label>
+
+          <div className={styles.formGroup}>
+            <label htmlFor="password" className={styles.label}>
+              Password
+            </label>
             <input
-              id="password"
               type="password"
+              id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className={styles.input}
-              disabled={isSubmitting}
               required
               autoComplete="current-password"
             />
           </div>
+
           {error && (
             <div className={styles.error} role="alert">
               {error}
             </div>
           )}
-          <button type="submit" className={styles.button} disabled={isSubmitting}>
-            {isSubmitting ? 'Signing in…' : 'Sign in'}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className={`${styles.submitButton} ${loading ? styles.loading : ''}`}
+          >
+            {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
       </div>
     </div>
   );
-}
+};
+
+export default LoginPage;

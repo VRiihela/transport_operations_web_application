@@ -1,25 +1,43 @@
+import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import styles from '../styles/App.module.css';
+import styles from './JobsPage.module.css';
 
-export function JobsPage() {
-  const { user, logout } = useAuth();
+const JobsPage: React.FC = () => {
+  const { logout } = useAuth();
 
-  const handleLogout = async () => {
-    await logout();
+  const handleLogout = (): void => {
+    void logout();
+  };
+
+  const handleCreateJob = (): void => {
+    // Placeholder for future implementation
+    console.log('Create job clicked');
   };
 
   return (
-    <div className={styles.page}>
+    <div className={styles.container}>
       <header className={styles.header}>
-        <h1 className={styles.headerTitle}>Jobs Dashboard</h1>
-        <div className={styles.headerRight}>
-          <span className={styles.userInfo}>{user?.email} · {user?.role}</span>
-          <button onClick={handleLogout} className={styles.logoutButton}>Sign out</button>
-        </div>
+        <h1 className={styles.title}>Jobs</h1>
+        <button onClick={handleLogout} className={styles.logoutButton}>
+          Logout
+        </button>
       </header>
+
       <main className={styles.main}>
-        <p className={styles.placeholder}>Jobs list coming soon.</p>
+        <div className={styles.actions}>
+          <button onClick={handleCreateJob} className={styles.createButton}>
+            Create Job
+          </button>
+        </div>
+
+        <div className={styles.jobList}>
+          <p className={styles.placeholder}>
+            Job listings will appear here once the backend integration is complete.
+          </p>
+        </div>
       </main>
     </div>
   );
-}
+};
+
+export default JobsPage;
