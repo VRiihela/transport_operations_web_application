@@ -18,7 +18,7 @@ vi.mock('../../api/axios', () => ({
 
 const mockLogout = vi.fn();
 const mockUseAuth = useAuth as Mock;
-const mockAxios = axiosInstance as { get: Mock; post: Mock; patch: Mock };
+const mockAxios = axiosInstance as unknown as { get: Mock; post: Mock; patch: Mock };
 
 const emptyJobsResponse = { data: { data: { jobs: [], pagination: { page: 1, limit: 10, total: 0, pages: 0 } } } };
 
