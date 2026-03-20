@@ -26,6 +26,11 @@ export const jobQuerySchema = z.object({
   limit: z.string().regex(/^\d+$/).transform(Number).optional(),
 });
 
+export const updateJobStatusSchema = z.object({
+  status: z.enum(['IN_PROGRESS', 'COMPLETED']),
+});
+
 export type CreateJobRequest = z.infer<typeof createJobSchema>;
 export type UpdateJobRequest = z.infer<typeof updateJobSchema>;
+export type UpdateJobStatusRequest = z.infer<typeof updateJobStatusSchema>;
 export type JobQuery = z.infer<typeof jobQuerySchema>;

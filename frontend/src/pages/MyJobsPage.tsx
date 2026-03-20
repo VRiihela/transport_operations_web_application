@@ -59,7 +59,7 @@ const MyJobsPage: React.FC = () => {
       setUpdatingJobs((prev) => new Set([...prev, jobId]));
       setError(null);
 
-      await axiosInstance.patch(`/api/jobs/${jobId}`, { status: newStatus });
+      await axiosInstance.patch(`/api/jobs/${jobId}/status`, { status: newStatus });
 
       setJobs((prev) =>
         prev.map((job) => (job.id === jobId ? { ...job, status: newStatus } : job))
