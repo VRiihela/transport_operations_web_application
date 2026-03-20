@@ -41,6 +41,18 @@
 }
 .createButton:hover { background: #1d4ed8; }
 
+.usersLink {
+  display: inline-block;
+  padding: 0.6rem 1rem;
+  color: #4b5563;
+  text-decoration: none;
+  font-size: 0.875rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+.usersLink:hover { background: #f3f4f6; }
+
 .logoutButton {
   background: transparent;
   color: #555;

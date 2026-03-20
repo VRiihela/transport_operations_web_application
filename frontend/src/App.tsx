@@ -5,6 +5,7 @@ import { RoleRoute } from './components/RoleRoute';
 import LoginPage from './pages/LoginPage';
 import JobsPage from './pages/JobsPage';
 import MyJobsPage from './pages/MyJobsPage';
+import UsersPage from './pages/UsersPage';
 
 export default function App() {
   return (
@@ -28,6 +29,16 @@ export default function App() {
               <ProtectedRoute>
                 <RoleRoute allowedRoles={['Driver']}>
                   <MyJobsPage />
+                </RoleRoute>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/users"
+            element={
+              <ProtectedRoute>
+                <RoleRoute allowedRoles={['Admin']}>
+                  <UsersPage />
                 </RoleRoute>
               </ProtectedRoute>
             }

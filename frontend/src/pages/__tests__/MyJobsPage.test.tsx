@@ -137,7 +137,7 @@ describe('MyJobsPage', () => {
       fireEvent.click(screen.getByText('Start Job'));
       expect(screen.getByText('Starting...')).toBeInTheDocument();
       await waitFor(() => {
-        expect(mockAxios.patch).toHaveBeenCalledWith('/api/jobs/1', { status: 'IN_PROGRESS' });
+        expect(mockAxios.patch).toHaveBeenCalledWith('/api/jobs/1/status', { status: 'IN_PROGRESS' });
       });
       await waitFor(() => {
         expect(screen.queryByText('Starting...')).not.toBeInTheDocument();
@@ -150,7 +150,7 @@ describe('MyJobsPage', () => {
       fireEvent.click(screen.getByText('Complete Job'));
       expect(screen.getByText('Completing...')).toBeInTheDocument();
       await waitFor(() => {
-        expect(mockAxios.patch).toHaveBeenCalledWith('/api/jobs/2', { status: 'COMPLETED' });
+        expect(mockAxios.patch).toHaveBeenCalledWith('/api/jobs/2/status', { status: 'COMPLETED' });
       });
       await waitFor(() => {
         expect(screen.queryByText('Completing...')).not.toBeInTheDocument();

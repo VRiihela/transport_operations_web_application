@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { isAxiosError } from 'axios';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import axiosInstance from '../api/axios';
 import styles from './JobsPage.module.css';
@@ -69,7 +70,7 @@ const STATUS_TRANSITIONS: Record<JobStatus, JobStatus[]> = {
 };
 
 const JobsPage: React.FC = () => {
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -219,6 +220,9 @@ const JobsPage: React.FC = () => {
       <div className={styles.header}>
         <h1 className={styles.heading}>Jobs Management</h1>
         <div className={styles.headerActions}>
+          {user?.role === 'Admin' && (
+            <Link to="/users" className={styles.usersLink}>Users</Link>
+          )}
           <button className={styles.createButton} onClick={() => setShowCreateForm(true)}>
             Create Job
           </button>
