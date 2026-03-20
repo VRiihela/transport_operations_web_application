@@ -1,0 +1,27 @@
+{
+  "title": "Frontend Pages — Login, Jobs and MyJobs",
+  "profile": "React Frontend",
+  "repo": "work_management_system",
+  "tech": "Vite, React 18, TypeScript, React Router v6, Axios, CSS Modules",
+  "keyConstraints": "TypeScript strict, no UI component library, plain CSS Modules only, no inline styles",
+  "description": "Implement the three page components for the frontend scaffold. The scaffold foundation already exists: AuthContext, Axios instance, ProtectedRoute, RoleRoute, main.tsx, App.tsx and routing are all in place. This task only adds the page components and their CSS modules. Pages should be functional but minimal — no complex UI, just working forms and lists.",
+  "acceptanceCriteria": [
+    "LoginPage renders email + password form, calls authContext.login(), shows generic error on failure, redirects to / on success",
+    "LoginPage has loading state on submit button while request is in flight",
+    "JobsPage renders a placeholder job list with heading 'Jobs' — no real data yet, just the shell with a 'Create Job' button placeholder",
+    "MyJobsPage renders a placeholder with heading 'My Jobs' — no real data yet, just the shell",
+    "Each page has its own CSS module file with basic layout styles",
+    "All pages are TypeScript strict — no any types",
+    "Pages import and use AuthContext correctly via useAuth hook",
+    "Logout button visible on JobsPage and MyJobsPage, calls authContext.logout()"
+  ],
+  "relevantFilePaths": [
+    "frontend/src/context/AuthContext.tsx",
+    "frontend/src/components/ProtectedRoute.tsx",
+    "frontend/src/components/RoleRoute.tsx",
+    "frontend/src/App.tsx",
+    "frontend/src/main.tsx",
+    "frontend/src/api/axios.ts"
+  ],
+  "securityConsiderations": "Login error message must remain generic — do not show whether email or password was wrong. No token or user data written to localStorage or sessionStorage anywhere in these components."
+}

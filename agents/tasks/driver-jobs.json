@@ -1,0 +1,26 @@
+{
+  "title": "Driver My Jobs View",
+  "profile": "React Frontend",
+  "repo": "work_management_system",
+  "tech": "Vite, React 18, TypeScript, React Router v6, Axios, CSS Modules",
+  "keyConstraints": "TypeScript strict, no UI component library, plain CSS Modules only, Axios instance already configured with auth interceptor",
+  "description": "Implement the Driver jobs view. Replaces the MyJobsPage placeholder. Drivers see only their own assigned jobs. They can view job details and update status to IN_PROGRESS or COMPLETED. No create, assign or delete — read and status update only.",
+  "acceptanceCriteria": [
+    "MyJobsPage fetches GET /api/jobs on mount — backend already filters to driver's own jobs via JWT",
+    "Jobs displayed as cards showing: title, status badge, scheduledAt, location, notes",
+    "Loading state while fetching, friendly empty state if no jobs assigned",
+    "Each job card has a Start Job button if status is ASSIGNED — calls PATCH /api/jobs/:id with status IN_PROGRESS",
+    "Each job card has a Complete Job button if status is IN_PROGRESS — calls PATCH /api/jobs/:id with status COMPLETED",
+    "Completed jobs still visible in list but buttons hidden and card visually dimmed",
+    "Status badges color coded same as dispatcher view: ASSIGNED=blue, IN_PROGRESS=yellow, COMPLETED=green",
+    "All API errors show a simple error message — no raw error objects",
+    "TypeScript strict — no any types"
+  ],
+  "relevantFilePaths": [
+    "frontend/src/pages/MyJobsPage.tsx",
+    "frontend/src/api/axios.ts",
+    "frontend/src/context/AuthContext.tsx",
+    "backend/src/routes/jobs.routes.ts"
+  ],
+  "securityConsiderations": "Driver must never be able to call create, delete or assign endpoints — these are blocked by RBAC on the backend, but the frontend should not even show these controls to drivers. Status update only allows IN_PROGRESS and COMPLETED transitions for drivers — do not show DRAFT option."
+}

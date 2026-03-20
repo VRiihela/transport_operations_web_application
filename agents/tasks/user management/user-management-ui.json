@@ -1,0 +1,29 @@
+{
+  "title": "User Management UI — Admin View",
+  "profile": "React Frontend",
+  "repo": "work_management_system",
+  "tech": "Vite, React 18, TypeScript, React Router v6, Axios, CSS Modules",
+  "keyConstraints": "TypeScript strict, no UI component library, plain CSS Modules only, Axios instance already configured with auth interceptor",
+  "description": "Implement the Admin user management page. Admin can see all users, create new accounts, change roles, deactivate accounts and reset passwords. Accessible only to Admin role via RoleRoute. Add a link to this page in the navigation for Admin users only.",
+  "acceptanceCriteria": [
+    "New route /users added to App.tsx — protected by RoleRoute for Admin only",
+    "UsersPage fetches GET /api/users on mount, displays table with: email, role badge, active/inactive status, actions",
+    "Create User button opens form with fields: email (required), password (required), role (DRIVER or DISPATCHER, required)",
+    "Create user form submits POST /api/users, adds user to list on success, shows error on failure including 409 if email taken",
+    "Each user row has Deactivate/Activate toggle that calls PATCH /api/users/:id with isActive",
+    "Admin's own account row does not show Deactivate button",
+    "Each user row has Reset Password button that opens a simple form with new password field, submits POST /api/users/:id/reset-password",
+    "Role badge color coded: ADMIN=purple, DISPATCHER=blue, DRIVER=green",
+    "Inactive users shown with dimmed/strikethrough style",
+    "Navigation shows Users link only when logged in user role is ADMIN",
+    "TypeScript strict — no any types"
+  ],
+  "relevantFilePaths": [
+    "frontend/src/pages/JobsPage.tsx",
+    "frontend/src/App.tsx",
+    "frontend/src/context/AuthContext.tsx",
+    "frontend/src/api/axios.ts",
+    "frontend/src/components/RoleRoute.tsx"
+  ],
+  "securityConsiderations": "Never display or log password values in the UI. Reset password form must clear after submission. Admin cannot see their own deactivate button — check against AuthContext user.id. Role badge and active status are display only — changes go through the API, never manipulate local state without API confirmation."
+}

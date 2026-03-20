@@ -1,0 +1,29 @@
+{
+  "title": "User Management API",
+  "profile": "Node/TypeScript Backend",
+  "repo": "work_management_system",
+  "tech": "Node.js, TypeScript, Express, PostgreSQL, Prisma, Zod, bcrypt, Vitest",
+  "keyConstraints": "TypeScript strict, Zod for all request validation, Prisma for all DB queries, JWT auth already implemented, RBAC middleware already exists (authenticateToken, requireRole)",
+  "description": "Implement user management endpoints so Admin can create, list, update and deactivate user accounts. Admins are the only role that can manage users. Drivers and Dispatchers cannot access these endpoints. Passwords are set by the Admin on account creation — no self-registration. Users can be deactivated (soft delete) but not permanently deleted since they may have jobs assigned to them.",
+  "acceptanceCriteria": [
+    "GET /api/users — Admin only — returns list of all users with id, email, role, isActive, createdAt — never returns passwordHash",
+    "GET /api/users?role=DRIVER — filters list by role — used by dispatcher job assignment dropdown",
+    "POST /api/users — Admin only — creates a new user with email, password, role (DRIVER or DISPATCHER) — hashes password with bcrypt cost 12",
+    "PATCH /api/users/:id — Admin only — can update email, role, isActive",
+    "POST /api/users/:id/reset-password — Admin only — sets a new password for the user, hashes with bcrypt",
+    "Admin cannot deactivate their own account",
+    "Email must be unique — return 409 if email already exists",
+    "Deactivated users (isActive: false) cannot log in — auth service checks isActive on login",
+    "All request bodies validated with Zod",
+    "Vitest tests cover: create user, list users, deactivate user, deactivated user cannot login, admin cannot deactivate self"
+  ],
+  "relevantFilePaths": [
+    "backend/prisma/schema.prisma",
+    "backend/src/services/auth.service.ts",
+    "backend/src/middleware/authenticate.ts",
+    "backend/src/middleware/requireRole.ts",
+    "backend/src/routes/auth.routes.ts",
+    "backend/src/app.ts"
+  ],
+  "securityConsiderations": "Never return passwordHash in any response — select only safe fields explicitly in all Prisma queries. Password reset must be Admin-only — users cannot reset their own or others passwords. isActive check must happen in AuthService.login() so deactivated users are rejected at auth time not just at the API level. New user passwords must meet minimum strength — at least 8 characters."
+}

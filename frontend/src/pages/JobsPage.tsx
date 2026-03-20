@@ -136,7 +136,7 @@ const JobsPage: React.FC = () => {
       const payload = {
         title: createFormData.title.trim(),
         description: createFormData.description.trim() || undefined,
-        scheduledAt: createFormData.scheduledAt || undefined,
+        scheduledAt: createFormData.scheduledAt ? new Date(createFormData.scheduledAt).toISOString() : null,
         location: createFormData.location.trim() || undefined,
       };
       const response = await axiosInstance.post<SingleJobApiResponse>('/api/jobs', payload);

@@ -1,0 +1,26 @@
+{
+  "title": "React Frontend Scaffold",
+  "profile": "React Frontend",
+  "repo": "work_management_system",
+  "tech": "Vite, React 18, TypeScript, React Router v6, Axios, Vitest, CSS Modules",
+  "keyConstraints": "TypeScript strict, no UI component library (plain CSS Modules), Axios for all HTTP, JWT access token stored in memory (not localStorage), refresh token handled via httpOnly cookie automatically",
+  "description": "Set up the React frontend scaffold for the transport company work management system. This is the foundation all future UI features will build on. It includes the Vite project structure, routing, auth context, protected routes, and a working login page that connects to the real backend. No job UI yet — just the skeleton that proves auth works end to end.",
+  "acceptanceCriteria": [
+    "Vite + React 18 + TypeScript project created at frontend/ with strict TypeScript config",
+    "React Router v6 set up with routes: /login (public), / (protected, redirects to /jobs), /jobs (protected, Dispatcher/Admin only), /my-jobs (protected, Driver only)",
+    "AuthContext provides: user (id, email, role), accessToken, login(), logout(), refreshToken() to the whole app",
+    "Access token stored in memory only (React state) — never localStorage or sessionStorage",
+    "Axios instance configured with base URL from env variable VITE_API_URL, automatically attaches Authorization: Bearer <token> header",
+    "Axios response interceptor handles 401 — attempts token refresh via POST /api/auth/refresh, retries original request, logs out if refresh fails",
+    "Login page has email + password form, calls POST /api/auth/login, stores access token in AuthContext on success",
+    "ProtectedRoute component redirects unauthenticated users to /login",
+    "RoleRoute component redirects users without required role to appropriate page",
+    "Logout calls POST /api/auth/logout and clears AuthContext",
+    "Environment variable VITE_API_URL in .env.local points to http://localhost:3000"
+  ],
+  "relevantFilePaths": [
+    "backend/src/routes/auth.routes.ts",
+    "backend/src/middleware/authenticate.ts"
+  ],
+  "securityConsiderations": "Access token must live in React state only — never written to localStorage, sessionStorage, or any persistent browser storage. The httpOnly refresh token cookie is sent automatically by the browser on requests to the backend — Axios must have withCredentials: true set on the instance. Login errors must show a generic message — do not indicate whether email or password was wrong."
+}

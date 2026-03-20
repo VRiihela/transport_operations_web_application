@@ -246,7 +246,7 @@ export class AgenticOrchestrator {
   }
 
   async runPipeline(spec: TaskSpec): Promise<RunLogEntry> {
-    const runId = `run_${Date.now()}`;
+    const runId = `${Date.now()}`;
     const pipeline: AgentRole[] = [
       "architect",
       "implementer",

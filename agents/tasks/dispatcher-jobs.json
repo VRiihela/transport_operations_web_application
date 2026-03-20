@@ -1,0 +1,27 @@
+{
+  "title": "Dispatcher Jobs View",
+  "profile": "React Frontend",
+  "repo": "work_management_system",
+  "tech": "Vite, React 18, TypeScript, React Router v6, Axios, CSS Modules",
+  "keyConstraints": "TypeScript strict, no UI component library, plain CSS Modules only, Axios instance already configured with auth interceptor",
+  "description": "Implement the Dispatcher/Admin jobs view. This replaces the JobsPage placeholder with a fully functional page. Dispatchers can see all jobs, create new jobs, assign drivers, and update job status. Uses the existing backend API at /api/jobs. Keep UI simple and functional — no complex design needed.",
+  "acceptanceCriteria": [
+    "JobsPage fetches GET /api/jobs on mount and displays jobs in a list/table showing: title, status, assigned driver name (or Unassigned), scheduledAt",
+    "Jobs list shows loading state while fetching and error state if request fails",
+    "Create Job button opens a form (inline or simple modal) with fields: title (required), description (optional), scheduledAt (optional), location (optional)",
+    "Create job form submits POST /api/jobs, adds new job to list on success, shows error on failure",
+    "Each job row has an Assign Driver button that opens a simple dropdown of available drivers fetched from GET /api/users?role=DRIVER",
+    "Assigning a driver calls PATCH /api/jobs/:id with assignedDriverId and updates the list",
+    "Each job row has a Status button that shows allowed next statuses and calls PATCH /api/jobs/:id with the new status",
+    "Status badges are color coded: DRAFT=gray, ASSIGNED=blue, IN_PROGRESS=yellow, COMPLETED=green",
+    "All API errors show a simple error message to the user — no raw error objects",
+    "TypeScript strict — no any types"
+  ],
+  "relevantFilePaths": [
+    "frontend/src/pages/JobsPage.tsx",
+    "frontend/src/api/axios.ts",
+    "frontend/src/context/AuthContext.tsx",
+    "backend/src/routes/jobs.routes.ts"
+  ],
+  "securityConsiderations": "Never pass user role or id from frontend state to the API as part of the request body — the backend reads these from the JWT. The Assign Driver dropdown must only show users with role DRIVER — enforce this via the API query parameter, not by filtering frontend state."
+}

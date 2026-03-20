@@ -31,6 +31,7 @@ describe('AuthService', () => {
       email: 'test@example.com',
       passwordHash: '$2b$12$hashedpassword',
       role: 'Admin',
+      isActive: true,
     };
 
     it('returns user data on valid credentials', async () => {
@@ -61,6 +62,15 @@ describe('AuthService', () => {
     it('throws INVALID_CREDENTIALS when user not found', async () => {
       (mockPrisma.user.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue(null);
       await expect(authService.login({ email: 'nobody@example.com', password: 'password' }))
+        .rejects.toThrow(new AuthError('Invalid credentials', 'INVALID_CREDENTIALS'));
+    });
+
+    it('throws INVALID_CREDENTIALS when user is deactivated', async () => {
+      (mockPrisma.user.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue({
+        ...validUser,
+        isActive: false,
+      });
+      await expect(authService.login({ email: 'test@example.com', password: 'validpassword' }))
         .rejects.toThrow(new AuthError('Invalid credentials', 'INVALID_CREDENTIALS'));
     });
 

@@ -27,17 +27,18 @@ export class AuthService {
       throw new AuthError('Email and password are required', 'MISSING_CREDENTIALS');
     }
 
+    const normalizedEmail = credentials.email.toLowerCase().trim();
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(credentials.email)) {
+    if (!emailRegex.test(normalizedEmail)) {
       throw new AuthError('Invalid email format', 'INVALID_EMAIL');
     }
 
     try {
       const user = await this.prisma.user.findUnique({
-        where: { email: credentials.email.toLowerCase().trim() },
+        where: { email: normalizedEmail },
       });
 
-      if (!user) {
+      if (!user || !user.isActive) {
         throw new AuthError('Invalid credentials', 'INVALID_CREDENTIALS');
       }
 
