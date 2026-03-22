@@ -209,7 +209,7 @@ const UsersPage: React.FC = () => {
                 </td>
                 <td>
                   <div className={styles.actions}>
-                    {u.id !== currentUser?.id && (
+                    {(u.id !== currentUser?.id || !u.isActive) && (
                       <button
                         className={u.isActive ? styles.deactivateButton : styles.activateButton}
                         onClick={() => void handleToggleActive(u)}
