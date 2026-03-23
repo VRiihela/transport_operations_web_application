@@ -184,6 +184,55 @@ describe('JobService', () => {
     });
   });
 
+  describe('updateDriverNotes', () => {
+    it('returns null when job not found', async () => {
+      mockFindFirst.mockResolvedValue(null);
+      const result = await service.updateDriverNotes('missing', 'some notes', 'driver-1');
+      expect(result).toBeNull();
+      expect(mockUpdate).not.toHaveBeenCalled();
+    });
+
+    it('throws FORBIDDEN when caller is not the assigned driver', async () => {
+      mockFindFirst.mockResolvedValue({ ...baseJob, assignedDriverId: 'driver-1' });
+      await expect(
+        service.updateDriverNotes('job-1', 'notes', 'other-user')
+      ).rejects.toThrow('FORBIDDEN');
+      expect(mockUpdate).not.toHaveBeenCalled();
+    });
+
+    it('throws FORBIDDEN when job has no assigned driver', async () => {
+      mockFindFirst.mockResolvedValue({ ...baseJob, assignedDriverId: null });
+      await expect(
+        service.updateDriverNotes('job-1', 'notes', 'driver-1')
+      ).rejects.toThrow('FORBIDDEN');
+    });
+
+    it('updates and returns job when caller is assigned driver', async () => {
+      const jobWithDriver = { ...baseJob, assignedDriverId: 'driver-1' };
+      const updated = { ...jobWithDriver, driverNotes: 'Delivered late due to traffic' };
+      mockFindFirst.mockResolvedValue(jobWithDriver);
+      mockUpdate.mockResolvedValue(updated);
+
+      const result = await service.updateDriverNotes('job-1', 'Delivered late due to traffic', 'driver-1');
+      expect(result?.driverNotes).toBe('Delivered late due to traffic');
+      expect(mockUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'job-1' },
+          data: expect.objectContaining({ driverNotes: 'Delivered late due to traffic' }),
+        })
+      );
+    });
+
+    it('allows clearing notes with empty string', async () => {
+      const jobWithDriver = { ...baseJob, assignedDriverId: 'driver-1', driverNotes: 'old notes' };
+      mockFindFirst.mockResolvedValue(jobWithDriver);
+      mockUpdate.mockResolvedValue({ ...jobWithDriver, driverNotes: '' });
+
+      const result = await service.updateDriverNotes('job-1', '', 'driver-1');
+      expect(result?.driverNotes).toBe('');
+    });
+  });
+
   describe('deleteJob', () => {
     it('soft-deletes by setting deletedAt', async () => {
       mockFindFirst.mockResolvedValue(baseJob);

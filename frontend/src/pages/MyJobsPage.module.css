@@ -177,6 +177,84 @@
 .startButton:disabled,
 .completeButton:disabled { background-color: #6c757d; cursor: not-allowed; opacity: 0.7; }
 
+/* ── Driver notes ───────────────────────────────────────── */
+.notesSection {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e9ecef;
+}
+
+.notesLabel {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 0.4rem;
+}
+
+.notesTextarea {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 0.875rem;
+  resize: vertical;
+  min-height: 80px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  box-sizing: border-box;
+}
+.notesTextarea:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.notesReadOnly {
+  background-color: #f8f9fa;
+  color: #6b7280;
+  cursor: default;
+}
+
+.notesFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.35rem;
+}
+
+.charCount {
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.saveNotesButton {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  padding: 0.35rem 0.875rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.saveNotesButton:hover:not(:disabled) { background: #1d4ed8; }
+.saveNotesButton:disabled { background: #93c5fd; cursor: not-allowed; }
+
+.saveSuccess {
+  margin-top: 0.35rem;
+  font-size: 0.8rem;
+  color: #166534;
+  font-weight: 500;
+}
+
+.saveError {
+  margin-top: 0.35rem;
+  font-size: 0.8rem;
+  color: #b91c1c;
+}
+
 @media (max-width: 768px) {
   .container { padding: 1rem; }
   .jobsGrid { grid-template-columns: 1fr; }

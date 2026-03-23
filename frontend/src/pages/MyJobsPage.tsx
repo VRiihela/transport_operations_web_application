@@ -14,6 +14,7 @@ interface Job {
   scheduledStart: string | null;
   scheduledEnd: string | null;
   schedulingNote: string | null;
+  driverNotes: string | null;
   location: string | null;
   notes: string | null;
 }
@@ -39,6 +40,9 @@ const MyJobsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updatingJobs, setUpdatingJobs] = useState<Set<string>>(new Set());
+  const [draftNotes, setDraftNotes] = useState<Record<string, string>>({});
+  const [noteSaveStatus, setNoteSaveStatus] = useState<Record<string, 'idle' | 'saving' | 'saved' | 'error'>>({});
+  const [noteSaveError, setNoteSaveError] = useState<Record<string, string>>({});
 
   const fetchJobs = useCallback(async (): Promise<void> => {
     try {
@@ -78,6 +82,21 @@ const MyJobsPage: React.FC = () => {
     }
   };
 
+  const saveDriverNotes = async (jobId: string, currentNotes: string | null): Promise<void> => {
+    const notes = draftNotes[jobId] ?? currentNotes ?? '';
+    setNoteSaveStatus((prev) => ({ ...prev, [jobId]: 'saving' }));
+    setNoteSaveError((prev) => ({ ...prev, [jobId]: '' }));
+    try {
+      const response = await axiosInstance.patch<{ data: Job }>(`/api/jobs/${jobId}/notes`, { driverNotes: notes });
+      setJobs((prev) => prev.map((j) => (j.id === jobId ? { ...j, driverNotes: response.data.data.driverNotes } : j)));
+      setNoteSaveStatus((prev) => ({ ...prev, [jobId]: 'saved' }));
+      setTimeout(() => setNoteSaveStatus((prev) => ({ ...prev, [jobId]: 'idle' })), 2000);
+    } catch (err) {
+      setNoteSaveStatus((prev) => ({ ...prev, [jobId]: 'error' }));
+      setNoteSaveError((prev) => ({ ...prev, [jobId]: getApiError(err, 'Failed to save notes') }));
+    }
+  };
+
   const formatFinnishDateTime = (value: string | null): string => {
     if (!value) return '';
     const d = new Date(value);
@@ -89,12 +108,24 @@ const MyJobsPage: React.FC = () => {
     });
   };
 
+  const formatFinnishTime = (value: string): string => {
+    const d = new Date(value);
+    return d.toLocaleTimeString('fi-FI', {
+      hour: '2-digit', minute: '2-digit',
+      timeZone: 'Europe/Helsinki',
+    });
+  };
+
   const formatSchedulingInfo = (start: string | null, end: string | null, note: string | null): string => {
     if (start || end) {
-      const s = formatFinnishDateTime(start);
-      const e = formatFinnishDateTime(end);
-      if (s && e) return `${s} – ${e}`;
-      return s || e;
+      if (start && end) {
+        const sDate = new Date(start).toLocaleDateString('fi-FI', { timeZone: 'Europe/Helsinki' });
+        const eDate = new Date(end).toLocaleDateString('fi-FI', { timeZone: 'Europe/Helsinki' });
+        const s = formatFinnishDateTime(start);
+        const endPart = sDate === eDate ? formatFinnishTime(end) : formatFinnishDateTime(end);
+        return `${s} – ${endPart}`;
+      }
+      return formatFinnishDateTime(start) || formatFinnishDateTime(end);
     }
     return note ?? '—';
   };
@@ -180,6 +211,43 @@ const MyJobsPage: React.FC = () => {
                   <div className={styles.jobDetail}>
                     <strong>Notes:</strong> {job.notes}
                   </div>
+                )}
+              </div>
+
+              <div className={styles.notesSection}>
+                <label htmlFor={`notes-${job.id}`} className={styles.notesLabel}>Driver notes</label>
+                <textarea
+                  id={`notes-${job.id}`}
+                  value={draftNotes[job.id] ?? job.driverNotes ?? ''}
+                  onChange={(e) => setDraftNotes((prev) => ({ ...prev, [job.id]: e.target.value }))}
+                  disabled={job.status === 'COMPLETED' || noteSaveStatus[job.id] === 'saving'}
+                  placeholder={job.status === 'COMPLETED' ? '' : 'Add notes or deviation info…'}
+                  className={`${styles.notesTextarea} ${job.status === 'COMPLETED' ? styles.notesReadOnly : ''}`}
+                  maxLength={1000}
+                  rows={3}
+                />
+                <div className={styles.notesFooter}>
+                  <span className={styles.charCount}>
+                    {(draftNotes[job.id] ?? job.driverNotes ?? '').length}/1000
+                  </span>
+                  {job.status !== 'COMPLETED' && (
+                    <button
+                      className={styles.saveNotesButton}
+                      onClick={() => void saveDriverNotes(job.id, job.driverNotes)}
+                      disabled={
+                        noteSaveStatus[job.id] === 'saving' ||
+                        (draftNotes[job.id] ?? job.driverNotes ?? '') === (job.driverNotes ?? '')
+                      }
+                    >
+                      {noteSaveStatus[job.id] === 'saving' ? 'Saving…' : 'Save'}
+                    </button>
+                  )}
+                </div>
+                {noteSaveStatus[job.id] === 'saved' && (
+                  <div className={styles.saveSuccess}>Saved</div>
+                )}
+                {noteSaveStatus[job.id] === 'error' && (
+                  <div className={styles.saveError}>{noteSaveError[job.id]}</div>
                 )}
               </div>
 

@@ -24,6 +24,7 @@ interface Job {
   scheduledStart: string | null;
   scheduledEnd: string | null;
   schedulingNote: string | null;
+  driverNotes: string | null;
   location: string | null;
   createdAt: string;
   updatedAt: string;
@@ -271,12 +272,24 @@ const JobsPage: React.FC = () => {
     });
   };
 
+  const formatFinnishTime = (value: string): string => {
+    const d = new Date(value);
+    return d.toLocaleTimeString('fi-FI', {
+      hour: '2-digit', minute: '2-digit',
+      timeZone: 'Europe/Helsinki',
+    });
+  };
+
   const formatSchedulingInfo = (start: string | null, end: string | null, note: string | null): string => {
     if (start || end) {
-      const s = formatFinnishDateTime(start);
-      const e = formatFinnishDateTime(end);
-      if (s && e) return `${s} – ${e}`;
-      return s || e;
+      if (start && end) {
+        const sDate = new Date(start).toLocaleDateString('fi-FI', { timeZone: 'Europe/Helsinki' });
+        const eDate = new Date(end).toLocaleDateString('fi-FI', { timeZone: 'Europe/Helsinki' });
+        const s = formatFinnishDateTime(start);
+        const endPart = sDate === eDate ? formatFinnishTime(end) : formatFinnishDateTime(end);
+        return `${s} – ${endPart}`;
+      }
+      return formatFinnishDateTime(start) || formatFinnishDateTime(end);
     }
     return note ?? '—';
   };
@@ -585,6 +598,11 @@ const JobsPage: React.FC = () => {
                     )}
                     {job.location && (
                       <div className={styles.jobLocation}>📍 {job.location}</div>
+                    )}
+                    {job.driverNotes && job.driverNotes.trim() && (
+                      <div className={styles.driverNotesDisplay}>
+                        <span className={styles.driverNotesLabel}>Driver notes:</span> {job.driverNotes}
+                      </div>
                     )}
                   </td>
                   <td className={styles.td}>

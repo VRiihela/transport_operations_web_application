@@ -131,6 +131,17 @@ export class JobService {
     });
   }
 
+  async updateDriverNotes(id: string, driverNotes: string, userId: string) {
+    const job = await this.prisma.job.findFirst({ where: { id, deletedAt: null } });
+    if (!job) return null;
+    if (job.assignedDriverId !== userId) throw new Error('FORBIDDEN');
+    return this.prisma.job.update({
+      where: { id },
+      data: { driverNotes },
+      ...jobInclude,
+    });
+  }
+
   async deleteJob(id: string) {
     const existing = await this.prisma.job.findFirst({ where: { id, deletedAt: null } });
     if (!existing) return null;

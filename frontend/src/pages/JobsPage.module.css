@@ -227,6 +227,19 @@
   margin-top: 0.15rem;
 }
 
+.driverNotesDisplay {
+  font-size: 0.78rem;
+  color: #374151;
+  margin-top: 0.3rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.driverNotesLabel {
+  font-weight: 600;
+  color: #6b7280;
+}
+
 .unassigned {
   color: #9ca3af;
   font-style: italic;
