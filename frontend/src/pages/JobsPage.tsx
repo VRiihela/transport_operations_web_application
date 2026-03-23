@@ -33,6 +33,16 @@ interface Driver {
   id: string;
   name: string | null;
   email: string;
+  isActive: boolean;
+}
+
+interface EditFormData {
+  title: string;
+  description: string;
+  scheduledStart: string;
+  scheduledEnd: string;
+  schedulingNote: string;
+  assignedDriverId: string;
 }
 
 interface CreateJobFormData {
@@ -95,6 +105,10 @@ const JobsPage: React.FC = () => {
   const [assigningJobs, setAssigningJobs] = useState<Set<string>>(new Set());
   const [updatingStatus, setUpdatingStatus] = useState<Set<string>>(new Set());
   const [openDriverDropdown, setOpenDriverDropdown] = useState<string | null>(null);
+  const [editingJob, setEditingJob] = useState<Job | null>(null);
+  const [editForm, setEditForm] = useState<EditFormData>({ title: '', description: '', scheduledStart: '', scheduledEnd: '', schedulingNote: '', assignedDriverId: '' });
+  const [editError, setEditError] = useState<string>('');
+  const [editSubmitting, setEditSubmitting] = useState(false);
 
   const fetchJobs = useCallback(async () => {
     try {
@@ -199,6 +213,50 @@ const JobsPage: React.FC = () => {
         next.delete(jobId);
         return next;
       });
+    }
+  };
+
+  const formatDateTimeForInput = (value: string | null): string => {
+    if (!value) return '';
+    const d = new Date(value);
+    return isNaN(d.getTime()) ? '' : d.toISOString().slice(0, 16);
+  };
+
+  const handleEditOpen = (job: Job) => {
+    void fetchDrivers();
+    setEditForm({
+      title: job.title,
+      description: job.description ?? '',
+      scheduledStart: formatDateTimeForInput(job.scheduledStart),
+      scheduledEnd: formatDateTimeForInput(job.scheduledEnd),
+      schedulingNote: job.schedulingNote ?? '',
+      assignedDriverId: job.assignedDriverId ?? '',
+    });
+    setEditError('');
+    setEditingJob(job);
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent): Promise<void> => {
+    e.preventDefault();
+    if (!editingJob) return;
+    setEditSubmitting(true);
+    setEditError('');
+    try {
+      const payload = {
+        title: editForm.title.trim(),
+        description: editForm.description.trim() || undefined,
+        scheduledStart: editForm.scheduledStart ? new Date(editForm.scheduledStart).toISOString() : null,
+        scheduledEnd: editForm.scheduledEnd ? new Date(editForm.scheduledEnd).toISOString() : null,
+        schedulingNote: editForm.schedulingNote.trim() || undefined,
+        assignedDriverId: editForm.assignedDriverId || undefined,
+      };
+      const response = await axiosInstance.patch<SingleJobApiResponse>(`/api/jobs/${editingJob.id}`, payload);
+      setJobs((prev) => prev.map((j) => (j.id === editingJob.id ? response.data.data : j)));
+      setEditingJob(null);
+    } catch (err) {
+      setEditError(getApiError(err, 'Failed to save changes'));
+    } finally {
+      setEditSubmitting(false);
     }
   };
 
@@ -389,6 +447,118 @@ const JobsPage: React.FC = () => {
         </div>
       )}
 
+      {/* Edit Job Modal */}
+      {editingJob && (
+        <div className={styles.modalOverlay} onClick={() => setEditingJob(null)}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h2 className={styles.modalTitle}>Edit Job</h2>
+              <button className={styles.modalClose} onClick={() => setEditingJob(null)} aria-label="Close">×</button>
+            </div>
+            <form onSubmit={(e) => void handleEditSubmit(e)} className={styles.form} noValidate>
+              {editError && (
+                <div className={styles.errorBanner} role="alert">
+                  {editError}
+                  <button className={styles.errorDismiss} onClick={() => setEditError('')}>×</button>
+                </div>
+              )}
+
+              <div className={styles.formGroup}>
+                <label htmlFor="edit-title" className={styles.formLabel}>
+                  Title <span className={styles.required}>*</span>
+                </label>
+                <input
+                  id="edit-title"
+                  type="text"
+                  required
+                  value={editForm.title}
+                  onChange={(e) => setEditForm((p) => ({ ...p, title: e.target.value }))}
+                  className={styles.formInput}
+                  maxLength={255}
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label htmlFor="edit-description" className={styles.formLabel}>Description</label>
+                <textarea
+                  id="edit-description"
+                  value={editForm.description}
+                  onChange={(e) => setEditForm((p) => ({ ...p, description: e.target.value }))}
+                  className={styles.formTextarea}
+                  rows={3}
+                  maxLength={1000}
+                />
+              </div>
+
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label htmlFor="edit-scheduledStart" className={styles.formLabel}>Start Time</label>
+                  <input
+                    id="edit-scheduledStart"
+                    type="datetime-local"
+                    value={editForm.scheduledStart}
+                    onChange={(e) => setEditForm((p) => ({ ...p, scheduledStart: e.target.value }))}
+                    className={styles.formInput}
+                  />
+                </div>
+                <div className={styles.formGroup}>
+                  <label htmlFor="edit-scheduledEnd" className={styles.formLabel}>End Time</label>
+                  <input
+                    id="edit-scheduledEnd"
+                    type="datetime-local"
+                    value={editForm.scheduledEnd}
+                    onChange={(e) => setEditForm((p) => ({ ...p, scheduledEnd: e.target.value }))}
+                    className={styles.formInput}
+                  />
+                </div>
+              </div>
+
+              <div className={styles.formGroup}>
+                <label htmlFor="edit-schedulingNote" className={styles.formLabel}>
+                  Scheduling Note{!editForm.scheduledStart && !editForm.scheduledEnd && (
+                    <span className={styles.required}> *</span>
+                  )}
+                </label>
+                <input
+                  id="edit-schedulingNote"
+                  type="text"
+                  value={editForm.schedulingNote}
+                  onChange={(e) => setEditForm((p) => ({ ...p, schedulingNote: e.target.value }))}
+                  className={styles.formInput}
+                  maxLength={500}
+                  placeholder="Time to be agreed with customer"
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label htmlFor="edit-driver" className={styles.formLabel}>Assigned Driver</label>
+                <select
+                  id="edit-driver"
+                  value={editForm.assignedDriverId}
+                  onChange={(e) => setEditForm((p) => ({ ...p, assignedDriverId: e.target.value }))}
+                  className={styles.formInput}
+                  disabled={loadingDrivers}
+                >
+                  <option value="">{loadingDrivers ? 'Loading…' : 'Unassigned'}</option>
+                  {drivers.filter((d) => d.isActive).map((d) => (
+                    <option key={d.id} value={d.id}>{d.name ?? d.email}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className={styles.formActions}>
+                <button type="submit" className={styles.submitButton} disabled={editSubmitting}>
+                  {editSubmitting ? 'Saving…' : 'Save Changes'}
+                </button>
+                <button type="button" className={styles.cancelButton} onClick={() => setEditingJob(null)}>
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {jobs.length === 0 ? (
         <div className={styles.emptyState}>
           <p>No jobs yet. Create your first job to get started.</p>
@@ -475,6 +645,12 @@ const JobsPage: React.FC = () => {
                             : `→ ${next.replace('_', ' ')}`}
                         </button>
                       ))}
+                      <button
+                        className={styles.editButton}
+                        onClick={() => handleEditOpen(job)}
+                      >
+                        Edit
+                      </button>
                     </div>
                   </td>
                 </tr>

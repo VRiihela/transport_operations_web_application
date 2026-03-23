@@ -93,6 +93,19 @@
 .statusButton:hover:not(:disabled) { background: #dbeafe; }
 .statusButton:disabled { opacity: 0.6; cursor: not-allowed; }
 
+.editButton {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  padding: 0.35rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+.editButton:hover { background: #e5e7eb; }
+
 .submitButton {
   background: #2563eb;
   color: #fff;
@@ -383,6 +396,12 @@
 .fieldError {
   font-size: 0.8rem;
   color: #ef4444;
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
 }
 
 .formActions {

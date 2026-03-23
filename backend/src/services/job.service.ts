@@ -90,6 +90,19 @@ export class JobService {
       this.assertValidTransition(existing.status, data.status as JobStatus);
     }
 
+    // Merge scheduling fields and validate the resulting state
+    const mergedStart = data.scheduledStart !== undefined
+      ? data.scheduledStart
+      : (existing.scheduledStart?.toISOString() ?? null);
+    const mergedEnd = data.scheduledEnd !== undefined
+      ? data.scheduledEnd
+      : (existing.scheduledEnd?.toISOString() ?? null);
+    const mergedNote = data.schedulingNote !== undefined ? data.schedulingNote : existing.schedulingNote;
+
+    if (!mergedStart && !mergedEnd && !mergedNote?.trim()) {
+      throw new Error('SCHEDULING_NOTE_REQUIRED');
+    }
+
     return this.prisma.job.update({
       where: { id },
       data: {

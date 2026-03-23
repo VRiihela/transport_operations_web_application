@@ -76,6 +76,10 @@ export const updateJob = async (req: AuthenticatedRequest, res: Response): Promi
       res.status(400).json({ error: error.message });
       return;
     }
+    if (error instanceof Error && error.message === 'SCHEDULING_NOTE_REQUIRED') {
+      res.status(400).json({ error: 'Scheduling note is required when no scheduled times are set' });
+      return;
+    }
     console.error('Update job error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
