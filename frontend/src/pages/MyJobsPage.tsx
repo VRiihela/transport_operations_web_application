@@ -15,7 +15,19 @@ interface Job {
   scheduledEnd: string | null;
   schedulingNote: string | null;
   driverNotes: string | null;
-  location: string | null;
+  // structured address (post-migration)
+  street?: string | null;
+  houseNumber?: string | null;
+  stair?: string | null;
+  postalCode?: string | null;
+  city?: string | null;
+  deliveryStreet?: string | null;
+  deliveryHouseNumber?: string | null;
+  deliveryStair?: string | null;
+  deliveryPostalCode?: string | null;
+  deliveryCity?: string | null;
+  // legacy field
+  location?: string | null;
   notes: string | null;
 }
 
@@ -130,6 +142,15 @@ const MyJobsPage: React.FC = () => {
     return note ?? '—';
   };
 
+  const formatAddress = (
+    street?: string | null, houseNumber?: string | null, stair?: string | null,
+    postalCode?: string | null, city?: string | null,
+  ): string => {
+    const streetPart = [street, houseNumber, stair].filter(Boolean).join(' ');
+    const cityPart = [postalCode, city].filter(Boolean).join(' ');
+    return [streetPart, cityPart].filter(Boolean).join(', ');
+  };
+
   const getStatusBadgeClass = (status: JobStatus): string => {
     switch (status) {
       case 'ASSIGNED':    return styles.statusAssigned;
@@ -205,7 +226,15 @@ const MyJobsPage: React.FC = () => {
                   <strong>Scheduled:</strong> {formatSchedulingInfo(job.scheduledStart, job.scheduledEnd, job.schedulingNote)}
                 </div>
                 <div className={styles.jobDetail}>
-                  <strong>Location:</strong> {job.location ?? '—'}
+                  <strong>Location:</strong>{' '}
+                  {job.street
+                    ? <>
+                        {formatAddress(job.street, job.houseNumber, job.stair, job.postalCode, job.city)}
+                        {job.deliveryStreet && (
+                          <><br />→ {formatAddress(job.deliveryStreet, job.deliveryHouseNumber, job.deliveryStair, job.deliveryPostalCode, job.deliveryCity)}</>
+                        )}
+                      </>
+                    : (job.location ?? '—')}
                 </div>
                 {job.notes && (
                   <div className={styles.jobDetail}>
