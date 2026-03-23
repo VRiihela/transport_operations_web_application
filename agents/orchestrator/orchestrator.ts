@@ -246,7 +246,7 @@ export class AgenticOrchestrator {
   }
 
   async runPipeline(spec: TaskSpec): Promise<RunLogEntry> {
-    const runId = `${Date.now()}`;
+    const runId = `run_${Date.now()}`;
     const pipeline: AgentRole[] = [
       "architect",
       "implementer",
@@ -580,13 +580,13 @@ async function main() {
   const result = await orchestrator.runPipeline(spec);
   orchestrator.printSummary(result);
 
-  const reportPath = `./reports/run_${result.runId}.md`;
+  const reportPath = `./reports/${result.runId}.md`;
   fs.mkdirSync("./reports", { recursive: true });
-  fs.writeFileSync(reportPath, buildMarkdownReport(result, spec));
+  fs.writeFileSync(reportPath, buildMarkdownReport(result, spec, specFile));
   console.log(`📝 Full report saved to: ${reportPath}`);
 }
 
-function buildMarkdownReport(entry: RunLogEntry, spec: TaskSpec): string {
+function buildMarkdownReport(entry: RunLogEntry, spec: TaskSpec, taskFilePath?: string): string {
   const lines: string[] = [
     `# Pipeline Report: ${entry.taskTitle}`,
     ``,
@@ -595,12 +595,11 @@ function buildMarkdownReport(entry: RunLogEntry, spec: TaskSpec): string {
     `**Started:** ${entry.startedAt}  `,
     `**Completed:** ${entry.completedAt ?? "N/A"}  `,
     ``,
-    `## Task Specification`,
-    ``,
-    `**Description:** ${spec.description}`,
-    ``,
-    `**Acceptance Criteria:**`,
-    ...spec.acceptanceCriteria.map((c) => `- ${c}`),
+    `## Task Spec`,
+    ...(taskFilePath ? [`**File:** ${path.basename(taskFilePath)}`, ``] : []),
+    "```json",
+    JSON.stringify(spec, null, 2),
+    "```",
     ``,
   ];
 
