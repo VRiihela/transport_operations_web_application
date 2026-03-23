@@ -2,9 +2,21 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { isAxiosError } from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import axiosInstance from '../api/axios';
+import { CompletionModal } from '../components/CompletionModal';
 import styles from './MyJobsPage.module.css';
 
 type JobStatus = 'ASSIGNED' | 'IN_PROGRESS' | 'COMPLETED';
+
+interface CompletionReport {
+  id: string;
+  jobId: string;
+  workDescription: string;
+  actualStart: string;
+  actualEnd: string;
+  totalHours: number;
+  customerName: string;
+  approvedAt: string | null;
+}
 
 interface Job {
   id: string;
@@ -15,6 +27,7 @@ interface Job {
   scheduledEnd: string | null;
   schedulingNote: string | null;
   driverNotes: string | null;
+  completionReport?: CompletionReport | null;
   // structured address (post-migration)
   street?: string | null;
   houseNumber?: string | null;
@@ -52,6 +65,7 @@ const MyJobsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updatingJobs, setUpdatingJobs] = useState<Set<string>>(new Set());
+  const [completionModalJob, setCompletionModalJob] = useState<Job | null>(null);
   const [draftNotes, setDraftNotes] = useState<Record<string, string>>({});
   const [noteSaveStatus, setNoteSaveStatus] = useState<Record<string, 'idle' | 'saving' | 'saved' | 'error'>>({});
   const [noteSaveError, setNoteSaveError] = useState<Record<string, string>>({});
@@ -292,19 +306,40 @@ const MyJobsPage: React.FC = () => {
                     </button>
                   )}
                   {job.status === 'IN_PROGRESS' && (
-                    <button
-                      onClick={() => void updateJobStatus(job.id, 'COMPLETED')}
-                      disabled={updatingJobs.has(job.id)}
-                      className={styles.completeButton}
-                    >
-                      {updatingJobs.has(job.id) ? 'Completing...' : 'Complete Job'}
-                    </button>
+                    job.completionReport?.approvedAt ? (
+                      <button
+                        onClick={() => void updateJobStatus(job.id, 'COMPLETED')}
+                        disabled={updatingJobs.has(job.id)}
+                        className={styles.completeButton}
+                      >
+                        {updatingJobs.has(job.id) ? 'Completing...' : 'Mark Completed'}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => setCompletionModalJob(job)}
+                        className={styles.reportButton}
+                      >
+                        Complete Job
+                      </button>
+                    )
                   )}
                 </div>
               )}
             </div>
           ))}
         </div>
+      )}
+
+      {completionModalJob && (
+        <CompletionModal
+          job={completionModalJob}
+          isOpen={true}
+          onClose={() => setCompletionModalJob(null)}
+          onApproved={() => {
+            setCompletionModalJob(null);
+            void fetchJobs();
+          }}
+        />
       )}
     </div>
   );

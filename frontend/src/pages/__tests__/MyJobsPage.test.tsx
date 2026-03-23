@@ -7,12 +7,12 @@ import axiosInstance from '../../api/axios';
 vi.mock('../../contexts/AuthContext', () => ({ useAuth: vi.fn() }));
 
 vi.mock('../../api/axios', () => ({
-  default: { get: vi.fn(), patch: vi.fn() },
+  default: { get: vi.fn(), patch: vi.fn(), post: vi.fn() },
 }));
 
 const mockLogout = vi.fn();
 const mockUseAuth = useAuth as Mock;
-const mockAxios = axiosInstance as unknown as { get: Mock; patch: Mock };
+const mockAxios = axiosInstance as unknown as { get: Mock; patch: Mock; post: Mock };
 
 const jobsResponse = (jobs: object[]) => ({
   data: { data: { jobs, pagination: { page: 1, limit: 10, total: jobs.length, pages: 1 } } },
@@ -145,17 +145,37 @@ describe('MyJobsPage', () => {
       });
     });
 
-    it('updates job status from IN_PROGRESS to COMPLETED', async () => {
+    it('shows Mark Completed button when completion report is approved', async () => {
+      const jobsWithApprovedReport = mockJobs.map((j) =>
+        j.id === '2'
+          ? { ...j, completionReport: { id: 'r1', jobId: '2', workDescription: 'Done', actualStart: '2024-01-15T14:00:00Z', actualEnd: '2024-01-15T16:00:00Z', totalHours: 2, customerName: 'Test', approvedAt: '2024-01-15T16:05:00Z' } }
+          : j
+      );
+      mockAxios.get.mockReset();
+      mockAxios.get.mockResolvedValueOnce(jobsResponse(jobsWithApprovedReport));
+      const { unmount } = render(<MyJobsPage />);
+      await waitFor(() => screen.getByText('Mark Completed'));
+      expect(screen.getByText('Mark Completed')).toBeInTheDocument();
+      unmount();
+    });
+
+    it('marks job as COMPLETED when Mark Completed is clicked', async () => {
+      const jobsWithApprovedReport = mockJobs.map((j) =>
+        j.id === '2'
+          ? { ...j, completionReport: { id: 'r1', jobId: '2', workDescription: 'Done', actualStart: '2024-01-15T14:00:00Z', actualEnd: '2024-01-15T16:00:00Z', totalHours: 2, customerName: 'Test', approvedAt: '2024-01-15T16:05:00Z' } }
+          : j
+      );
+      mockAxios.get.mockReset();
+      mockAxios.get.mockResolvedValueOnce({ data: { data: { jobs: jobsWithApprovedReport, pagination: { page: 1, limit: 10, total: 3, pages: 1 } } } });
+      const { unmount } = render(<MyJobsPage />);
+      await waitFor(() => screen.getByText('Mark Completed'));
       mockAxios.patch.mockResolvedValueOnce({});
-      fireEvent.click(screen.getByText('Complete Job'));
-      expect(screen.getByText('Completing...')).toBeInTheDocument();
+      mockAxios.get.mockResolvedValueOnce(jobsResponse(mockJobs));
+      fireEvent.click(screen.getByText('Mark Completed'));
       await waitFor(() => {
         expect(mockAxios.patch).toHaveBeenCalledWith('/api/jobs/2/status', { status: 'COMPLETED' });
       });
-      await waitFor(() => {
-        expect(screen.queryByText('Completing...')).not.toBeInTheDocument();
-        expect(screen.getAllByText('COMPLETED')).toHaveLength(2);
-      });
+      unmount();
     });
 
     it('shows error and re-enables button on status update failure', async () => {

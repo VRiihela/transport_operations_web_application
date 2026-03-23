@@ -1,0 +1,31 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.canvas {
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: white;
+  cursor: crosshair;
+  width: 100%;
+  display: block;
+}
+
+.controls {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.clearButton {
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  color: #374151;
+  padding: 0.35rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.clearButton:hover { background: #e5e7eb; }

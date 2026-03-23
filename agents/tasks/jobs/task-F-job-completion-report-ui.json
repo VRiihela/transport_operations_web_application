@@ -1,0 +1,20 @@
+{
+  "id": "job-completion-report-ui",
+  "title": "Job completion report — frontend",
+  "description": "Add completion report UI to the My Jobs view (driver) and Jobs view (dispatcher/admin). The flow has three steps: (1) fill in work report, (2) customer reviews summary and draws signature, (3) approve. After approval, driver/dispatcher can mark job as COMPLETED.",
+  "acceptanceCriteria": [
+    "MyJobsPage shows a 'Complete job' button on jobs with status IN_PROGRESS. Clicking opens a completion modal with fields: workDescription (textarea, required), actualStart (datetime-local, pre-filled with job scheduledStart if set), actualEnd (datetime-local), totalHours (read-only, calculated live from actualStart/actualEnd difference in the UI). Submit calls POST /api/jobs/:id/completion-report.",
+    "After report is saved, modal advances to a read-only customer summary screen showing: job title, address, workDescription, actualStart–actualEnd formatted as Finnish datetime range, totalHours. Below the summary a signature canvas (HTML5 canvas, touch and mouse support) with label 'Customer signature'. Canvas has Clear button. Customer name text input required. Submit calls POST /api/jobs/:id/completion-report/approve.",
+    "After approval, modal closes and the job row shows a 'Mark completed' button. Clicking calls PATCH /api/jobs/:id/status with { status: 'COMPLETED' }. If backend returns 400 (missing report), show the error message.",
+    "JobsPage (dispatcher/admin) shows completion report details inline below the job row when completionReport is present: workDescription, time range, totalHours, customerName, and an 'Approved' badge with approvedAt timestamp if approved.",
+    "Signature canvas implementation: use a plain HTML5 canvas element with onMouseDown/onMouseMove/onTouchStart/onTouchMove handlers to draw. On submit convert canvas to base64 PNG with canvas.toDataURL('image/png'). Validate canvas is not blank before allowing approve (check if any non-white pixel exists or track if user has drawn).",
+    "npx tsc --noEmit passes with no errors. No external signature library — implement canvas drawing from scratch."
+  ],
+  "affectedFiles": [
+    "frontend/src/pages/MyJobsPage.tsx",
+    "frontend/src/pages/MyJobsPage.module.css",
+    "frontend/src/pages/JobsPage.tsx",
+    "frontend/src/pages/JobsPage.module.css"
+  ],
+  "notes": "The modal has two distinct screens — report form and customer signature — controlled by local state (e.g. step: 'report' | 'signature'). Keep them as one modal component with conditional rendering, not two separate modals. For blank canvas detection: compare canvas pixel data using ctx.getImageData and check if all pixels are white/transparent. Touch events need e.preventDefault() to stop page scrolling while signing. totalHours live calculation: update on every actualEnd change using the same formula as backend (Math.abs diff / 36e5, toFixed(2))."
+}

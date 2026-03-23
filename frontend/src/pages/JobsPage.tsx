@@ -13,6 +13,17 @@ interface AssignedDriver {
   email: string;
 }
 
+interface CompletionReport {
+  id: string;
+  jobId: string;
+  workDescription: string;
+  actualStart: string;
+  actualEnd: string;
+  totalHours: number;
+  customerName: string;
+  approvedAt: string | null;
+}
+
 interface Job {
   id: string;
   title: string;
@@ -38,6 +49,7 @@ interface Job {
   deliveryCity?: string | null;
   // legacy field
   location?: string | null;
+  completionReport?: CompletionReport | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -843,6 +855,41 @@ const JobsPage: React.FC = () => {
                     {job.driverNotes && job.driverNotes.trim() && (
                       <div className={styles.driverNotesDisplay}>
                         <span className={styles.driverNotesLabel}>Driver notes:</span> {job.driverNotes}
+                      </div>
+                    )}
+                    {job.completionReport && (
+                      <div className={styles.completionReport}>
+                        <div className={styles.completionReportHeader}>
+                          <span className={styles.completionReportTitle}>Completion Report</span>
+                          {job.completionReport.approvedAt ? (
+                            <span className={styles.approvedBadge}>
+                              Approved {formatFinnishDateTime(job.completionReport.approvedAt)}
+                            </span>
+                          ) : (
+                            <span className={styles.pendingBadge}>Pending approval</span>
+                          )}
+                        </div>
+                        <div className={styles.completionReportRow}>
+                          <strong>Work:</strong> {job.completionReport.workDescription}
+                        </div>
+                        <div className={styles.completionReportRow}>
+                          <strong>Time:</strong>{' '}
+                          {(() => {
+                            const s = job.completionReport.actualStart;
+                            const e = job.completionReport.actualEnd;
+                            const sDate = new Date(s).toLocaleDateString('fi-FI', { timeZone: 'Europe/Helsinki' });
+                            const eDate = new Date(e).toLocaleDateString('fi-FI', { timeZone: 'Europe/Helsinki' });
+                            return sDate === eDate
+                              ? `${formatFinnishDateTime(s)} – ${formatFinnishTime(e)}`
+                              : `${formatFinnishDateTime(s)} – ${formatFinnishDateTime(e)}`;
+                          })()}
+                        </div>
+                        <div className={styles.completionReportRow}>
+                          <strong>Hours:</strong> {job.completionReport.totalHours.toFixed(2)} h
+                        </div>
+                        <div className={styles.completionReportRow}>
+                          <strong>Customer:</strong> {job.completionReport.customerName}
+                        </div>
                       </div>
                     )}
                   </td>
