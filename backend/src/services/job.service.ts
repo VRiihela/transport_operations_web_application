@@ -42,6 +42,8 @@ export class JobService {
         ...data,
         createdById,
         scheduledAt: data.scheduledAt ? new Date(data.scheduledAt) : undefined,
+        scheduledStart: data.scheduledStart != null ? new Date(data.scheduledStart) : undefined,
+        scheduledEnd: data.scheduledEnd != null ? new Date(data.scheduledEnd) : undefined,
       },
       ...jobInclude,
     });
@@ -96,6 +98,18 @@ export class JobService {
           data.scheduledAt !== undefined
             ? data.scheduledAt
               ? new Date(data.scheduledAt)
+              : null
+            : undefined,
+        scheduledStart:
+          data.scheduledStart !== undefined
+            ? data.scheduledStart
+              ? new Date(data.scheduledStart)
+              : null
+            : undefined,
+        scheduledEnd:
+          data.scheduledEnd !== undefined
+            ? data.scheduledEnd
+              ? new Date(data.scheduledEnd)
               : null
             : undefined,
         status: data.status as JobStatus | undefined,

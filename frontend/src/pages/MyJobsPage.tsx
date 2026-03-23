@@ -11,6 +11,9 @@ interface Job {
   title: string;
   status: JobStatus;
   scheduledAt: string | null;
+  scheduledStart: string | null;
+  scheduledEnd: string | null;
+  schedulingNote: string | null;
   location: string | null;
   notes: string | null;
 }
@@ -75,10 +78,25 @@ const MyJobsPage: React.FC = () => {
     }
   };
 
-  const formatDate = (value: string | null): string => {
-    if (!value) return '—';
+  const formatFinnishDateTime = (value: string | null): string => {
+    if (!value) return '';
     const d = new Date(value);
-    return isNaN(d.getTime()) ? value : d.toLocaleString();
+    if (isNaN(d.getTime())) return value;
+    return d.toLocaleString('fi-FI', {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit',
+      timeZone: 'Europe/Helsinki',
+    });
+  };
+
+  const formatSchedulingInfo = (start: string | null, end: string | null, note: string | null): string => {
+    if (start || end) {
+      const s = formatFinnishDateTime(start);
+      const e = formatFinnishDateTime(end);
+      if (s && e) return `${s} – ${e}`;
+      return s || e;
+    }
+    return note ?? '—';
   };
 
   const getStatusBadgeClass = (status: JobStatus): string => {
@@ -153,7 +171,7 @@ const MyJobsPage: React.FC = () => {
 
               <div className={styles.jobDetails}>
                 <div className={styles.jobDetail}>
-                  <strong>Scheduled:</strong> {formatDate(job.scheduledAt)}
+                  <strong>Scheduled:</strong> {formatSchedulingInfo(job.scheduledStart, job.scheduledEnd, job.schedulingNote)}
                 </div>
                 <div className={styles.jobDetail}>
                   <strong>Location:</strong> {job.location ?? '—'}

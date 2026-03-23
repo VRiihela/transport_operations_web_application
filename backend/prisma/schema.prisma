@@ -80,6 +80,9 @@ model Job {
   status           JobStatus @default(DRAFT)
   assignedDriverId String?
   scheduledAt      DateTime?
+  scheduledStart   DateTime?
+  scheduledEnd     DateTime?
+  schedulingNote   String?
   location         String?   @db.VarChar(255)
   notes            String?
   createdById      String

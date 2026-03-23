@@ -21,6 +21,9 @@ interface Job {
   assignedDriverId: string | null;
   assignedDriver: AssignedDriver | null;
   scheduledAt: string | null;
+  scheduledStart: string | null;
+  scheduledEnd: string | null;
+  schedulingNote: string | null;
   location: string | null;
   createdAt: string;
   updatedAt: string;
@@ -35,7 +38,9 @@ interface Driver {
 interface CreateJobFormData {
   title: string;
   description: string;
-  scheduledAt: string;
+  scheduledStart: string;
+  scheduledEnd: string;
+  schedulingNote: string;
   location: string;
 }
 
@@ -79,7 +84,9 @@ const JobsPage: React.FC = () => {
   const [createFormData, setCreateFormData] = useState<CreateJobFormData>({
     title: '',
     description: '',
-    scheduledAt: '',
+    scheduledStart: '',
+    scheduledEnd: '',
+    schedulingNote: '',
     location: '',
   });
   const [titleError, setTitleError] = useState<string>('');
@@ -137,13 +144,15 @@ const JobsPage: React.FC = () => {
       const payload = {
         title: createFormData.title.trim(),
         description: createFormData.description.trim() || undefined,
-        scheduledAt: createFormData.scheduledAt ? new Date(createFormData.scheduledAt).toISOString() : null,
+        scheduledStart: createFormData.scheduledStart ? new Date(createFormData.scheduledStart).toISOString() : null,
+        scheduledEnd: createFormData.scheduledEnd ? new Date(createFormData.scheduledEnd).toISOString() : null,
+        schedulingNote: createFormData.schedulingNote.trim() || undefined,
         location: createFormData.location.trim() || undefined,
       };
       const response = await axiosInstance.post<SingleJobApiResponse>('/api/jobs', payload);
       setJobs((prev) => [response.data.data, ...prev]);
       setShowCreateForm(false);
-      setCreateFormData({ title: '', description: '', scheduledAt: '', location: '' });
+      setCreateFormData({ title: '', description: '', scheduledStart: '', scheduledEnd: '', schedulingNote: '', location: '' });
     } catch (err) {
       setError(getApiError(err, 'Failed to create job. Please try again.'));
     } finally {
@@ -193,15 +202,25 @@ const JobsPage: React.FC = () => {
     }
   };
 
-  const formatDate = (value: string | null): string => {
-    if (!value) return '—';
-    return new Date(value).toLocaleDateString('fi-FI', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+  const formatFinnishDateTime = (value: string | null): string => {
+    if (!value) return '';
+    const d = new Date(value);
+    if (isNaN(d.getTime())) return value;
+    return d.toLocaleString('fi-FI', {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit',
+      timeZone: 'Europe/Helsinki',
     });
+  };
+
+  const formatSchedulingInfo = (start: string | null, end: string | null, note: string | null): string => {
+    if (start || end) {
+      const s = formatFinnishDateTime(start);
+      const e = formatFinnishDateTime(end);
+      if (s && e) return `${s} – ${e}`;
+      return s || e;
+    }
+    return note ?? '—';
   };
 
   const driverLabel = (driver: AssignedDriver): string =>
@@ -289,17 +308,51 @@ const JobsPage: React.FC = () => {
               </div>
 
               <div className={styles.formGroup}>
-                <label htmlFor="scheduledAt" className={styles.formLabel}>
-                  Scheduled Date
+                <label htmlFor="scheduledStart" className={styles.formLabel}>
+                  Start Time
                 </label>
                 <input
-                  id="scheduledAt"
+                  id="scheduledStart"
                   type="datetime-local"
-                  value={createFormData.scheduledAt}
+                  value={createFormData.scheduledStart}
                   onChange={(e) =>
-                    setCreateFormData((prev) => ({ ...prev, scheduledAt: e.target.value }))
+                    setCreateFormData((prev) => ({ ...prev, scheduledStart: e.target.value }))
                   }
                   className={styles.formInput}
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label htmlFor="scheduledEnd" className={styles.formLabel}>
+                  End Time
+                </label>
+                <input
+                  id="scheduledEnd"
+                  type="datetime-local"
+                  value={createFormData.scheduledEnd}
+                  onChange={(e) =>
+                    setCreateFormData((prev) => ({ ...prev, scheduledEnd: e.target.value }))
+                  }
+                  className={styles.formInput}
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label htmlFor="schedulingNote" className={styles.formLabel}>
+                  Scheduling Note{!createFormData.scheduledStart && !createFormData.scheduledEnd && (
+                    <span className={styles.required}> *</span>
+                  )}
+                </label>
+                <input
+                  id="schedulingNote"
+                  type="text"
+                  value={createFormData.schedulingNote}
+                  onChange={(e) =>
+                    setCreateFormData((prev) => ({ ...prev, schedulingNote: e.target.value }))
+                  }
+                  className={styles.formInput}
+                  maxLength={500}
+                  placeholder={!createFormData.scheduledStart && !createFormData.scheduledEnd ? 'Required when no times set' : ''}
                 />
               </div>
 
@@ -374,7 +427,7 @@ const JobsPage: React.FC = () => {
                       <span className={styles.unassigned}>Unassigned</span>
                     )}
                   </td>
-                  <td className={styles.td}>{formatDate(job.scheduledAt)}</td>
+                  <td className={styles.td}>{formatSchedulingInfo(job.scheduledStart, job.scheduledEnd, job.schedulingNote)}</td>
                   <td className={styles.td}>
                     <div className={styles.actionGroup}>
                       {(job.status === 'DRAFT' || job.status === 'ASSIGNED') && (
