@@ -7,6 +7,7 @@ const mockFindMany = vi.fn();
 const mockCount = vi.fn();
 const mockCreate = vi.fn();
 const mockUpdate = vi.fn();
+const mockCompletionReportFindUnique = vi.fn();
 
 vi.mock('@prisma/client', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@prisma/client')>();
@@ -19,6 +20,9 @@ vi.mock('@prisma/client', async (importOriginal) => {
         count: mockCount,
         create: mockCreate,
         update: mockUpdate,
+      },
+      completionReport: {
+        findUnique: mockCompletionReportFindUnique,
       },
     })),
   };
@@ -47,7 +51,11 @@ const baseJob = {
 };
 
 describe('JobService', () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    // Default: no completion report (safe for most tests)
+    mockCompletionReportFindUnique.mockResolvedValue(null);
+  });
 
   describe('createJob', () => {
     it('creates a job and returns it', async () => {
@@ -181,6 +189,34 @@ describe('JobService', () => {
       await expect(
         service.updateJob('job-1', { status: 'ASSIGNED' }, UserRole.Admin, 'admin-1')
       ).rejects.toThrow('Invalid status transition');
+    });
+
+    it('throws COMPLETION_REPORT_REQUIRED when transitioning to COMPLETED without approved report', async () => {
+      mockFindFirst.mockResolvedValue({ ...baseJob, status: JobStatus.IN_PROGRESS });
+      mockCompletionReportFindUnique.mockResolvedValue(null);
+
+      await expect(
+        service.updateJob('job-1', { status: 'COMPLETED' }, UserRole.Admin, 'admin-1')
+      ).rejects.toThrow('COMPLETION_REPORT_REQUIRED');
+    });
+
+    it('throws COMPLETION_REPORT_REQUIRED when report exists but is not approved', async () => {
+      mockFindFirst.mockResolvedValue({ ...baseJob, status: JobStatus.IN_PROGRESS });
+      mockCompletionReportFindUnique.mockResolvedValue({ approvedAt: null });
+
+      await expect(
+        service.updateJob('job-1', { status: 'COMPLETED' }, UserRole.Admin, 'admin-1')
+      ).rejects.toThrow('COMPLETION_REPORT_REQUIRED');
+    });
+
+    it('allows transition to COMPLETED when approved report exists', async () => {
+      mockFindFirst.mockResolvedValue({ ...baseJob, status: JobStatus.IN_PROGRESS });
+      mockCompletionReportFindUnique.mockResolvedValue({ approvedAt: new Date() });
+      mockUpdate.mockResolvedValue({ ...baseJob, status: JobStatus.COMPLETED });
+
+      await expect(
+        service.updateJob('job-1', { status: 'COMPLETED' }, UserRole.Admin, 'admin-1')
+      ).resolves.not.toThrow();
     });
   });
 

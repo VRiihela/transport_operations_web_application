@@ -38,9 +38,10 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  refreshTokens RefreshToken[]
-  assignedJobs  Job[]          @relation("AssignedJobs")
-  createdJobs   Job[]          @relation("CreatedJobs")
+  refreshTokens     RefreshToken[]
+  assignedJobs      Job[]              @relation("AssignedJobs")
+  createdJobs       Job[]              @relation("CreatedJobs")
+  completionReports CompletionReport[]
 
   @@map("users")
 }
@@ -91,11 +92,32 @@ model Job {
   updatedAt        DateTime  @updatedAt
   deletedAt        DateTime?
 
-  assignedDriver User? @relation("AssignedJobs", fields: [assignedDriverId], references: [id])
-  createdBy      User  @relation("CreatedJobs", fields: [createdById], references: [id])
+  assignedDriver   User?             @relation("AssignedJobs", fields: [assignedDriverId], references: [id])
+  createdBy        User              @relation("CreatedJobs", fields: [createdById], references: [id])
+  completionReport CompletionReport?
 
   @@index([status])
   @@index([assignedDriverId])
   @@index([createdById])
   @@map("jobs")
+}
+
+model CompletionReport {
+  id                String    @id @default(cuid())
+  jobId             String    @unique
+  workDescription   String
+  actualStart       DateTime
+  actualEnd         DateTime
+  totalHours        Float
+  customerName      String
+  customerSignature String
+  approvedAt        DateTime?
+  createdById       String
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  job       Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  createdBy User @relation(fields: [createdById], references: [id])
+
+  @@map("completion_reports")
 }

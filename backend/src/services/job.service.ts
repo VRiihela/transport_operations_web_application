@@ -9,6 +9,7 @@ const jobInclude = {
   include: {
     createdBy: userSelect,
     assignedDriver: userSelect,
+    completionReport: true,
   },
 } satisfies Prisma.JobDefaultArgs;
 
@@ -88,6 +89,16 @@ export class JobService {
 
     if (data.status && data.status !== existing.status) {
       this.assertValidTransition(existing.status, data.status as JobStatus);
+
+      if (data.status === JobStatus.COMPLETED) {
+        const report = await this.prisma.completionReport.findUnique({
+          where: { jobId: id },
+          select: { approvedAt: true },
+        });
+        if (!report?.approvedAt) {
+          throw new Error('COMPLETION_REPORT_REQUIRED');
+        }
+      }
     }
 
     // Merge scheduling fields and validate the resulting state
