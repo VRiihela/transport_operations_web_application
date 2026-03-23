@@ -1,0 +1,21 @@
+{
+  "id": "address-fields",
+  "title": "Replace address string with structured address fields",
+  "description": "Replace the existing single address string field on Job with structured address fields. Add a second optional address for jobs with both pickup and delivery locations. Run Prisma migration with data migration for existing rows.",
+  "acceptanceCriteria": [
+    "Prisma schema removes the old address String field and adds: street String, houseNumber String, stair String?, postalCode String, city String. Add identical optional set prefixed with 'delivery': deliveryStreet String?, deliveryHouseNumber String?, deliveryStair String?, deliveryPostalCode String?, deliveryCity String?. Migration created and applied. Existing rows get street='MIGRATED', houseNumber='', postalCode='00000', city='MIGRATED' or carry over the old address string into street if feasible.",
+    "POST /api/jobs Zod schema: street, houseNumber, postalCode, city are required non-empty strings. stair is optional. All delivery fields are optional, but if any delivery field is provided then deliveryStreet, deliveryHouseNumber, deliveryPostalCode and deliveryCity become required (use Zod .refine() for this group dependency).",
+    "PATCH /api/jobs/:id (edit modal) Zod updateSchema accepts all address fields as optional individually, but applies the same delivery group dependency refinement.",
+    "GET /api/jobs and GET /api/jobs/my responses include all address fields. Old address field no longer present in responses.",
+    "JobsPage and MyJobsPage display the primary address as a single formatted line: 'Mannerheimintie 5 A, 00100 Helsinki'. If delivery address exists show it on a second line prefixed with an arrow: '→ Aleksanterinkatu 10, 00170 Helsinki'.",
+    "Edit modal and create job form updated to show structured address inputs. Primary address fields grouped under label 'Address', delivery fields grouped under 'Delivery address (optional)' with a checkbox or toggle to reveal them. npx tsc --noEmit passes with no errors."
+  ],
+  "affectedFiles": [
+    "backend/prisma/schema.prisma",
+    "backend/src/routes/jobs.ts",
+    "frontend/src/pages/JobsPage.tsx",
+    "frontend/src/pages/JobsPage.module.css",
+    "frontend/src/pages/MyJobsPage.tsx"
+  ],
+  "notes": "The delivery address toggle in the frontend should show/hide the delivery fields — if the user hides them after filling them in, clear the values before submitting. Format helper: `${street} ${houseNumber}${stair ? ' ' + stair : ''}, ${postalCode} ${city}`. Do not add a separate Address model — flat fields on Job are sufficient for v1. The old address field removal is a breaking migration: make sure the migration SQL drops the column after copying data."
+}

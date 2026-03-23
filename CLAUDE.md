@@ -111,3 +111,10 @@ PORT                  Server port (default: 3001)
 ```
 
 `validateEnvironment()` in `utils/env.ts` crashes the process on startup if any of the first three are missing or too short.
+
+## Git
+
+- Commit after each pipeline run is implemented and compiles clean
+- Do not push to remote — developer pushes manually after reviewing
+- `run_log.json` committed to git — audit trail of all pipeline runs
+- `.env` never committed — `node_modules/`, `dist/`, `.env` in `.gitignore`

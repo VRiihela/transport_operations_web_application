@@ -1,0 +1,20 @@
+{
+  "id": "job-scheduling-fields",
+  "title": "Add scheduling fields to Job model",
+  "description": "Add scheduledStart, scheduledEnd (nullable DateTime) and schedulingNote (nullable String) to the Job model. schedulingNote is required when both time fields are null — enforced by Zod on create and update. Display all three fields in the Dispatcher Jobs view and Driver My Jobs view. Run Prisma migration.",
+  "acceptanceCriteria": [
+    "Prisma schema adds scheduledStart DateTime?, scheduledEnd DateTime?, schedulingNote String? to Job model. Migration created and applied.",
+    "POST /api/jobs Zod schema: scheduledStart and scheduledEnd are optional ISO datetime strings. If both are omitted or null, schedulingNote is required (non-empty string). If either time is provided, schedulingNote is optional.",
+    "GET /api/jobs and GET /api/jobs/my responses include scheduledStart, scheduledEnd, schedulingNote on each job object.",
+    "JobsPage (dispatcher view) displays scheduled times formatted as Finnish datetime (e.g. 24.3.2026 14:00) or the schedulingNote text when times are absent.",
+    "MyJobsPage (driver view) displays the same scheduling info in each job row.",
+    "npx tsc --noEmit passes with no errors after implementation."
+  ],
+  "affectedFiles": [
+    "backend/prisma/schema.prisma",
+    "backend/src/routes/jobs.ts",
+    "frontend/src/pages/JobsPage.tsx",
+    "frontend/src/pages/MyJobsPage.tsx"
+  ],
+  "notes": "DateTime fields must be stored as UTC. Frontend datetime-local inputs must call .toISOString() before sending. Finnish format helper: new Date(val).toLocaleString('fi-FI', { dateStyle: 'short', timeStyle: 'short' }). Do not add schedulingNote to the driver PATCH /api/jobs/:id/status endpoint — that is covered by a separate task."
+}

@@ -1,0 +1,19 @@
+{
+  "id": "job-edit-modal",
+  "title": "Dispatcher/Admin job edit modal",
+  "description": "Add PATCH /api/jobs/:id endpoint for Admin and Dispatcher roles to edit job fields. Add an Edit button to each job row in the Dispatcher Jobs view that opens a modal pre-filled with current values. On save, optimistically update the list and close the modal.",
+  "acceptanceCriteria": [
+    "PATCH /api/jobs/:id accepts partial updates for: title, description, scheduledStart, scheduledEnd, schedulingNote, assignedDriverId. Requires Admin or Dispatcher role. Same Zod validation as POST (schedulingNote required if both times are null after merge with existing values). Returns updated job as { data: job }.",
+    "PATCH /api/jobs/:id returns 404 if job not found or soft-deleted. Returns 400 for validation errors. createdById is never updated from request body.",
+    "JobsPage renders an Edit button per job row (Dispatcher and Admin only). Clicking opens a modal with a form pre-filled with current job values.",
+    "Edit modal form fields: title (text), description (textarea), scheduledStart (datetime-local), scheduledEnd (datetime-local), schedulingNote (text, shown with placeholder 'Time to be agreed with customer'), assignedDriverId (select from active Drivers).",
+    "On successful PATCH, modal closes and the jobs list updates the edited row without a full page reload. On error, modal stays open and shows the error message.",
+    "npx tsc --noEmit passes with no errors after implementation."
+  ],
+  "affectedFiles": [
+    "backend/src/routes/jobs.ts",
+    "frontend/src/pages/JobsPage.tsx",
+    "frontend/src/pages/JobsPage.module.css"
+  ],
+  "notes": "The assignedDriverId select must fetch active users with role DRIVER from GET /api/users (already exists, Admin/Dispatcher can call it). Modal should be a simple CSS Modules overlay — no UI library. PATCH must not overwrite fields not included in the request body; use Prisma's partial update (only include fields that are present in the validated payload). Do not allow editing status via this endpoint — status transitions stay on their existing endpoints."
+}

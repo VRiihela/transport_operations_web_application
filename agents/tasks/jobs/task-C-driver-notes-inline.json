@@ -1,0 +1,21 @@
+{
+  "id": "driver-notes-inline",
+  "title": "Driver inline notes field on My Jobs view",
+  "description": "Allow drivers to write freeform notes or deviation info on their assigned jobs, directly inline in the My Jobs view. Notes are saved via a new dedicated PATCH /api/jobs/:id/notes endpoint. Dispatcher and Admin can see driver notes in the Jobs view (read-only).",
+  "acceptanceCriteria": [
+    "PATCH /api/jobs/:id/notes accepts { driverNotes: string } (max 1000 chars, may be empty string to clear). Requires authentication. Only the driver assigned to the job may call this endpoint — return 403 for any other user. Returns updated job as { data: job }.",
+    "MyJobsPage renders a driverNotes textarea inline below each job row. The textarea shows current driverNotes value (or empty). An auto-save or explicit Save button triggers PATCH /api/jobs/:id/notes. Show a brief 'Saved' confirmation on success and an error message on failure.",
+    "Driver notes textarea is only editable when job status is ASSIGNED or IN_PROGRESS. For COMPLETED jobs the field is shown read-only.",
+    "JobsPage (dispatcher/admin view) shows driverNotes as read-only text below the job row if driverNotes is non-empty. Label it 'Driver notes:'.",
+    "GET /api/jobs and GET /api/jobs/my responses include driverNotes field.",
+    "npx tsc --noEmit passes with no errors after implementation."
+  ],
+  "affectedFiles": [
+    "backend/src/routes/jobs.ts",
+    "frontend/src/pages/MyJobsPage.tsx",
+    "frontend/src/pages/MyJobsPage.module.css",
+    "frontend/src/pages/JobsPage.tsx",
+    "frontend/src/pages/JobsPage.module.css"
+  ],
+  "notes": "Use a separate endpoint /api/jobs/:id/notes instead of the existing /api/jobs/:id/status to keep concerns separate and avoid accidental overwrites. The 403 check must verify req.user.id === job.assignedDriverId at the service/route level — not just by role. For auto-save UX, debounce is acceptable but a simple Save button is fine too. Do not expose driverNotes in any admin edit modal — it is driver-owned data."
+}
