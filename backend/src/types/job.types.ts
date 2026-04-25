@@ -18,6 +18,16 @@ export const createJobSchema = z
     schedulingNote: z.string().trim().max(500).optional(),
     location: z.string().max(255, 'Location too long').trim().optional(),
     notes: z.string().max(1000, 'Notes too long').trim().optional(),
+    street: z.string().max(255).trim().optional(),
+    houseNumber: z.string().max(50).trim().optional(),
+    stair: z.string().max(50).trim().optional(),
+    postalCode: z.string().max(20).trim().optional(),
+    city: z.string().max(255).trim().optional(),
+    deliveryStreet: z.string().max(255).trim().optional(),
+    deliveryHouseNumber: z.string().max(50).trim().optional(),
+    deliveryStair: z.string().max(50).trim().optional(),
+    deliveryPostalCode: z.string().max(20).trim().optional(),
+    deliveryCity: z.string().max(255).trim().optional(),
   })
   .refine(
     (data) => {
@@ -43,6 +53,16 @@ export const updateJobSchema = z
     schedulingNote: z.string().trim().max(500).optional(),
     location: z.string().max(255, 'Location too long').trim().optional(),
     notes: z.string().max(1000, 'Notes too long').trim().optional(),
+    street: z.string().max(255).trim().optional(),
+    houseNumber: z.string().max(50).trim().optional(),
+    stair: z.string().max(50).trim().optional(),
+    postalCode: z.string().max(20).trim().optional(),
+    city: z.string().max(255).trim().optional(),
+    deliveryStreet: z.string().max(255).trim().optional(),
+    deliveryHouseNumber: z.string().max(50).trim().optional(),
+    deliveryStair: z.string().max(50).trim().optional(),
+    deliveryPostalCode: z.string().max(20).trim().optional(),
+    deliveryCity: z.string().max(255).trim().optional(),
   })
   .refine(
     (data) => {

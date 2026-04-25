@@ -1,0 +1,32 @@
+{
+    "taskId": "dispatcher-board-phase1",
+    "title": "Dispatcher Board — Phase 1: Static Layout",
+    "description": "Create a static dispatcher board page with a job pool section and driver columns. No logic or interactions — mock data only. This is the foundation for drag-and-drop in phase 2.",
+    "acceptanceCriteria": [
+      "DispatcherBoard page component renders at /dispatcher/board route",
+      "JobPool component renders at top, showing unassigned jobs from mock data",
+      "DriverColumn component renders one column per driver from mock data",
+      "JobCard component used in both JobPool and DriverColumn",
+      "Mock data typed with Job and Driver interfaces in a mockData.ts file",
+      "All styling via CSS Modules, no inline styles"
+    ],
+    "affectedFiles": [
+      "frontend/src/pages/DispatcherBoard/DispatcherBoard.tsx",
+      "frontend/src/pages/DispatcherBoard/DispatcherBoard.module.css",
+      "frontend/src/pages/DispatcherBoard/components/JobPool/JobPool.tsx",
+      "frontend/src/pages/DispatcherBoard/components/JobPool/JobPool.module.css",
+      "frontend/src/pages/DispatcherBoard/components/DriverColumn/DriverColumn.tsx",
+      "frontend/src/pages/DispatcherBoard/components/DriverColumn/DriverColumn.module.css",
+      "frontend/src/pages/DispatcherBoard/components/JobCard/JobCard.tsx",
+      "frontend/src/pages/DispatcherBoard/components/JobCard/JobCard.module.css",
+      "frontend/src/pages/DispatcherBoard/mockData.ts",
+      "frontend/src/App.tsx"
+    ],
+    "implementationNotes": [
+      "Job type: { id, title, status: DRAFT | ASSIGNED, assignedDriverId: string | null }",
+      "Driver type: { id, name }",
+      "Layout: JobPool full width at top, DriverColumns in horizontal flex row below",
+      "Route /dispatcher/board must be protected with adminOrDispatcher role guard",
+      "Do not install any new dependencies in this phase"
+    ]
+  }

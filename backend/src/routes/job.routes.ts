@@ -9,12 +9,12 @@ const router = Router();
 router.use(authenticateToken);
 
 router.post('/', requireRole(UserRole.Admin, UserRole.Dispatcher), createJob);
-router.get('/', getJobs);
+router.get('/', requireRole(UserRole.Admin, UserRole.Dispatcher), getJobs);
 router.get('/:id', getJobById);
-router.patch('/:id/notes', updateDriverNotes);
-router.patch('/:id/status', updateJobStatus);
+router.patch('/:id/notes', requireRole(UserRole.Driver), updateDriverNotes);
+router.patch('/:id/status', requireRole(UserRole.Driver), updateJobStatus);
 router.post('/:id/completion-report', upsertCompletionReport);
-router.post('/:id/completion-report/approve', approveCompletionReport);
+router.post('/:id/completion-report/approve', requireRole(UserRole.Admin, UserRole.Dispatcher), approveCompletionReport);
 router.patch('/:id', requireRole(UserRole.Admin, UserRole.Dispatcher), updateJob);
 router.delete('/:id', requireRole(UserRole.Admin), deleteJob);
 

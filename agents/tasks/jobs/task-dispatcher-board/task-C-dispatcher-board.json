@@ -1,0 +1,27 @@
+{
+    "taskId": "dispatcher-board-phase3",
+    "title": "Dispatcher Board — Phase 3: Backend Integration",
+    "description": "Replace mock data with real API calls. Load jobs and drivers on mount. Persist assignments to backend after drag-and-drop with optimistic updates and rollback on failure.",
+    "acceptanceCriteria": [
+      "Board fetches jobs (status DRAFT and ASSIGNED) from GET /api/jobs on mount",
+      "Board fetches drivers from GET /api/users?role=DRIVER on mount",
+      "Jobs and drivers replace mock data — mockData.ts is no longer imported",
+      "onDragEnd sends PATCH /api/jobs/:id with { assignedDriverId } after state update",
+      "On PATCH failure state rolls back to pre-drop snapshot and console.error is called",
+      "Loading state shown while initial fetch is in progress",
+      "mockData.ts file is deleted"
+    ],
+    "affectedFiles": [
+      "frontend/src/pages/DispatcherBoard/DispatcherBoard.tsx",
+      "frontend/src/pages/DispatcherBoard/mockData.ts",
+      "backend/src/routes/users.ts"
+    ],
+    "implementationNotes": [
+      "Use the existing configured axios instance from src/api/axios.ts",
+      "Optimistic update: snapshot jobs before setJobs, restore snapshot in catch block",
+      "GET /api/users?role=DRIVER — verify this query param is supported in users.ts, add it if missing",
+      "PATCH /api/jobs/:id already exists — only assignedDriverId field needs to be sent",
+      "Job type should be imported from a shared types file if one exists, not redefined",
+      "Do not change drag-and-drop logic from phase 2 — only replace data source"
+    ]
+  }

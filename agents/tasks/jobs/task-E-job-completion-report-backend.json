@@ -1,0 +1,18 @@
+{
+  "id": "job-completion-report-backend",
+  "title": "Job completion report — backend",
+  "description": "Add a CompletionReport model to capture work done before a job transitions to COMPLETED. The completion report must exist and be customer-approved before the job status can move to COMPLETED. Driver or Dispatcher/Admin can create and edit the report. Customer approval is recorded as a drawn signature stored as base64 string.",
+  "acceptanceCriteria": [
+    "Prisma schema adds CompletionReport model with fields: id, jobId (unique, FK to Job), workDescription String, actualStart DateTime, actualEnd DateTime, totalHours Float (calculated server-side from actualStart/actualEnd, stored for convenience), customerName String, customerSignature String (base64 canvas PNG), approvedAt DateTime, createdById FK to User, createdAt, updatedAt. Add completionReport relation to Job model. Migration created and applied.",
+    "POST /api/jobs/:id/completion-report creates or updates the completion report (upsert). Accepts: workDescription, actualStart, actualEnd, customerName, customerSignature. Requires authenticateToken. Allowed roles: Driver (only if assignedDriverId matches), Dispatcher, Admin. Validates actualEnd is after actualStart. Calculates and stores totalHours. Returns { data: completionReport }.",
+    "POST /api/jobs/:id/completion-report/approve records customer approval: sets approvedAt to now. Requires the report to exist and customerSignature to be non-empty. Returns { data: completionReport }. Same role rules as above.",
+    "PATCH /api/jobs/:id/status blocks transition to COMPLETED if no completion report exists for the job, or if completionReport.approvedAt is null. Returns 400 with error: 'Completion report with customer approval required before marking job as completed'.",
+    "GET /api/jobs and GET /api/jobs/my responses include completionReport (or null) nested on each job object.",
+    "npx tsc --noEmit passes with no errors."
+  ],
+  "affectedFiles": [
+    "backend/prisma/schema.prisma",
+    "backend/src/routes/jobs.ts"
+  ],
+  "notes": "Use Prisma upsert for POST /completion-report so driver can edit before customer approves. totalHours = Math.abs(actualEnd.getTime() - actualStart.getTime()) / 36e5, rounded to 2 decimal places. customerSignature is a long base64 string — do not log it. The approve endpoint is separate from the upsert so the flow is clear: fill report → customer reviews → customer signs → approve. Do not add a separate route file — add to existing jobs.ts."
+}

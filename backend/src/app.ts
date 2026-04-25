@@ -13,7 +13,7 @@ app.use(express.json({ limit: '200kb' }));
 app.use(cookieParser());
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL ?? 'http://localhost:3000',
+    origin: (process.env.FRONTEND_URL ?? 'http://localhost:3000').split(',').map(s => s.trim()),
     credentials: true,
     methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],

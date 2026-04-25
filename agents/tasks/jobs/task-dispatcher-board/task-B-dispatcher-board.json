@@ -1,0 +1,29 @@
+{
+    "taskId": "dispatcher-board-phase2",
+    "title": "Dispatcher Board — Phase 2: Drag and Drop",
+    "description": "Add drag-and-drop using dnd-kit. Jobs draggable from pool to driver columns and back. State updates on drop. Still uses mock data from phase 1.",
+    "acceptanceCriteria": [
+      "DndContext wraps the full board in DispatcherBoard.tsx",
+      "JobCard uses useDraggable — dragging is smooth with visual feedback",
+      "JobPool and DriverColumn use useDroppable with correct droppable ids",
+      "onDragEnd updates assignedDriverId in state: null for pool, driverId for columns",
+      "Dragging a job from driver column back to pool sets assignedDriverId to null",
+      "No backend calls in this phase — state only"
+    ],
+    "affectedFiles": [
+      "frontend/src/pages/DispatcherBoard/DispatcherBoard.tsx",
+      "frontend/src/pages/DispatcherBoard/components/JobPool/JobPool.tsx",
+      "frontend/src/pages/DispatcherBoard/components/DriverColumn/DriverColumn.tsx",
+      "frontend/src/pages/DispatcherBoard/components/JobCard/JobCard.tsx",
+      "frontend/src/pages/DispatcherBoard/components/JobCard/JobCard.module.css",
+      "frontend/package.json"
+    ],
+    "implementationNotes": [
+      "Install: @dnd-kit/core @dnd-kit/utilities",
+      "Pool droppable id must be the string 'pool'",
+      "Driver column droppable id must be the driver's id string",
+      "onDragEnd: if over.id === 'pool' set assignedDriverId to null, else set to over.id",
+      "Add CSS transform via useDraggable transform style for drag preview",
+      "Do not rewrite phase 1 components — extend them only"
+    ]
+  }
