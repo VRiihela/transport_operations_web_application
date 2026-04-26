@@ -12,7 +12,7 @@ const completionReportService = new CompletionReportService(new PrismaClient());
 export const createJob = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const parsed = createJobSchema.safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json({ error: 'Validation failed', details: parsed.error.errors });
+    res.status(400).json({ error: 'Invalid request data' });
     return;
   }
 
@@ -28,7 +28,7 @@ export const createJob = async (req: AuthenticatedRequest, res: Response): Promi
 export const getJobs = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const parsed = jobQuerySchema.safeParse(req.query);
   if (!parsed.success) {
-    res.status(400).json({ error: 'Invalid query parameters', details: parsed.error.errors });
+    res.status(400).json({ error: 'Invalid request data' });
     return;
   }
 
@@ -58,7 +58,7 @@ export const getJobById = async (req: AuthenticatedRequest, res: Response): Prom
 export const updateJob = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const parsed = updateJobSchema.safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json({ error: 'Validation failed', details: parsed.error.errors });
+    res.status(400).json({ error: 'Invalid request data' });
     return;
   }
 
@@ -95,7 +95,7 @@ export const updateJob = async (req: AuthenticatedRequest, res: Response): Promi
 export const updateJobStatus = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const parsed = updateJobStatusSchema.safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json({ error: 'Validation failed', details: parsed.error.errors });
+    res.status(400).json({ error: 'Invalid request data' });
     return;
   }
 
@@ -128,7 +128,7 @@ export const updateJobStatus = async (req: AuthenticatedRequest, res: Response):
 export const updateDriverNotes = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const parsed = updateDriverNotesSchema.safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json({ error: 'Validation failed', details: parsed.error.errors });
+    res.status(400).json({ error: 'Invalid request data' });
     return;
   }
 
@@ -156,7 +156,7 @@ export const updateDriverNotes = async (req: AuthenticatedRequest, res: Response
 export const upsertCompletionReport = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const parsed = upsertCompletionReportSchema.safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json({ error: 'Validation failed', details: parsed.error.errors });
+    res.status(400).json({ error: 'Invalid request data' });
     return;
   }
 
