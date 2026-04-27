@@ -40,3 +40,12 @@
   background: #dbeafe;
   color: #1e40af;
 }
+
+.dragging {
+  box-shadow: 0 0 0 2px #6366f1;
+}
+
+.overlay {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  rotate: 2deg;
+}
