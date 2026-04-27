@@ -6,6 +6,7 @@ import LoginPage from './pages/LoginPage';
 import JobsPage from './pages/JobsPage';
 import MyJobsPage from './pages/MyJobsPage';
 import UsersPage from './pages/UsersPage';
+import DispatcherBoard from './pages/DispatcherBoard/DispatcherBoard';
 
 export default function App() {
   return (
@@ -39,6 +40,16 @@ export default function App() {
               <ProtectedRoute>
                 <RoleRoute allowedRoles={['Admin']}>
                   <UsersPage />
+                </RoleRoute>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dispatcher/board"
+            element={
+              <ProtectedRoute>
+                <RoleRoute allowedRoles={['Admin', 'Dispatcher']}>
+                  <DispatcherBoard />
                 </RoleRoute>
               </ProtectedRoute>
             }

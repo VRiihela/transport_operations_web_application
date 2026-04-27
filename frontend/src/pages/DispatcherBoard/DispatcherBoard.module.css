@@ -1,0 +1,57 @@
+.board {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 24px;
+  min-height: 100vh;
+  background: #f9fafb;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+}
+
+.title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.driversSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.driversHeading {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.driverColumns {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.driverColumns > * {
+  flex: 1 1 220px;
+  max-width: 340px;
+}
+
+@media (max-width: 640px) {
+  .board {
+    padding: 16px;
+    gap: 16px;
+  }
+
+  .driverColumns > * {
+    max-width: 100%;
+  }
+}
