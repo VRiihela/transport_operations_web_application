@@ -3,6 +3,7 @@ import { isAxiosError } from 'axios';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import axiosInstance from '../api/axios';
+import { JobDetailModal } from '../components/JobDetailModal';
 import styles from './JobsPage.module.css';
 
 type JobStatus = 'DRAFT' | 'ASSIGNED' | 'IN_PROGRESS' | 'COMPLETED';
@@ -147,6 +148,7 @@ const JobsPage: React.FC = () => {
   const [assigningJobs, setAssigningJobs] = useState<Set<string>>(new Set());
   const [updatingStatus, setUpdatingStatus] = useState<Set<string>>(new Set());
   const [openDriverDropdown, setOpenDriverDropdown] = useState<string | null>(null);
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [editingJob, setEditingJob] = useState<Job | null>(null);
   const [editForm, setEditForm] = useState<EditFormData>({
     title: '', description: '', scheduledStart: '', scheduledEnd: '', schedulingNote: '', assignedDriverId: '',
@@ -836,7 +838,7 @@ const JobsPage: React.FC = () => {
             </thead>
             <tbody>
               {jobs.map((job) => (
-                <tr key={job.id} className={styles.tr}>
+                <tr key={job.id} className={styles.tr} onClick={() => setSelectedJob(job)} style={{ cursor: 'pointer' }}>
                   <td className={styles.td}>
                     <div className={styles.jobTitle}>{job.title}</div>
                     {job.description && (
@@ -904,7 +906,7 @@ const JobsPage: React.FC = () => {
                     )}
                   </td>
                   <td className={styles.td}>{formatSchedulingInfo(job.scheduledStart, job.scheduledEnd, job.schedulingNote)}</td>
-                  <td className={styles.td}>
+                  <td className={styles.td} onClick={(e) => e.stopPropagation()}>
                     <div className={styles.actionGroup}>
                       {(job.status === 'DRAFT' || job.status === 'ASSIGNED') && (
                         <div className={styles.assignContainer}>
@@ -964,6 +966,15 @@ const JobsPage: React.FC = () => {
             </tbody>
           </table>
         </div>
+      )}
+
+      {selectedJob && (
+        <JobDetailModal
+          job={selectedJob}
+          isOpen={true}
+          onClose={() => setSelectedJob(null)}
+          onEdit={() => { handleEditOpen(selectedJob); setSelectedJob(null); }}
+        />
       )}
     </div>
   );

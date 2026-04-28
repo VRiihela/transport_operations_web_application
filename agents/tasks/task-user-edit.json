@@ -1,0 +1,24 @@
+{
+    "taskId": "user-edit",
+    "title": "User Management — Edit User Modal",
+    "description": "Add edit functionality to the users table. Admin can edit name, email, role and active status of existing users.",
+    "acceptanceCriteria": [
+      "Edit button on each user row opens a modal pre-filled with current user data",
+      "Admin can edit: name, email, role, isActive",
+      "Submit sends PATCH /api/users/:id with changed fields only",
+      "User list refreshes after successful edit",
+      "Modal closes on success and shows error message on failure",
+      "Password is not editable in this modal"
+    ],
+    "affectedFiles": [
+      "frontend/src/pages/UsersPage/UsersPage.tsx",
+      "frontend/src/pages/UsersPage/UsersPage.module.css",
+      "backend/src/routes/users.ts"
+    ],
+    "implementationNotes": [
+      "Reuse the existing modal pattern from the create user flow",
+      "PATCH /api/users/:id may already exist — check before adding",
+      "Only send fields that have changed to avoid overwriting with stale data",
+      "isActive toggle should be a checkbox or toggle, not a text field"
+    ]
+  }

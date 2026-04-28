@@ -1,0 +1,27 @@
+{
+    "taskId": "job-edit-and-inspect",
+    "title": "Jobs — Edit Modal and Job Detail View",
+    "description": "Add edit functionality for dispatchers and a read-only job detail view accessible by clicking a job card. Job detail shows all fields.",
+    "acceptanceCriteria": [
+      "Clicking a job card opens a read-only detail modal showing all job fields",
+      "Detail modal shows: title, description, status, assigned driver, scheduled start/end, scheduling note, pickup address, delivery address, driver notes",
+      "Edit button in detail modal opens editable form (Admin and Dispatcher only)",
+      "Edit form allows changing: title, description, assignedDriverId, scheduledStart, scheduledEnd, schedulingNote, address fields",
+      "Submit sends PATCH /api/jobs/:id with updated fields",
+      "Job list or board refreshes after successful edit"
+    ],
+    "affectedFiles": [
+      "frontend/src/pages/DispatcherBoard/DispatcherBoard.tsx",
+      "frontend/src/pages/DispatcherBoard/components/JobCard/JobCard.tsx",
+      "frontend/src/pages/DispatcherBoard/components/JobCard/JobCard.module.css",
+      "frontend/src/pages/JobsPage/JobsPage.tsx",
+      "frontend/src/pages/JobsPage/JobsPage.module.css"
+    ],
+    "implementationNotes": [
+      "Detail modal and edit modal can be two separate components or a single modal with a view/edit toggle",
+      "Scheduled datetime fields use datetime-local input and must be converted to ISO string before sending to API",
+      "Finnish datetime formatting applies in read-only view (scheduledStart/End already have this pattern elsewhere in the codebase)",
+      "assignedDriverId field should be a dropdown populated from GET /api/users?role=Driver",
+      "PATCH /api/jobs/:id already exists in the backend"
+    ]
+  }

@@ -1,15 +1,16 @@
 import React from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
-import { Job } from '../../mockData';
+import { Job } from '../../types';
 import styles from './JobCard.module.css';
 
 interface JobCardProps {
   job: Job;
   overlay?: boolean;
+  onCardClick?: (job: Job) => void;
 }
 
-const JobCard: React.FC<JobCardProps> = ({ job, overlay = false }) => {
+const JobCard: React.FC<JobCardProps> = ({ job, overlay = false, onCardClick }) => {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: job.id,
   });
@@ -27,6 +28,7 @@ const JobCard: React.FC<JobCardProps> = ({ job, overlay = false }) => {
       ref={overlay ? undefined : setNodeRef}
       style={style}
       {...(overlay ? {} : { ...listeners, ...attributes })}
+      onClick={!overlay && onCardClick ? () => onCardClick(job) : undefined}
       className={[
         styles.card,
         isDragging ? styles.dragging : '',

@@ -1,14 +1,15 @@
 import React from 'react';
 import { useDroppable } from '@dnd-kit/core';
-import { Job } from '../../mockData';
+import { Job } from '../../types';
 import JobCard from '../JobCard/JobCard';
 import styles from './JobPool.module.css';
 
 interface JobPoolProps {
   jobs: Job[];
+  onCardClick?: (job: Job) => void;
 }
 
-const JobPool: React.FC<JobPoolProps> = ({ jobs }) => {
+const JobPool: React.FC<JobPoolProps> = ({ jobs, onCardClick }) => {
   const { isOver, setNodeRef } = useDroppable({ id: 'pool' });
 
   return (
@@ -21,7 +22,7 @@ const JobPool: React.FC<JobPoolProps> = ({ jobs }) => {
       ) : (
         <div className={styles.grid}>
           {jobs.map((job) => (
-            <JobCard key={job.id} job={job} />
+            <JobCard key={job.id} job={job} onCardClick={onCardClick} />
           ))}
         </div>
       )}

@@ -9,7 +9,7 @@ const router = Router();
 router.use(authenticateToken);
 
 router.post('/', requireRole(UserRole.Admin, UserRole.Dispatcher), createJob);
-router.get('/', requireRole(UserRole.Admin, UserRole.Dispatcher), getJobs);
+router.get('/', requireRole(UserRole.Admin, UserRole.Dispatcher, UserRole.Driver), getJobs);
 router.get('/:id', getJobById);
 router.patch('/:id/notes', requireRole(UserRole.Driver), updateDriverNotes);
 router.patch('/:id/status', requireRole(UserRole.Driver), updateJobStatus);

@@ -25,9 +25,17 @@ interface SingleUserApiResponse {
 }
 
 interface CreateForm {
+  name: string;
   email: string;
   password: string;
   role: 'Driver' | 'Dispatcher';
+}
+
+interface EditForm {
+  name: string;
+  email: string;
+  role: 'Driver' | 'Dispatcher';
+  isActive: boolean;
 }
 
 function getApiError(err: unknown, fallback: string): string {
@@ -46,7 +54,7 @@ const UsersPage: React.FC = () => {
   const [success, setSuccess] = useState<string | null>(null);
 
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [createForm, setCreateForm] = useState<CreateForm>({ email: '', password: '', role: 'Driver' });
+  const [createForm, setCreateForm] = useState<CreateForm>({ name: '', email: '', password: '', role: 'Driver' });
   const [creating, setCreating] = useState(false);
 
   const [resetUser, setResetUser] = useState<User | null>(null);
@@ -54,6 +62,10 @@ const UsersPage: React.FC = () => {
   const [resetting, setResetting] = useState(false);
 
   const [togglingIds, setTogglingIds] = useState<Set<string>>(new Set());
+
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [editForm, setEditForm] = useState<EditForm>({ name: '', email: '', role: 'Driver', isActive: true });
+  const [saving, setSaving] = useState(false);
 
   const fetchUsers = useCallback(async (): Promise<void> => {
     try {
@@ -79,7 +91,7 @@ const UsersPage: React.FC = () => {
     try {
       const res = await axiosInstance.post<SingleUserApiResponse>('/api/users', createForm);
       setUsers((prev) => [...prev, res.data.data]);
-      setCreateForm({ email: '', password: '', role: 'Driver' });
+      setCreateForm({ name: '', email: '', password: '', role: 'Driver' });
       setShowCreateModal(false);
       setSuccess('User created successfully');
       setTimeout(() => setSuccess(null), 3000);
@@ -91,6 +103,52 @@ const UsersPage: React.FC = () => {
       }
     } finally {
       setCreating(false);
+    }
+  };
+
+  const openEditModal = (u: User): void => {
+    setEditingUser(u);
+    setEditForm({
+      name: u.name ?? '',
+      email: u.email,
+      role: u.role !== 'Admin' ? u.role : 'Driver',
+      isActive: u.isActive,
+    });
+    setError(null);
+  };
+
+  const handleEditUser = async (e: React.FormEvent): Promise<void> => {
+    e.preventDefault();
+    if (!editingUser) return;
+    setSaving(true);
+    setError(null);
+
+    const patch: { name?: string; email?: string; role?: 'Driver' | 'Dispatcher'; isActive?: boolean } = {};
+    if (editForm.name !== (editingUser.name ?? '')) patch.name = editForm.name;
+    if (editForm.email !== editingUser.email) patch.email = editForm.email;
+    if (editingUser.role !== 'Admin' && editForm.role !== editingUser.role) patch.role = editForm.role;
+    if (editForm.isActive !== editingUser.isActive) patch.isActive = editForm.isActive;
+
+    if (Object.keys(patch).length === 0) {
+      setEditingUser(null);
+      setSaving(false);
+      return;
+    }
+
+    try {
+      const res = await axiosInstance.patch<SingleUserApiResponse>(`/api/users/${editingUser.id}`, patch);
+      setUsers((prev) => prev.map((u) => (u.id === editingUser.id ? res.data.data : u)));
+      setEditingUser(null);
+      setSuccess('User updated successfully');
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      if (isAxiosError(err) && err.response?.status === 409) {
+        setError('Email already in use');
+      } else {
+        setError(getApiError(err, 'Failed to update user'));
+      }
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -209,6 +267,12 @@ const UsersPage: React.FC = () => {
                 </td>
                 <td>
                   <div className={styles.actions}>
+                    <button
+                      className={styles.editButton}
+                      onClick={() => openEditModal(u)}
+                    >
+                      Edit
+                    </button>
                     {(u.id !== currentUser?.id || !u.isActive) && (
                       <button
                         className={u.isActive ? styles.deactivateButton : styles.activateButton}
@@ -242,6 +306,16 @@ const UsersPage: React.FC = () => {
           <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <h2>Create New User</h2>
             <form onSubmit={(e) => void handleCreateUser(e)} noValidate>
+              <div className={styles.formGroup}>
+                <label htmlFor="cu-name">Name *</label>
+                <input
+                  id="cu-name"
+                  type="text"
+                  required
+                  value={createForm.name}
+                  onChange={(e) => setCreateForm((p) => ({ ...p, name: e.target.value }))}
+                />
+              </div>
               <div className={styles.formGroup}>
                 <label htmlFor="cu-email">Email *</label>
                 <input
@@ -282,7 +356,7 @@ const UsersPage: React.FC = () => {
                   className={styles.cancelButton}
                   onClick={() => {
                     setShowCreateModal(false);
-                    setCreateForm({ email: '', password: '', role: 'Driver' });
+                    setCreateForm({ name: '', email: '', password: '', role: 'Driver' });
                     setError(null);
                   }}
                 >
@@ -290,6 +364,78 @@ const UsersPage: React.FC = () => {
                 </button>
                 <button type="submit" className={styles.submitButton} disabled={creating}>
                   {creating ? 'Creating...' : 'Create User'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit User Modal */}
+      {editingUser && (
+        <div className={styles.modalOverlay} onClick={() => setEditingUser(null)}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <h2>Edit User</h2>
+            <form onSubmit={(e) => void handleEditUser(e)} noValidate>
+              <div className={styles.formGroup}>
+                <label htmlFor="eu-name">Name</label>
+                <input
+                  id="eu-name"
+                  type="text"
+                  value={editForm.name}
+                  onChange={(e) => setEditForm((p) => ({ ...p, name: e.target.value }))}
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label htmlFor="eu-email">Email *</label>
+                <input
+                  id="eu-email"
+                  type="email"
+                  required
+                  value={editForm.email}
+                  onChange={(e) => setEditForm((p) => ({ ...p, email: e.target.value }))}
+                />
+              </div>
+              {editingUser.role !== 'Admin' ? (
+                <div className={styles.formGroup}>
+                  <label htmlFor="eu-role">Role *</label>
+                  <select
+                    id="eu-role"
+                    value={editForm.role}
+                    onChange={(e) =>
+                      setEditForm((p) => ({ ...p, role: e.target.value as 'Driver' | 'Dispatcher' }))
+                    }
+                  >
+                    <option value="Driver">Driver</option>
+                    <option value="Dispatcher">Dispatcher</option>
+                  </select>
+                </div>
+              ) : (
+                <div className={styles.formGroup}>
+                  <label>Role</label>
+                  <input type="text" value="Admin" disabled />
+                </div>
+              )}
+              <div className={styles.formGroup}>
+                <label className={styles.checkboxLabel}>
+                  <input
+                    type="checkbox"
+                    checked={editForm.isActive}
+                    onChange={(e) => setEditForm((p) => ({ ...p, isActive: e.target.checked }))}
+                  />
+                  Active
+                </label>
+              </div>
+              <div className={styles.modalActions}>
+                <button
+                  type="button"
+                  className={styles.cancelButton}
+                  onClick={() => { setEditingUser(null); setError(null); }}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className={styles.submitButton} disabled={saving}>
+                  {saving ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>
             </form>
