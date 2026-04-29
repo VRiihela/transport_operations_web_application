@@ -1,17 +1,29 @@
 .card {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 10px 12px;
+  align-items: baseline;
+  gap: 6px;
+  padding: 7px 9px;
   background: #fff;
   border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  border-radius: 5px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: box-shadow 0.12s, border-color 0.12s;
+}
+.card:hover {
+  border-color: #c7d2fe;
+  box-shadow: 0 2px 6px rgba(99, 102, 241, 0.12);
+}
+
+.time {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 700;
+  color: #6366f1;
+  font-variant-numeric: tabular-nums;
 }
 
 .title {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   color: #111827;
   flex: 1;
@@ -23,29 +35,15 @@
 
 .badge {
   flex-shrink: 0;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
-  padding: 2px 7px;
+  padding: 1px 6px;
   border-radius: 999px;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
-.draft {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-.assigned {
-  background: #dbeafe;
-  color: #1e40af;
-}
-
-.dragging {
-  box-shadow: 0 0 0 2px #6366f1;
-}
-
-.overlay {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
-  rotate: 2deg;
-}
+.statusDRAFT       { background: #fef3c7; color: #92400e; }
+.statusASSIGNED    { background: #dbeafe; color: #1e40af; }
+.statusIN_PROGRESS { background: #ede9fe; color: #5b21b6; }
+.statusCOMPLETED   { background: #d1fae5; color: #065f46; }

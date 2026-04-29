@@ -59,8 +59,38 @@ function getApiError(err: unknown, fallback: string): string {
   return fallback;
 }
 
+function debounce<T extends unknown[]>(fn: (...args: T) => void, delay: number): (...args: T) => void {
+  let timer: ReturnType<typeof setTimeout>;
+  return (...args: T) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), delay);
+  };
+}
+
+function todayISO(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function getDayBounds(dateStr: string): { from: string; to: string } {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  const start = new Date(year, month - 1, day, 0, 0, 0, 0);
+  const end = new Date(year, month - 1, day, 23, 59, 59, 999);
+  return { from: start.toISOString(), to: end.toISOString() };
+}
+
+function sortByScheduledStart(jobs: Job[]): Job[] {
+  return [...jobs].sort((a, b) => {
+    if (!a.scheduledStart && !b.scheduledStart) return 0;
+    if (!a.scheduledStart) return 1;
+    if (!b.scheduledStart) return -1;
+    return new Date(a.scheduledStart).getTime() - new Date(b.scheduledStart).getTime();
+  });
+}
+
 const MyJobsPage: React.FC = () => {
   const { logout } = useAuth();
+  const [selectedDate, setSelectedDate] = useState<string>(todayISO);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -70,12 +100,15 @@ const MyJobsPage: React.FC = () => {
   const [noteSaveStatus, setNoteSaveStatus] = useState<Record<string, 'idle' | 'saving' | 'saved' | 'error'>>({});
   const [noteSaveError, setNoteSaveError] = useState<Record<string, string>>({});
 
-  const fetchJobs = useCallback(async (): Promise<void> => {
+  const fetchJobs = useCallback(async (date: string): Promise<void> => {
     try {
       setLoading(true);
       setError(null);
-      const response = await axiosInstance.get<JobsApiResponse>('/api/jobs');
-      setJobs(response.data.data.jobs);
+      const { from, to } = getDayBounds(date);
+      const response = await axiosInstance.get<JobsApiResponse>(
+        `/api/jobs?scheduledFrom=${encodeURIComponent(from)}&scheduledTo=${encodeURIComponent(to)}&limit=100`,
+      );
+      setJobs(sortByScheduledStart(response.data.data.jobs));
     } catch (err) {
       setError(getApiError(err, 'Failed to load jobs'));
     } finally {
@@ -83,9 +116,18 @@ const MyJobsPage: React.FC = () => {
     }
   }, []);
 
+  const debouncedFetchJobs = useCallback(debounce(fetchJobs, 300), [fetchJobs]);
+
   useEffect(() => {
-    void fetchJobs();
-  }, [fetchJobs]);
+    void fetchJobs(selectedDate);
+  }, [fetchJobs]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    const date = e.target.value;
+    if (!date) return;
+    setSelectedDate(date);
+    debouncedFetchJobs(date);
+  };
 
   const updateJobStatus = async (jobId: string, newStatus: 'IN_PROGRESS' | 'COMPLETED'): Promise<void> => {
     try {
@@ -193,7 +235,7 @@ const MyJobsPage: React.FC = () => {
         </div>
         <div className={styles.error}>
           {error}
-          <button onClick={() => void fetchJobs()} className={styles.retryButton}>
+          <button onClick={() => void fetchJobs(selectedDate)} className={styles.retryButton}>
             Try Again
           </button>
         </div>
@@ -205,7 +247,16 @@ const MyJobsPage: React.FC = () => {
     <div className={styles.container}>
       <div className={styles.pageHeader}>
         <h1>My Jobs</h1>
-        <button className={styles.logoutButton} onClick={() => void logout()}>Logout</button>
+        <div className={styles.headerRight}>
+          <input
+            type="date"
+            value={selectedDate}
+            onChange={handleDateChange}
+            className={styles.datePicker}
+            aria-label="Select date"
+          />
+          <button className={styles.logoutButton} onClick={() => void logout()}>Logout</button>
+        </div>
       </div>
 
       {error && (
@@ -217,8 +268,8 @@ const MyJobsPage: React.FC = () => {
 
       {jobs.length === 0 ? (
         <div className={styles.emptyState}>
-          <p>No jobs assigned to you at the moment.</p>
-          <p>Check back later or contact your dispatcher if you expect to see jobs here.</p>
+          <p>Ei töitä valitulle päivälle.</p>
+          <p>Valitse toinen päivämäärä tai ota yhteyttä dispatcheriin.</p>
         </div>
       ) : (
         <div className={styles.jobsGrid}>
@@ -237,8 +288,16 @@ const MyJobsPage: React.FC = () => {
 
               <div className={styles.jobDetails}>
                 <div className={styles.jobDetail}>
-                  <strong>Scheduled:</strong> {formatSchedulingInfo(job.scheduledStart, job.scheduledEnd, job.schedulingNote)}
+                  <strong>Scheduled:</strong>{' '}
+                  {(job.scheduledStart || job.scheduledEnd)
+                    ? formatSchedulingInfo(job.scheduledStart, job.scheduledEnd, null)
+                    : '—'}
                 </div>
+                {job.schedulingNote && (
+                  <div className={styles.jobDetail}>
+                    <strong>Note:</strong> {job.schedulingNote}
+                  </div>
+                )}
                 <div className={styles.jobDetail}>
                   <strong>Location:</strong>{' '}
                   {job.street
@@ -316,7 +375,7 @@ const MyJobsPage: React.FC = () => {
                       </button>
                     ) : (
                       <button
-                        onClick={() => setCompletionModalJob(job)}
+                        onClick={() => { setCompletionModalJob(job); }}
                         className={styles.reportButton}
                       >
                         Complete Job
@@ -337,7 +396,7 @@ const MyJobsPage: React.FC = () => {
           onClose={() => setCompletionModalJob(null)}
           onApproved={() => {
             setCompletionModalJob(null);
-            void fetchJobs();
+            void fetchJobs(selectedDate);
           }}
         />
       )}

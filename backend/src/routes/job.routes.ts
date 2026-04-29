@@ -14,7 +14,7 @@ router.get('/:id', getJobById);
 router.patch('/:id/notes', requireRole(UserRole.Driver), updateDriverNotes);
 router.patch('/:id/status', requireRole(UserRole.Driver), updateJobStatus);
 router.post('/:id/completion-report', upsertCompletionReport);
-router.post('/:id/completion-report/approve', requireRole(UserRole.Admin, UserRole.Dispatcher), approveCompletionReport);
+router.post('/:id/completion-report/approve', requireRole(UserRole.Admin, UserRole.Dispatcher, UserRole.Driver), approveCompletionReport);
 router.patch('/:id', requireRole(UserRole.Admin, UserRole.Dispatcher), updateJob);
 router.delete('/:id', requireRole(UserRole.Admin), deleteJob);
 

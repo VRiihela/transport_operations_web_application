@@ -1,0 +1,27 @@
+{
+    "taskId": "dispatcher-weekly-view",
+    "title": "Dispatcher Board — Weekly View with Date Navigation",
+    "description": "Replace the current pool/column layout with a 7-column weekly view (Mon–Sun). Each column shows jobs scheduled for that day, sorted by time. Dispatcher can navigate weeks with prev/next arrows and jump to any week via date picker.",
+    "acceptanceCriteria": [
+      "Board shows 7 columns, one per day Mon–Sun, with the current week as default",
+      "Each column header shows the weekday name and date in Finnish format (e.g. 'Ma 28.4.')",
+      "Jobs appear in the column matching their scheduledStart date, sorted by time ascending",
+      "Jobs without scheduledStart appear in an 'Unscheduled' pool above the weekly grid",
+      "Prev/next week arrow buttons shift the view by 7 days",
+      "Date picker input lets dispatcher jump to any week — week adjusts to contain the selected date"
+    ],
+    "affectedFiles": [
+      "frontend/src/pages/DispatcherBoard/DispatcherBoard.tsx",
+      "frontend/src/pages/DispatcherBoard/DispatcherBoard.module.css",
+      "frontend/src/pages/DispatcherBoard/components/JobCard/JobCard.tsx",
+      "frontend/src/pages/DispatcherBoard/components/JobCard/JobCard.module.css"
+    ],
+    "implementationNotes": [
+      "Week starts on Monday — use date-fns startOfWeek with weekStartsOn: 1",
+      "Finnish weekday abbreviations: Ma, Ti, Ke, To, Pe, La, Su",
+      "Date formatting follows existing Finnish pattern already in the codebase (dd.MM.yyyy)",
+      "Jobs are fetched for the visible week range: GET /api/jobs?scheduledFrom=<ISO>&scheduledTo=<ISO> — if this query param is not supported in backend add it",
+      "Keep existing Job and Driver types — do not redefine them",
+      "Unscheduled pool uses the same JobCard component as columns"
+    ]
+  }

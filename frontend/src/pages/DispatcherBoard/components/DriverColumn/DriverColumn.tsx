@@ -21,7 +21,7 @@ const DriverColumn: React.FC<DriverColumnProps> = ({ driver, jobs, onCardClick }
         {jobs.length === 0 ? (
           <p className={styles.empty}>No assigned jobs.</p>
         ) : (
-          jobs.map((job) => <JobCard key={job.id} job={job} onCardClick={onCardClick} />)
+          jobs.map((job) => <JobCard key={job.id} job={job} draggable onCardClick={onCardClick} />)
         )}
       </div>
     </div>

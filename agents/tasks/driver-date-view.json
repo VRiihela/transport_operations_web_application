@@ -1,0 +1,24 @@
+{
+    "taskId": "driver-date-view",
+    "title": "Driver — My Jobs Date View",
+    "description": "Replace or extend the driver My Jobs page with a date-filtered view. Driver selects a date and sees their jobs for that day, sorted by scheduledStart time.",
+    "acceptanceCriteria": [
+      "Page shows a date picker defaulting to today",
+      "Jobs shown are only those assigned to the logged-in driver matching the selected date",
+      "Jobs sorted by scheduledStart ascending, jobs without scheduledStart shown at the bottom",
+      "Each job card shows: title, scheduledStart–scheduledEnd in Finnish format, status badge, schedulingNote",
+      "Changing the date picker immediately refetches and updates the list",
+      "Empty state shown when no jobs exist for the selected date"
+    ],
+    "affectedFiles": [
+      "frontend/src/pages/MyJobsPage/MyJobsPage.tsx",
+      "frontend/src/pages/MyJobsPage/MyJobsPage.module.css"
+    ],
+    "implementationNotes": [
+      "Fetch: GET /api/jobs?scheduledFrom=<start of day ISO>&scheduledTo=<end of day ISO> — backend must support this filter",
+      "Driver filtering is enforced server-side via JWT — frontend does not need to pass driverId",
+      "Finnish datetime formatting already exists in the codebase — reuse the same pattern",
+      "Date picker uses native <input type='date'> — no external library needed",
+      "Do not modify the dispatcher board in this task"
+    ]
+  }

@@ -22,7 +22,7 @@ const JobPool: React.FC<JobPoolProps> = ({ jobs, onCardClick }) => {
       ) : (
         <div className={styles.grid}>
           {jobs.map((job) => (
-            <JobCard key={job.id} job={job} onCardClick={onCardClick} />
+            <JobCard key={job.id} job={job} draggable onCardClick={onCardClick} />
           ))}
         </div>
       )}

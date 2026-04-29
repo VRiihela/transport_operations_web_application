@@ -51,12 +51,18 @@ export class JobService {
   }
 
   async getJobs(query: JobQuery, userRole: UserRole, userId: string) {
-    const { status, assignedDriverId, page = 1, limit = 10 } = query;
+    const { status, assignedDriverId, scheduledFrom, scheduledTo, page = 1, limit = 10 } = query;
 
     const where: Prisma.JobWhereInput = {
       ...this.baseWhere(userRole, userId),
       ...(status && { status }),
       ...(assignedDriverId && userRole !== UserRole.Driver && { assignedDriverId }),
+      ...((scheduledFrom || scheduledTo) && {
+        scheduledStart: {
+          ...(scheduledFrom && { gte: new Date(scheduledFrom) }),
+          ...(scheduledTo && { lte: new Date(scheduledTo) }),
+        },
+      }),
     };
 
     const [jobs, total] = await Promise.all([

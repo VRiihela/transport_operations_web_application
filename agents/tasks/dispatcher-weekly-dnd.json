@@ -1,0 +1,25 @@
+{
+    "taskId": "dispatcher-weekly-dnd",
+    "title": "Dispatcher Board — Drag and Drop on Weekly View",
+    "description": "Re-enable drag-and-drop on the weekly view. Jobs can be dragged between day columns and the unscheduled pool. Dropping on a day column updates scheduledStart to that day at midnight (time preserved if already set). Dropping on pool clears scheduledStart.",
+    "acceptanceCriteria": [
+      "JobCard is draggable using existing dnd-kit setup",
+      "Each day column and the unscheduled pool are droppable targets",
+      "Dropping a job on a day column sets scheduledStart to that day, preserving existing time if set or defaulting to 08:00",
+      "Dropping a job on the unscheduled pool sets scheduledStart to null",
+      "Optimistic state update on drop, PATCH /api/jobs/:id on backend, rollback on failure",
+      "Visual drag overlay shows job title while dragging"
+    ],
+    "affectedFiles": [
+      "frontend/src/pages/DispatcherBoard/DispatcherBoard.tsx",
+      "frontend/src/pages/DispatcherBoard/DispatcherBoard.module.css",
+      "frontend/src/pages/DispatcherBoard/components/JobCard/JobCard.tsx"
+    ],
+    "implementationNotes": [
+      "Build on existing dnd-kit DndContext, useDraggable, useDroppable setup from phase 2",
+      "Droppable id for day columns should be the ISO date string of that day (e.g. '2026-04-28')",
+      "Droppable id for unscheduled pool is the string 'unscheduled'",
+      "Use DragOverlay from dnd-kit for the drag preview",
+      "Do not rewrite the weekly view layout from the previous task — extend only"
+    ]
+  }
