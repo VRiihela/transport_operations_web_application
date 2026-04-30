@@ -1,0 +1,29 @@
+{
+  "taskId": "assign-view-route-ordering",
+  "title": "Dispatcher Assign View — Route Ordering Within Driver Column",
+  "description": "Allow dispatcher to reorder jobs within a driver column by dragging. Order represents the route sequence for that driver's day. Order is persisted to backend via a sortOrder field.",
+  "acceptanceCriteria": [
+    "Jobs within a driver column can be dragged up and down to reorder",
+    "Visual indicator shows drop position between jobs while dragging",
+    "On drop, new order is saved to backend via PATCH /api/jobs/:id with sortOrder field",
+    "Jobs are displayed in sortOrder ascending within each driver column",
+    "Dragging between driver columns still works — assigns job to new driver",
+    "Dragging to unassigned pool still works — clears assignedDriverId"
+  ],
+  "affectedFiles": [
+    "frontend/src/pages/DispatcherBoard/DispatcherBoard.tsx",
+    "frontend/src/pages/DispatcherBoard/components/DriverColumn/DriverColumn.tsx",
+    "frontend/src/pages/DispatcherBoard/components/DriverColumn/DriverColumn.module.css",
+    "backend/src/routes/jobs.ts",
+    "backend/prisma/schema.prisma"
+  ],
+  "implementationNotes": [
+    "Add sortOrder Int field to Job model in schema.prisma, default 0, run migration",
+    "Use @dnd-kit/sortable (already in dnd-kit ecosystem) for within-column reordering",
+    "Install: npm install @dnd-kit/sortable @dnd-kit/modifiers in frontend",
+    "SortableContext wraps jobs within each DriverColumn",
+    "onDragEnd must distinguish between cross-column drag (assign) and within-column drag (reorder)",
+    "PATCH /api/jobs/:id already accepts partial updates — sortOrder can be sent as part of existing endpoint",
+    "Do not rewrite existing drag-and-drop between columns — extend only"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "taskId": "assign-view-date-filter",
+  "title": "Dispatcher Assign View — Date Filter",
+  "description": "Add a date picker to the assign view. Dispatcher selects a date and sees only jobs scheduled for that day per driver column. Unassigned pool shows jobs without a scheduledStart or matching the selected date.",
+  "acceptanceCriteria": [
+    "Date picker shown at top of assign view, defaulting to today",
+    "Driver columns show only jobs where scheduledStart matches the selected date",
+    "Unassigned pool shows jobs where scheduledStart is null or matches the selected date",
+    "Changing the date immediately refetches jobs for that date",
+    "Date displayed in Finnish format (dd.MM.yyyy) next to the picker",
+    "Jobs within each driver column sorted by scheduledStart time ascending"
+  ],
+  "affectedFiles": [
+    "frontend/src/pages/DispatcherBoard/DispatcherBoard.tsx",
+    "frontend/src/pages/DispatcherBoard/DispatcherBoard.module.css"
+  ],
+  "implementationNotes": [
+    "Use native <input type='date'> — no external library needed",
+    "Fetch jobs using existing scheduledFrom/scheduledTo query params: start of selected day to end of selected day as ISO strings",
+    "Unassigned pool fetches separately without date filter to show all unscheduled jobs",
+    "Do not modify DriverColumn or JobCard components — only DispatcherBoard.tsx data fetching and layout",
+    "Do not touch the schedule view — assign view only"
+  ]
+}
