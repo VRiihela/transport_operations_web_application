@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   DndContext,
   DragEndEvent,
@@ -100,8 +100,32 @@ function sortByTime(jobs: Job[]): Job[] {
   });
 }
 
+function todayISO(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function getDayBounds(dateStr: string): { from: string; to: string } {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  const start = new Date(year, month - 1, day, 0, 0, 0, 0);
+  const end = new Date(year, month - 1, day, 23, 59, 59, 999);
+  return { from: start.toISOString(), to: end.toISOString() };
+}
+
+function formatAssignDate(dateStr: string): string {
+  const [year, month, day] = dateStr.split('-');
+  return `${day}.${month}.${year}`;
+}
+
+function dateOffset(days: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return d.toISOString().split('T')[0];
+}
+
 const DispatcherBoard: React.FC = () => {
   const [view, setView] = useState<'assign' | 'schedule'>('assign');
+  const [selectedDate, setSelectedDate] = useState<string>(todayISO);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [loading, setLoading] = useState(true);
@@ -118,25 +142,31 @@ const DispatcherBoard: React.FC = () => {
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
   );
 
-  useEffect(() => {
-    const fetchAll = async (): Promise<void> => {
-      try {
-        const [draftRes, assignedRes, driversRes] = await Promise.all([
-          apiService.axios.get<{ data: { jobs: Job[] } }>('/api/jobs?status=DRAFT&limit=100'),
-          apiService.axios.get<{ data: { jobs: Job[] } }>('/api/jobs?status=ASSIGNED&limit=100'),
-          apiService.axios.get<{ data: Driver[] }>('/api/users?role=Driver'),
-        ]);
-        setJobs([...draftRes.data.data.jobs, ...assignedRes.data.data.jobs]);
-        setDrivers(driversRes.data.data);
-      } catch (err) {
-        console.error('Failed to load board data:', err);
-        setError('Failed to load board data');
-      } finally {
-        setLoading(false);
-      }
-    };
-    void fetchAll();
+  const fetchAll = useCallback(async (date: string): Promise<void> => {
+    try {
+      setLoading(true);
+      setError(null);
+      const { from, to } = getDayBounds(date);
+      const [draftRes, assignedRes, driversRes] = await Promise.all([
+        apiService.axios.get<{ data: { jobs: Job[] } }>('/api/jobs?status=DRAFT&limit=100'),
+        apiService.axios.get<{ data: { jobs: Job[] } }>(
+          `/api/jobs?status=ASSIGNED&scheduledFrom=${encodeURIComponent(from)}&scheduledTo=${encodeURIComponent(to)}&limit=100`,
+        ),
+        apiService.axios.get<{ data: Driver[] }>('/api/users?role=Driver'),
+      ]);
+      setJobs([...draftRes.data.data.jobs, ...assignedRes.data.data.jobs]);
+      setDrivers(driversRes.data.data);
+    } catch (err) {
+      console.error('Failed to load board data:', err);
+      setError('Failed to load board data');
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    void fetchAll(selectedDate);
+  }, [fetchAll, selectedDate]);
 
   const handleDragStart = (event: DragStartEvent): void => {
     setActiveJob(jobs.find((j) => j.id === event.active.id) ?? null);
@@ -285,8 +315,24 @@ const DispatcherBoard: React.FC = () => {
 
         {view === 'assign' && (
           <>
+            <div className={styles.assignDateRow}>
+              <input
+                type="date"
+                value={selectedDate}
+                min={dateOffset(-365)}
+                max={dateOffset(365)}
+                onChange={(e) => { if (e.target.value) setSelectedDate(e.target.value); }}
+                className={styles.datePicker}
+                aria-label="Filter by date"
+              />
+              <span className={styles.weekLabel}>{formatAssignDate(selectedDate)}</span>
+            </div>
             <JobPool
-              jobs={jobs.filter((j) => j.assignedDriverId === null)}
+              jobs={jobs.filter((j) => {
+                if (j.assignedDriverId !== null) return false;
+                const d = parseJobDate(j.scheduledStart);
+                return !d || isSameDay(d, parseISO(selectedDate));
+              })}
               onCardClick={setSelectedJob}
             />
             <section className={styles.driversSection}>
@@ -296,7 +342,7 @@ const DispatcherBoard: React.FC = () => {
                   <DriverColumn
                     key={driver.id}
                     driver={driver}
-                    jobs={jobs.filter((j) => j.assignedDriverId === driver.id)}
+                    jobs={sortByTime(jobs.filter((j) => j.assignedDriverId === driver.id))}
                     onCardClick={setSelectedJob}
                   />
                 ))}

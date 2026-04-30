@@ -91,6 +91,13 @@
 }
 
 /* ── Assign view ───────────────────────────────────────── */
+.assignDateRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
 .driversSection {
   display: flex;
   flex-direction: column;
