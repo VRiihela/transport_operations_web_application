@@ -10,6 +10,13 @@ const jobInclude = {
     createdBy: userSelect,
     assignedDriver: userSelect,
     completionReport: true,
+    team: {
+      include: {
+        members: {
+          include: { user: { select: { id: true, name: true, email: true } } },
+        },
+      },
+    },
   },
 } satisfies Prisma.JobDefaultArgs;
 
@@ -45,6 +52,7 @@ export class JobService {
         scheduledAt: data.scheduledAt ? new Date(data.scheduledAt) : undefined,
         scheduledStart: data.scheduledStart != null ? new Date(data.scheduledStart) : undefined,
         scheduledEnd: data.scheduledEnd != null ? new Date(data.scheduledEnd) : undefined,
+        teamId: data.teamId ?? undefined,
       },
       ...jobInclude,
     });
@@ -143,6 +151,8 @@ export class JobService {
               : null
             : undefined,
         status: data.status as JobStatus | undefined,
+        teamId: data.teamId !== undefined ? data.teamId : undefined,
+        sortOrder: data.sortOrder !== undefined ? data.sortOrder : undefined,
       },
       ...jobInclude,
     });

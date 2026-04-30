@@ -12,6 +12,7 @@ export const createJobSchema = z
     title: z.string().min(1, 'Title is required').max(255, 'Title too long').trim(),
     description: z.string().max(1000, 'Description too long').trim().optional(),
     assignedDriverId: z.string().cuid().optional(),
+    teamId: z.string().cuid().optional(),
     scheduledAt: z.string().datetime().optional(),
     scheduledStart: z.string().datetime().nullish(),
     scheduledEnd: z.string().datetime().nullish(),
@@ -39,7 +40,11 @@ export const createJobSchema = z
   .refine(schedulingDateRefinement, {
     message: 'scheduledEnd must be after scheduledStart',
     path: ['scheduledEnd'],
-  });
+  })
+  .refine(
+    (data) => !(data.assignedDriverId && data.teamId),
+    { message: 'Job cannot be assigned to both a driver and a team', path: ['teamId'] }
+  );
 
 export const updateJobSchema = z
   .object({
@@ -47,6 +52,8 @@ export const updateJobSchema = z
     description: z.string().max(1000, 'Description too long').trim().optional(),
     status: z.enum(['DRAFT', 'ASSIGNED', 'IN_PROGRESS', 'COMPLETED']).optional(),
     assignedDriverId: z.string().cuid().nullable().optional(),
+    teamId: z.string().cuid().nullable().optional(),
+    sortOrder: z.number().int().optional(),
     scheduledAt: z.string().datetime().nullable().optional(),
     scheduledStart: z.string().datetime().nullish(),
     scheduledEnd: z.string().datetime().nullish(),
@@ -77,7 +84,11 @@ export const updateJobSchema = z
   .refine(schedulingDateRefinement, {
     message: 'scheduledEnd must be after scheduledStart',
     path: ['scheduledEnd'],
-  });
+  })
+  .refine(
+    (data) => !(data.assignedDriverId && data.teamId),
+    { message: 'Job cannot be assigned to both a driver and a team', path: ['teamId'] }
+  );
 
 export const jobQuerySchema = z.object({
   status: z.enum(['DRAFT', 'ASSIGNED', 'IN_PROGRESS', 'COMPLETED']).optional(),

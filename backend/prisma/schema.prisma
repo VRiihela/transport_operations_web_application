@@ -42,6 +42,8 @@ model User {
   assignedJobs      Job[]              @relation("AssignedJobs")
   createdJobs       Job[]              @relation("CreatedJobs")
   completionReports CompletionReport[]
+  createdTeams      Team[]             @relation("CreatedTeams")
+  teamMemberships   TeamMember[]       @relation("TeamMemberships")
 
   @@map("users")
 }
@@ -80,6 +82,8 @@ model Job {
   description      String?
   status           JobStatus @default(DRAFT)
   assignedDriverId String?
+  teamId           String?
+  sortOrder        Int       @default(0)
   scheduledAt      DateTime?
   scheduledStart   DateTime?
   scheduledEnd     DateTime?
@@ -105,6 +109,7 @@ model Job {
   assignedDriver   User?             @relation("AssignedJobs", fields: [assignedDriverId], references: [id])
   createdBy        User              @relation("CreatedJobs", fields: [createdById], references: [id])
   completionReport CompletionReport?
+  team             Team?             @relation(fields: [teamId], references: [id])
 
   @@index([status])
   @@index([assignedDriverId])
@@ -130,4 +135,32 @@ model CompletionReport {
   createdBy User @relation(fields: [createdById], references: [id])
 
   @@map("completion_reports")
+}
+
+model Team {
+  id          String   @id @default(cuid())
+  name        String   @db.VarChar(100)
+  date        DateTime
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  createdBy User         @relation("CreatedTeams", fields: [createdById], references: [id])
+  members   TeamMember[]
+  jobs      Job[]
+
+  @@index([date])
+  @@map("teams")
+}
+
+model TeamMember {
+  id     String @id @default(cuid())
+  teamId String
+  userId String
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user User @relation("TeamMemberships", fields: [userId], references: [id])
+
+  @@unique([teamId, userId])
+  @@map("team_members")
 }

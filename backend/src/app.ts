@@ -4,6 +4,7 @@ import cors from 'cors';
 import { authRoutes } from './routes/auth.routes';
 import { jobRoutes } from './routes/job.routes';
 import { userRoutes } from './routes/user.routes';
+import { teamRoutes } from './routes/team.routes';
 
 const app = express();
 
@@ -23,5 +24,6 @@ app.use(
 app.use('/api/auth', authRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/teams', teamRoutes);
 
 export { app };

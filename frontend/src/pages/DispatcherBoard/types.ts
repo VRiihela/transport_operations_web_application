@@ -3,6 +3,7 @@ export interface Job {
   title: string;
   status: 'DRAFT' | 'ASSIGNED' | 'IN_PROGRESS' | 'COMPLETED';
   assignedDriverId: string | null;
+  sortOrder?: number;
   assignedDriver?: { id: string; name: string | null; email: string } | null;
   description?: string | null;
   scheduledStart?: string | null;

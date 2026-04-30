@@ -21,6 +21,7 @@ import {
   isValid,
   set as setTime,
 } from 'date-fns';
+import { arrayMove } from '@dnd-kit/sortable';
 import apiService from '../../services/api';
 import JobPool from './components/JobPool/JobPool';
 import DriverColumn from './components/DriverColumn/DriverColumn';
@@ -91,6 +92,20 @@ function parseJobDate(scheduledStart: string | null | undefined): Date | null {
 
 function sortByTime(jobs: Job[]): Job[] {
   return [...jobs].sort((a, b) => {
+    const ta = parseJobDate(a.scheduledStart);
+    const tb = parseJobDate(b.scheduledStart);
+    if (!ta && !tb) return 0;
+    if (!ta) return 1;
+    if (!tb) return -1;
+    return ta.getTime() - tb.getTime();
+  });
+}
+
+function sortByOrder(jobs: Job[]): Job[] {
+  return [...jobs].sort((a, b) => {
+    const sa = a.sortOrder ?? 0;
+    const sb = b.sortOrder ?? 0;
+    if (sa !== sb) return sa - sb;
     const ta = parseJobDate(a.scheduledStart);
     const tb = parseJobDate(b.scheduledStart);
     if (!ta && !tb) return 0;
@@ -187,27 +202,63 @@ const DispatcherBoard: React.FC = () => {
     const overId = over.id as string;
 
     if (view === 'assign') {
-      const newAssignedDriverId = overId === 'pool' ? null : overId;
-      const newStatus = overId === 'pool' ? ('DRAFT' as const) : ('ASSIGNED' as const);
+      const activeJobData = jobs.find((j) => j.id === jobId);
+      if (!activeJobData) return;
 
-      const snapshot: Job[] = jobs;
-      setJobs((prev) =>
-        prev.map((job) =>
-          job.id !== jobId ? job : { ...job, assignedDriverId: newAssignedDriverId, status: newStatus },
-        ),
-      );
+      const overJobData = jobs.find((j) => j.id === overId);
 
-      try {
-        await apiService.axios.patch(`/api/jobs/${jobId}`, {
-          assignedDriverId: newAssignedDriverId,
-          status: newStatus,
-        });
-      } catch (err) {
-        console.error('Failed to update job assignment:', err);
-        if (snapshot !== null) {
+      const isWithinColumn =
+        overJobData !== undefined &&
+        overJobData.assignedDriverId !== null &&
+        overJobData.assignedDriverId === activeJobData.assignedDriverId;
+
+      if (isWithinColumn) {
+        // Reorder within driver column
+        const colJobs = sortByOrder(jobs.filter((j) => j.assignedDriverId === activeJobData.assignedDriverId));
+        const oldIndex = colJobs.findIndex((j) => j.id === jobId);
+        const newIndex = colJobs.findIndex((j) => j.id === overId);
+        if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return;
+
+        const reordered = arrayMove(colJobs, oldIndex, newIndex);
+        const prevSortOrder = reordered[newIndex - 1]?.sortOrder ?? 0;
+        const nextSortOrder = reordered[newIndex + 1]?.sortOrder ?? (prevSortOrder + 2000);
+        const newSortOrder = Math.max(prevSortOrder + 1, Math.floor((prevSortOrder + nextSortOrder) / 2));
+
+        const snapshot = jobs;
+        setJobs((prev) => prev.map((j) => j.id === jobId ? { ...j, sortOrder: newSortOrder } : j));
+
+        try {
+          await apiService.axios.patch(`/api/jobs/${jobId}`, { sortOrder: newSortOrder });
+        } catch (err) {
+          console.error('Failed to update sort order:', err);
           setJobs(snapshot);
-        } else {
-          console.warn('Rollback snapshot is null, skipping rollback');
+        }
+      } else {
+        // Cross-column assign or to pool
+        const newAssignedDriverId = overId === 'pool'
+          ? null
+          : (overJobData ? overJobData.assignedDriverId : overId);
+        const newStatus = newAssignedDriverId === null ? ('DRAFT' as const) : ('ASSIGNED' as const);
+
+        const snapshot: Job[] = jobs;
+        setJobs((prev) =>
+          prev.map((job) =>
+            job.id !== jobId ? job : { ...job, assignedDriverId: newAssignedDriverId, status: newStatus },
+          ),
+        );
+
+        try {
+          await apiService.axios.patch(`/api/jobs/${jobId}`, {
+            assignedDriverId: newAssignedDriverId,
+            status: newStatus,
+          });
+        } catch (err) {
+          console.error('Failed to update job assignment:', err);
+          if (snapshot !== null) {
+            setJobs(snapshot);
+          } else {
+            console.warn('Rollback snapshot is null, skipping rollback');
+          }
         }
       }
     } else {
@@ -358,7 +409,7 @@ const DispatcherBoard: React.FC = () => {
                   <DriverColumn
                     key={driver.id}
                     driver={driver}
-                    jobs={sortByTime(jobs.filter((j) => j.assignedDriverId === driver.id))}
+                    jobs={sortByOrder(jobs.filter((j) => j.assignedDriverId === driver.id))}
                     onCardClick={setSelectedJob}
                   />
                 ))}
