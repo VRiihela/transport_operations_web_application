@@ -123,6 +123,12 @@ function dateOffset(days: number): string {
   return d.toISOString().split('T')[0];
 }
 
+function shiftDate(dateStr: string, days: number): string {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  const d = new Date(year, month - 1, day + days);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 const DispatcherBoard: React.FC = () => {
   const [view, setView] = useState<'assign' | 'schedule'>('assign');
   const [selectedDate, setSelectedDate] = useState<string>(todayISO);
@@ -316,6 +322,11 @@ const DispatcherBoard: React.FC = () => {
         {view === 'assign' && (
           <>
             <div className={styles.assignDateRow}>
+              <button
+                className={styles.navBtn}
+                onClick={() => setSelectedDate(shiftDate(selectedDate, -1))}
+                aria-label="Previous day"
+              >←</button>
               <input
                 type="date"
                 value={selectedDate}
@@ -325,6 +336,11 @@ const DispatcherBoard: React.FC = () => {
                 className={styles.datePicker}
                 aria-label="Filter by date"
               />
+              <button
+                className={styles.navBtn}
+                onClick={() => setSelectedDate(shiftDate(selectedDate, 1))}
+                aria-label="Next day"
+              >→</button>
               <span className={styles.weekLabel}>{formatAssignDate(selectedDate)}</span>
             </div>
             <JobPool
