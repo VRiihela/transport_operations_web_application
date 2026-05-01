@@ -33,7 +33,10 @@ export class JobService {
   private baseWhere(userRole: UserRole, userId: string): Prisma.JobWhereInput {
     const where: Prisma.JobWhereInput = { deletedAt: null };
     if (userRole === UserRole.Driver) {
-      where.assignedDriverId = userId;
+      where.OR = [
+        { assignedDriverId: userId },
+        { team: { members: { some: { userId } } } },
+      ];
     }
     return where;
   }
@@ -61,17 +64,34 @@ export class JobService {
   async getJobs(query: JobQuery, userRole: UserRole, userId: string) {
     const { status, assignedDriverId, scheduledFrom, scheduledTo, page = 1, limit = 10 } = query;
 
-    const where: Prisma.JobWhereInput = {
-      ...this.baseWhere(userRole, userId),
-      ...(status && { status }),
-      ...(assignedDriverId && userRole !== UserRole.Driver && { assignedDriverId }),
-      ...((scheduledFrom || scheduledTo) && {
-        scheduledStart: {
-          ...(scheduledFrom && { gte: new Date(scheduledFrom) }),
-          ...(scheduledTo && { lte: new Date(scheduledTo) }),
-        },
-      }),
-    };
+    let where: Prisma.JobWhereInput;
+
+    if (userRole === UserRole.Driver && (scheduledFrom || scheduledTo)) {
+      const dateFilter = {
+        ...(scheduledFrom && { gte: new Date(scheduledFrom) }),
+        ...(scheduledTo && { lte: new Date(scheduledTo) }),
+      };
+      where = {
+        deletedAt: null,
+        ...(status && { status }),
+        OR: [
+          { assignedDriverId: userId, scheduledStart: dateFilter },
+          { team: { members: { some: { userId } }, date: dateFilter } },
+        ],
+      };
+    } else {
+      where = {
+        ...this.baseWhere(userRole, userId),
+        ...(status && { status }),
+        ...(assignedDriverId && userRole !== UserRole.Driver && { assignedDriverId }),
+        ...((scheduledFrom || scheduledTo) && {
+          scheduledStart: {
+            ...(scheduledFrom && { gte: new Date(scheduledFrom) }),
+            ...(scheduledTo && { lte: new Date(scheduledTo) }),
+          },
+        }),
+      };
+    }
 
     const [jobs, total] = await Promise.all([
       this.prisma.job.findMany({
@@ -159,9 +179,16 @@ export class JobService {
   }
 
   async updateDriverNotes(id: string, driverNotes: string, userId: string) {
-    const job = await this.prisma.job.findFirst({ where: { id, deletedAt: null } });
+    const job = await this.prisma.job.findFirst({
+      where: { id, deletedAt: null },
+      include: { team: { include: { members: true } } },
+    });
     if (!job) return null;
-    if (job.assignedDriverId !== userId) throw new Error('FORBIDDEN');
+
+    const isDirectlyAssigned = job.assignedDriverId === userId;
+    const isTeamMember = job.team !== null && job.team.members.some((m) => m.userId === userId);
+    if (!isDirectlyAssigned && !isTeamMember) throw new Error('FORBIDDEN');
+
     return this.prisma.job.update({
       where: { id },
       data: { driverNotes },

@@ -42,6 +42,7 @@ interface Job {
   // legacy field
   location?: string | null;
   notes: string | null;
+  team?: { id: string; name: string } | null;
 }
 
 interface JobsApiResponse {
@@ -281,9 +282,14 @@ const MyJobsPage: React.FC = () => {
             >
               <div className={styles.jobHeader}>
                 <h3 className={styles.jobTitle}>{job.title}</h3>
-                <span className={`${styles.statusBadge} ${getStatusBadgeClass(job.status)}`}>
-                  {job.status}
-                </span>
+                <div className={styles.jobHeaderRight}>
+                  {job.team && (
+                    <span className={styles.teamBadge}>{job.team.name}</span>
+                  )}
+                  <span className={`${styles.statusBadge} ${getStatusBadgeClass(job.status)}`}>
+                    {job.status}
+                  </span>
+                </div>
               </div>
 
               <div className={styles.jobDetails}>
