@@ -25,6 +25,11 @@ interface CompletionReport {
   approvedAt: string | null;
 }
 
+interface Team {
+  id: string;
+  name: string;
+}
+
 interface Job {
   id: string;
   title: string;
@@ -32,6 +37,8 @@ interface Job {
   status: JobStatus;
   assignedDriverId: string | null;
   assignedDriver: AssignedDriver | null;
+  teamId?: string | null;
+  team?: Team | null;
   scheduledAt: string | null;
   scheduledStart: string | null;
   scheduledEnd: string | null;
@@ -69,6 +76,7 @@ interface EditFormData {
   scheduledEnd: string;
   schedulingNote: string;
   assignedDriverId: string;
+  teamId: string;
   street: string;
   houseNumber: string;
   stair: string;
@@ -114,6 +122,10 @@ interface UsersApiResponse {
   data: Driver[];
 }
 
+interface TeamsApiResponse {
+  data: Team[];
+}
+
 function getApiError(err: unknown, fallback: string): string {
   if (isAxiosError(err)) {
     const msg = (err.response?.data as { error?: string } | undefined)?.error;
@@ -151,10 +163,13 @@ const JobsPage: React.FC = () => {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [editingJob, setEditingJob] = useState<Job | null>(null);
   const [editForm, setEditForm] = useState<EditFormData>({
-    title: '', description: '', scheduledStart: '', scheduledEnd: '', schedulingNote: '', assignedDriverId: '',
+    title: '', description: '', scheduledStart: '', scheduledEnd: '', schedulingNote: '',
+    assignedDriverId: '', teamId: '',
     street: '', houseNumber: '', stair: '', postalCode: '', city: '',
     deliveryStreet: '', deliveryHouseNumber: '', deliveryStair: '', deliveryPostalCode: '', deliveryCity: '',
   });
+  const [editTeams, setEditTeams] = useState<Team[]>([]);
+  const [loadingTeams, setLoadingTeams] = useState(false);
   const [showEditDelivery, setShowEditDelivery] = useState(false);
   const [editError, setEditError] = useState<string>('');
   const [editSubmitting, setEditSubmitting] = useState(false);
@@ -285,6 +300,17 @@ const JobsPage: React.FC = () => {
 
   const handleEditOpen = (job: Job) => {
     void fetchDrivers();
+
+    const jobDate = job.scheduledStart
+      ? new Date(job.scheduledStart).toISOString().split('T')[0]
+      : new Date().toISOString().split('T')[0];
+    setLoadingTeams(true);
+    axiosInstance
+      .get<TeamsApiResponse>(`/api/teams?date=${jobDate}`)
+      .then((res) => setEditTeams(res.data.data))
+      .catch(() => setEditTeams([]))
+      .finally(() => setLoadingTeams(false));
+
     setEditForm({
       title: job.title,
       description: job.description ?? '',
@@ -292,6 +318,7 @@ const JobsPage: React.FC = () => {
       scheduledEnd: formatDateTimeForInput(job.scheduledEnd),
       schedulingNote: job.schedulingNote ?? '',
       assignedDriverId: job.assignedDriverId ?? '',
+      teamId: job.teamId ?? '',
       street: job.street ?? '',
       houseNumber: job.houseNumber ?? '',
       stair: job.stair ?? '',
@@ -316,13 +343,15 @@ const JobsPage: React.FC = () => {
     setEditSubmitting(true);
     setEditError('');
     try {
+      const isTeamAssigned = Boolean(editForm.teamId);
       const payload = {
         title: editForm.title.trim(),
         description: editForm.description.trim() || undefined,
         scheduledStart: editForm.scheduledStart ? new Date(editForm.scheduledStart).toISOString() : null,
         scheduledEnd: editForm.scheduledEnd ? new Date(editForm.scheduledEnd).toISOString() : null,
         schedulingNote: editForm.schedulingNote.trim() || undefined,
-        assignedDriverId: editForm.assignedDriverId || undefined,
+        assignedDriverId: isTeamAssigned ? null : (editForm.assignedDriverId || undefined),
+        teamId: editForm.teamId || null,
         street: editForm.street.trim() || undefined,
         houseNumber: editForm.houseNumber.trim() || undefined,
         stair: editForm.stair.trim() || undefined,
@@ -710,13 +739,29 @@ const JobsPage: React.FC = () => {
                 <select
                   id="edit-driver"
                   value={editForm.assignedDriverId}
-                  onChange={(e) => setEditForm((p) => ({ ...p, assignedDriverId: e.target.value }))}
+                  onChange={(e) => setEditForm((p) => ({ ...p, assignedDriverId: e.target.value, ...(e.target.value ? { teamId: '' } : {}) }))}
                   className={styles.formInput}
                   disabled={loadingDrivers}
                 >
                   <option value="">{loadingDrivers ? 'Loading…' : 'Unassigned'}</option>
                   {drivers.filter((d) => d.isActive).map((d) => (
                     <option key={d.id} value={d.id}>{d.name ?? d.email}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className={styles.formGroup}>
+                <label htmlFor="edit-team" className={styles.formLabel}>Assigned Team</label>
+                <select
+                  id="edit-team"
+                  value={editForm.teamId}
+                  onChange={(e) => setEditForm((p) => ({ ...p, teamId: e.target.value, ...(e.target.value ? { assignedDriverId: '' } : {}) }))}
+                  className={styles.formInput}
+                  disabled={loadingTeams}
+                >
+                  <option value="">{loadingTeams ? 'Loading…' : 'No team'}</option>
+                  {editTeams.map((t) => (
+                    <option key={t.id} value={t.id}>{t.name}</option>
                   ))}
                 </select>
               </div>
@@ -901,9 +946,11 @@ const JobsPage: React.FC = () => {
                     </span>
                   </td>
                   <td className={styles.td}>
-                    {job.assignedDriver ? driverLabel(job.assignedDriver) : (
-                      <span className={styles.unassigned}>Unassigned</span>
-                    )}
+                    {job.assignedDriver
+                      ? driverLabel(job.assignedDriver)
+                      : job.team
+                        ? job.team.name
+                        : <span className={styles.unassigned}>Unassigned</span>}
                   </td>
                   <td className={styles.td}>{formatSchedulingInfo(job.scheduledStart, job.scheduledEnd, job.schedulingNote)}</td>
                   <td className={styles.td} onClick={(e) => e.stopPropagation()}>

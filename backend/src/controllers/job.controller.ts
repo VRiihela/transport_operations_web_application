@@ -41,6 +41,16 @@ export const getJobs = async (req: AuthenticatedRequest, res: Response): Promise
   }
 };
 
+export const getMyJobs = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const jobs = await jobService.getMyJobs(req.user!.id);
+    res.json({ data: jobs });
+  } catch (error) {
+    console.error('Get my jobs error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 export const getJobById = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const job = await jobService.getJobById(req.params['id'] as string, req.user!.role as UserRole, req.user!.id);

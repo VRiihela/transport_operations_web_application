@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { authenticateToken } from '../middleware/authenticate';
 import { requireRole } from '../middleware/requireRole';
 import { UserRole } from '../types/auth.types';
-import { createJob, getJobs, getJobById, updateJob, updateJobStatus, updateDriverNotes, upsertCompletionReport, approveCompletionReport, deleteJob } from '../controllers/job.controller';
+import { createJob, getJobs, getMyJobs, getJobById, updateJob, updateJobStatus, updateDriverNotes, upsertCompletionReport, approveCompletionReport, deleteJob } from '../controllers/job.controller';
 
 const router = Router();
 
@@ -10,6 +10,7 @@ router.use(authenticateToken);
 
 router.post('/', requireRole(UserRole.Admin, UserRole.Dispatcher), createJob);
 router.get('/', requireRole(UserRole.Admin, UserRole.Dispatcher, UserRole.Driver), getJobs);
+router.get('/my-jobs', requireRole(UserRole.Driver), getMyJobs);
 router.get('/:id', getJobById);
 router.patch('/:id/notes', requireRole(UserRole.Driver), updateDriverNotes);
 router.patch('/:id/status', requireRole(UserRole.Driver), updateJobStatus);

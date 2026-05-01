@@ -110,6 +110,26 @@ export class JobService {
     };
   }
 
+  async getMyJobs(userId: string) {
+    const memberships = await this.prisma.teamMember.findMany({
+      where: { userId },
+      select: { teamId: true },
+    });
+    const teamIds = memberships.map((m) => m.teamId);
+
+    return this.prisma.job.findMany({
+      where: {
+        deletedAt: null,
+        OR: [
+          { assignedDriverId: userId },
+          ...(teamIds.length > 0 ? [{ teamId: { in: teamIds } }] : []),
+        ],
+      },
+      ...jobInclude,
+      orderBy: [{ scheduledStart: 'asc' }, { createdAt: 'desc' }],
+    });
+  }
+
   async getJobById(id: string, userRole: UserRole, userId: string) {
     return this.prisma.job.findFirst({
       where: { id, ...this.baseWhere(userRole, userId) },
