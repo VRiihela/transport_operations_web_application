@@ -1,0 +1,28 @@
+{
+  "taskId": "teams-backend",
+  "title": "Driver Teams — Backend: Models and API",
+  "description": "Add Team model to the database. A team has a name, a date, and a list of driver members. Jobs can be assigned to a team instead of an individual driver. Add CRUD endpoints for teams and update job assignment to support teamId.",
+  "acceptanceCriteria": [
+    "Team model added to schema.prisma with fields: id, name, date, createdById, createdAt",
+    "TeamMember join table added: teamId, userId (Driver role only)",
+    "Job model gets optional teamId field — assignedDriverId and teamId are mutually exclusive",
+    "POST /api/teams — create team with name, date, driverIds (Admin/Dispatcher only)",
+    "GET /api/teams?date= — list teams for a given date with members included",
+    "DELETE /api/teams/:id — delete team (Admin/Dispatcher only)",
+    "PATCH /api/teams/:id — update team name or members"
+  ],
+  "affectedFiles": [
+    "backend/prisma/schema.prisma",
+    "backend/src/routes/teams.ts",
+    "backend/src/routes/jobs.ts",
+    "backend/src/app.ts"
+  ],
+  "implementationNotes": [
+    "Run migration after schema changes: npx prisma migrate dev --name add-teams",
+    "Team date field is DateTime stored as start of day UTC",
+    "GET /api/jobs must include team relation when teamId is set",
+    "Job assignedDriverId and teamId should not both be set — enforce in Zod schema with .refine()",
+    "Register /api/teams route in app.ts",
+    "All team endpoints require authenticateToken and adminOrDispatcher middleware"
+  ]
+}

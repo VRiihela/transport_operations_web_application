@@ -1,0 +1,23 @@
+{
+  "taskId": "teams-driver-view",
+  "title": "Driver Teams — Driver My Jobs View",
+  "description": "Update the driver My Jobs page to show jobs assigned to any team the driver is a member of, in addition to jobs assigned directly. Driver sees all jobs they are responsible for on the selected date.",
+  "acceptanceCriteria": [
+    "Driver sees jobs assigned to their team(s) for the selected date alongside direct assignments",
+    "Team name shown on job card when job is assigned via team",
+    "Driver can update status and add notes on team-assigned jobs",
+    "No change to how directly assigned jobs are displayed",
+    "Empty state shown when no direct or team jobs exist for the selected date"
+  ],
+  "affectedFiles": [
+    "frontend/src/pages/MyJobsPage/MyJobsPage.tsx",
+    "frontend/src/pages/MyJobsPage/MyJobsPage.module.css",
+    "backend/src/routes/jobs.ts"
+  ],
+  "implementationNotes": [
+    "Backend GET /api/jobs for Driver role must return jobs where teamId matches any team the driver is a member of OR assignedDriverId matches the driver",
+    "Use Prisma OR query: where: { OR: [{ assignedDriverId: userId }, { team: { members: { some: { userId } } } }] }",
+    "Team name displayed as a small badge on the job card e.g. 'Tiimi A'",
+    "Do not change dispatcher-facing endpoints in this task"
+  ]
+}

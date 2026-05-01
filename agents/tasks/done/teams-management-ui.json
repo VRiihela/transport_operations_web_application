@@ -1,0 +1,26 @@
+{
+  "taskId": "teams-management-ui",
+  "title": "Driver Teams — Team Management UI",
+  "description": "Add a team management panel to the dispatcher board assign view. Dispatcher can create teams for the selected date, add drivers to teams, and delete teams. Teams are shown alongside individual driver columns.",
+  "acceptanceCriteria": [
+    "Create Team button opens a modal with team name input and driver multi-select",
+    "Drivers already in a team for the selected date are marked as unavailable in the picker",
+    "Created teams appear as columns in the assign view alongside individual driver columns",
+    "Team column header shows team name and member driver names",
+    "Delete button on team column removes the team after confirmation",
+    "Teams are fetched from GET /api/teams?date= on date change"
+  ],
+  "affectedFiles": [
+    "frontend/src/pages/DispatcherBoard/DispatcherBoard.tsx",
+    "frontend/src/pages/DispatcherBoard/DispatcherBoard.module.css",
+    "frontend/src/pages/DispatcherBoard/components/DriverColumn/DriverColumn.tsx",
+    "frontend/src/pages/DispatcherBoard/components/DriverColumn/DriverColumn.module.css"
+  ],
+  "implementationNotes": [
+    "Team columns use the same DriverColumn component with a isTeam prop to adjust header rendering",
+    "Driver multi-select uses native <select multiple> — no external library",
+    "Droppable id for team columns is the team id string",
+    "Do not modify the schedule (weekly) view in this task",
+    "Reuse existing modal CSS pattern for the create team modal"
+  ]
+}
