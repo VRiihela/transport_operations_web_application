@@ -1,8 +1,26 @@
+export interface TeamMember {
+  id: string;
+  teamId: string;
+  userId: string;
+  user: { id: string; name: string | null; email: string };
+}
+
+export interface Team {
+  id: string;
+  name: string;
+  date: string;
+  createdById: string;
+  createdAt: string;
+  updatedAt: string;
+  members: TeamMember[];
+}
+
 export interface Job {
   id: string;
   title: string;
   status: 'DRAFT' | 'ASSIGNED' | 'IN_PROGRESS' | 'COMPLETED';
   assignedDriverId: string | null;
+  teamId?: string | null;
   sortOrder?: number;
   assignedDriver?: { id: string; name: string | null; email: string } | null;
   description?: string | null;

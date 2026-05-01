@@ -1,0 +1,131 @@
+.column {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #eff6ff;
+  border: 2px solid #bfdbfe;
+  border-radius: 8px;
+  padding: 16px;
+  min-width: 200px;
+}
+
+.over {
+  border-color: #3b82f6;
+  background: #dbeafe;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.info {
+  flex: 1;
+  min-width: 0;
+}
+
+.name {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e3a8a;
+}
+
+.members {
+  margin: 4px 0 0;
+  font-size: 11px;
+  color: #3b82f6;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.deleteBtn {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+  transition: color 0.12s;
+}
+.deleteBtn:hover:not(:disabled) { color: #ef4444; }
+.deleteBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.jobs {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 60px;
+}
+
+.empty {
+  margin: 0;
+  font-size: 12px;
+  color: #93c5fd;
+  font-style: italic;
+}
+
+/* Delete confirmation overlay */
+.confirmOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.confirmBox {
+  text-align: center;
+  padding: 16px;
+}
+
+.confirmText {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #1e3a8a;
+}
+
+.confirmError {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: #ef4444;
+}
+
+.confirmActions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.cancelBtn {
+  padding: 5px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 5px;
+  background: #fff;
+  font-size: 12px;
+  cursor: pointer;
+}
+.cancelBtn:hover:not(:disabled) { background: #f9fafb; }
+
+.confirmDeleteBtn {
+  padding: 5px 14px;
+  border: none;
+  border-radius: 5px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.confirmDeleteBtn:hover:not(:disabled) { background: #dc2626; }
+.confirmDeleteBtn:disabled { background: #fca5a5; cursor: not-allowed; }

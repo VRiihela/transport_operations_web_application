@@ -98,6 +98,20 @@
   margin-bottom: 4px;
 }
 
+.createTeamBtn {
+  margin-left: auto;
+  padding: 5px 14px;
+  border: none;
+  border-radius: 6px;
+  background: #3b82f6;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.createTeamBtn:hover { background: #2563eb; }
+
 .driversSection {
   display: flex;
   flex-direction: column;

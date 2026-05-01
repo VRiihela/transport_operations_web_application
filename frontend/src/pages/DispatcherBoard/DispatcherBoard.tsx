@@ -25,9 +25,12 @@ import { arrayMove } from '@dnd-kit/sortable';
 import apiService from '../../services/api';
 import JobPool from './components/JobPool/JobPool';
 import DriverColumn from './components/DriverColumn/DriverColumn';
+import TeamColumn from './components/TeamColumn/TeamColumn';
+import TeamManagementModal from './components/TeamManagementModal/TeamManagementModal';
 import JobCard from './components/JobCard/JobCard';
 import { JobDetailModal } from '../../components/JobDetailModal';
 import { JobEditModal, JobUpdatePayload } from '../../components/JobEditModal';
+import { useTeams } from './hooks/useTeams';
 import styles from './DispatcherBoard.module.css';
 import { Job, Driver } from './types';
 
@@ -120,12 +123,6 @@ function todayISO(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-function getDayBounds(dateStr: string): { from: string; to: string } {
-  const [year, month, day] = dateStr.split('-').map(Number);
-  const start = new Date(year, month - 1, day, 0, 0, 0, 0);
-  const end = new Date(year, month - 1, day, 23, 59, 59, 999);
-  return { from: start.toISOString(), to: end.toISOString() };
-}
 
 function formatAssignDate(dateStr: string): string {
   const [year, month, day] = dateStr.split('-');
@@ -158,21 +155,25 @@ const DispatcherBoard: React.FC = () => {
     startOfWeek(new Date(), { weekStartsOn: 1 }),
   );
   const [datePickerValue, setDatePickerValue] = useState('');
+  const [showTeamModal, setShowTeamModal] = useState(false);
+
+  const { teams, createTeam, deleteTeam, error: teamsError } = useTeams(selectedDate);
+
+  const driversInTeams = new Set(
+    teams.flatMap((t) => t.members.map((m) => m.userId)),
+  );
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
   );
 
-  const fetchAll = useCallback(async (date: string): Promise<void> => {
+  const fetchAll = useCallback(async (_date: string): Promise<void> => {
     try {
       setLoading(true);
       setError(null);
-      const { from, to } = getDayBounds(date);
       const [draftRes, assignedRes, driversRes] = await Promise.all([
         apiService.axios.get<{ data: { jobs: Job[] } }>('/api/jobs?status=DRAFT&limit=100'),
-        apiService.axios.get<{ data: { jobs: Job[] } }>(
-          `/api/jobs?status=ASSIGNED&scheduledFrom=${encodeURIComponent(from)}&scheduledTo=${encodeURIComponent(to)}&limit=100`,
-        ),
+        apiService.axios.get<{ data: { jobs: Job[] } }>('/api/jobs?status=ASSIGNED&limit=200'),
         apiService.axios.get<{ data: Driver[] }>('/api/users?role=Driver'),
       ]);
       setJobs([...draftRes.data.data.jobs, ...assignedRes.data.data.jobs]);
@@ -234,31 +235,52 @@ const DispatcherBoard: React.FC = () => {
           setJobs(snapshot);
         }
       } else {
-        // Cross-column assign or to pool
-        const newAssignedDriverId = overId === 'pool'
-          ? null
-          : (overJobData ? overJobData.assignedDriverId : overId);
-        const newStatus = newAssignedDriverId === null ? ('DRAFT' as const) : ('ASSIGNED' as const);
+        // Cross-column: pool, team column, or driver column
+        const targetTeam = teams.find((t) => t.id === overId);
+
+        let newAssignedDriverId: string | null;
+        let newTeamId: string | null;
+
+        if (overId === 'pool') {
+          newAssignedDriverId = null;
+          newTeamId = null;
+        } else if (targetTeam) {
+          newAssignedDriverId = null;
+          newTeamId = targetTeam.id;
+        } else {
+          newAssignedDriverId = overJobData ? overJobData.assignedDriverId : overId;
+          newTeamId = null;
+        }
+
+        // No-op if nothing changes
+        if (
+          newAssignedDriverId === (activeJobData.assignedDriverId ?? null) &&
+          newTeamId === (activeJobData.teamId ?? null)
+        ) return;
+
+        const newStatus =
+          newAssignedDriverId === null && newTeamId === null
+            ? ('DRAFT' as const)
+            : ('ASSIGNED' as const);
 
         const snapshot: Job[] = jobs;
         setJobs((prev) =>
           prev.map((job) =>
-            job.id !== jobId ? job : { ...job, assignedDriverId: newAssignedDriverId, status: newStatus },
+            job.id !== jobId
+              ? job
+              : { ...job, assignedDriverId: newAssignedDriverId, teamId: newTeamId, status: newStatus },
           ),
         );
 
         try {
           await apiService.axios.patch(`/api/jobs/${jobId}`, {
             assignedDriverId: newAssignedDriverId,
+            teamId: newTeamId,
             status: newStatus,
           });
         } catch (err) {
           console.error('Failed to update job assignment:', err);
-          if (snapshot !== null) {
-            setJobs(snapshot);
-          } else {
-            console.warn('Rollback snapshot is null, skipping rollback');
-          }
+          setJobs(snapshot);
         }
       }
     } else {
@@ -393,23 +415,46 @@ const DispatcherBoard: React.FC = () => {
                 aria-label="Next day"
               >→</button>
               <span className={styles.weekLabel}>{formatAssignDate(selectedDate)}</span>
+              <button
+                className={styles.createTeamBtn}
+                onClick={() => setShowTeamModal(true)}
+              >
+                + Create Team
+              </button>
             </div>
+            {teamsError && (
+              <p className={styles.statusMessage} style={{ color: '#b91c1c' }}>{teamsError}</p>
+            )}
             <JobPool
               jobs={jobs.filter((j) => {
                 if (j.assignedDriverId !== null) return false;
+                if (j.teamId) return false;
                 const d = parseJobDate(j.scheduledStart);
                 return !d || isSameDay(d, parseISO(selectedDate));
               })}
               onCardClick={setSelectedJob}
             />
             <section className={styles.driversSection}>
-              <h2 className={styles.driversHeading}>Drivers</h2>
+              <h2 className={styles.driversHeading}>Drivers &amp; Teams</h2>
               <div className={styles.driverColumns}>
                 {drivers.map((driver) => (
                   <DriverColumn
                     key={driver.id}
                     driver={driver}
-                    jobs={sortByOrder(jobs.filter((j) => j.assignedDriverId === driver.id))}
+                    jobs={sortByOrder(jobs.filter((j) => {
+                      if (j.assignedDriverId !== driver.id) return false;
+                      const d = parseJobDate(j.scheduledStart);
+                      return d ? isSameDay(d, parseISO(selectedDate)) : false;
+                    }))}
+                    onCardClick={setSelectedJob}
+                  />
+                ))}
+                {teams.map((team) => (
+                  <TeamColumn
+                    key={team.id}
+                    team={team}
+                    jobs={sortByOrder(jobs.filter((j) => j.teamId === team.id))}
+                    onDelete={deleteTeam}
                     onCardClick={setSelectedJob}
                   />
                 ))}
@@ -495,6 +540,14 @@ const DispatcherBoard: React.FC = () => {
           onSave={handleSave}
         />
       )}
+
+      <TeamManagementModal
+        isOpen={showTeamModal}
+        onClose={() => setShowTeamModal(false)}
+        onCreate={createTeam}
+        drivers={drivers}
+        driversInTeams={driversInTeams}
+      />
     </DndContext>
   );
 };
