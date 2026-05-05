@@ -1,0 +1,30 @@
+{
+  "taskId": "customer-model",
+  "title": "Customer model and lookup endpoint",
+  "profile": "Node/TypeScript Backend",
+  "repo": "work_management_system",
+  "tech": "Node.js, TypeScript, Express, PostgreSQL, Prisma 6, Zod",
+  "keyConstraints": "TypeScript strict mode, Zod validation server-side, .nullish() not .optional().nullable(), Prisma selects must include all returned fields",
+  "description": "Add a Customer model to the database and a lookup endpoint so dispatchers can find returning customers by phone number during job creation.",
+  "acceptanceCriteria": [
+    "Customer model has: id, name, phone (unique, indexed), email (optional), type (PRIVATE | BUSINESS enum), companyName (optional), referenceNumber (optional), createdAt. Migration created and applied.",
+    "GET /api/customers?phone=<partial> returns matching customers (max 10), safe fields only, requires Admin or Dispatcher role",
+    "POST /api/customers creates a new customer; phone uniqueness enforced with 409 on conflict",
+    "GET /api/customers/:id returns a single customer",
+    "All routes require authenticateToken and adminOrDispatcher role middleware",
+    "Zod validation on create body; use .nullish() not .optional().nullable()"
+  ],
+  "affectedFiles": [
+    "backend/prisma/schema.prisma",
+    "backend/src/routes/customer.routes.ts",
+    "backend/src/services/customer.service.ts",
+    "backend/src/types/customer.types.ts",
+    "backend/src/app.ts"
+  ],
+  "implementationNotes": [
+    "CustomerType enum: PRIVATE, BUSINESS",
+    "phone is the primary lookup key — add @@index([phone])",
+    "Follow existing pattern: route → service → Prisma; response shape { data: ... }",
+    "Do not store sensitive payment data"
+  ]
+}

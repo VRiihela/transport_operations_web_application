@@ -28,6 +28,15 @@ enum JobStatus {
   COMPLETED
 }
 
+enum JobType {
+  DELIVERY
+  PICKUP
+  DELIVERY_AND_PICKUP
+  INSTALLATION
+  SERVICE
+  COMBINED
+}
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
@@ -81,9 +90,12 @@ model Job {
   title            String    @db.VarChar(255)
   description      String?
   status           JobStatus @default(DRAFT)
+  jobType          JobType   @default(DELIVERY)
   assignedDriverId String?
   teamId           String?
+  customerId       String?
   sortOrder        Int       @default(0)
+  services         String?
   scheduledAt      DateTime?
   scheduledStart   DateTime?
   scheduledEnd     DateTime?
@@ -101,6 +113,12 @@ model Job {
   deliveryStair       String?   @db.VarChar(50)
   deliveryPostalCode  String?   @db.VarChar(20)
   deliveryCity        String?   @db.VarChar(255)
+  pickupStreet     String?
+  pickupPostalCode String?
+  pickupCity       String?
+  floorStair       String?
+  doorCode         String?
+  accessNotes      String?
   createdById      String
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
@@ -110,6 +128,7 @@ model Job {
   createdBy        User              @relation("CreatedJobs", fields: [createdById], references: [id])
   completionReport CompletionReport?
   team             Team?             @relation(fields: [teamId], references: [id])
+  customer         Customer?         @relation(fields: [customerId], references: [id], onDelete: SetNull)
 
   @@index([status])
   @@index([assignedDriverId])
@@ -163,4 +182,25 @@ model TeamMember {
 
   @@unique([teamId, userId])
   @@map("team_members")
+}
+
+enum CustomerType {
+  PRIVATE
+  BUSINESS
+}
+
+model Customer {
+  id              String       @id @default(cuid())
+  name            String
+  phone           String       @unique
+  email           String?
+  type            CustomerType
+  companyName     String?
+  referenceNumber String?
+  createdAt       DateTime     @default(now())
+
+  jobs Job[]
+
+  @@index([phone])
+  @@map("customers")
 }

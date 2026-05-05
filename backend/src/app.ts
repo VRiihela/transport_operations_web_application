@@ -5,6 +5,7 @@ import { authRoutes } from './routes/auth.routes';
 import { jobRoutes } from './routes/job.routes';
 import { userRoutes } from './routes/user.routes';
 import { teamRoutes } from './routes/team.routes';
+import { customerRoutes } from './routes/customer.routes';
 
 const app = express();
 
@@ -25,5 +26,6 @@ app.use('/api/auth', authRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/teams', teamRoutes);
+app.use('/api/customers', customerRoutes);
 
 export { app };
