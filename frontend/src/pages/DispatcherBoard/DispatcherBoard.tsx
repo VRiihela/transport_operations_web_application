@@ -214,22 +214,30 @@ const DispatcherBoard: React.FC = () => {
         overJobData.assignedDriverId === activeJobData.assignedDriverId;
 
       if (isWithinColumn) {
-        // Reorder within driver column
-        const colJobs = sortByOrder(jobs.filter((j) => j.assignedDriverId === activeJobData.assignedDriverId));
+        // Reorder within driver column — use the same date filter as the column display
+        const colJobs = sortByOrder(jobs.filter((j) => {
+          if (j.assignedDriverId !== activeJobData.assignedDriverId) return false;
+          const d = parseJobDate(j.scheduledStart);
+          return d ? isSameDay(d, parseISO(selectedDate)) : false;
+        }));
         const oldIndex = colJobs.findIndex((j) => j.id === jobId);
         const newIndex = colJobs.findIndex((j) => j.id === overId);
         if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return;
 
         const reordered = arrayMove(colJobs, oldIndex, newIndex);
-        const prevSortOrder = reordered[newIndex - 1]?.sortOrder ?? 0;
-        const nextSortOrder = reordered[newIndex + 1]?.sortOrder ?? (prevSortOrder + 2000);
-        const newSortOrder = Math.max(prevSortOrder + 1, Math.floor((prevSortOrder + nextSortOrder) / 2));
+        // Re-index all items with even spacing so the order is always unambiguous
+        const updates = reordered
+          .map((j, idx) => ({ id: j.id, sortOrder: (idx + 1) * 1000 }))
+          .filter(({ id, sortOrder }) => jobs.find((j) => j.id === id)?.sortOrder !== sortOrder);
 
         const snapshot = jobs;
-        setJobs((prev) => prev.map((j) => j.id === jobId ? { ...j, sortOrder: newSortOrder } : j));
+        setJobs((prev) => prev.map((j) => {
+          const u = updates.find((x) => x.id === j.id);
+          return u ? { ...j, sortOrder: u.sortOrder } : j;
+        }));
 
         try {
-          await apiService.axios.patch(`/api/jobs/${jobId}`, { sortOrder: newSortOrder });
+          await Promise.all(updates.map((u) => apiService.axios.patch(`/api/jobs/${u.id}`, { sortOrder: u.sortOrder })));
         } catch (err) {
           console.error('Failed to update sort order:', err);
           setJobs(snapshot);
@@ -437,27 +445,39 @@ const DispatcherBoard: React.FC = () => {
             <section className={styles.driversSection}>
               <h2 className={styles.driversHeading}>Drivers &amp; Teams</h2>
               <div className={styles.driverColumns}>
-                {drivers.map((driver) => (
-                  <DriverColumn
-                    key={driver.id}
-                    driver={driver}
-                    jobs={sortByOrder(jobs.filter((j) => {
-                      if (j.assignedDriverId !== driver.id) return false;
-                      const d = parseJobDate(j.scheduledStart);
-                      return d ? isSameDay(d, parseISO(selectedDate)) : false;
-                    }))}
-                    onCardClick={setSelectedJob}
-                  />
-                ))}
-                {teams.map((team) => (
-                  <TeamColumn
-                    key={team.id}
-                    team={team}
-                    jobs={sortByOrder(jobs.filter((j) => j.teamId === team.id))}
-                    onDelete={deleteTeam}
-                    onCardClick={setSelectedJob}
-                  />
-                ))}
+                {drivers
+                  .filter((driver) => !driversInTeams.has(driver.id))
+                  .map((driver) => (
+                    <DriverColumn
+                      key={driver.id}
+                      driver={driver}
+                      jobs={sortByOrder(jobs.filter((j) => {
+                        if (j.assignedDriverId !== driver.id) return false;
+                        const d = parseJobDate(j.scheduledStart);
+                        return d ? isSameDay(d, parseISO(selectedDate)) : false;
+                      }))}
+                      onCardClick={setSelectedJob}
+                    />
+                  ))}
+                {teams.map((team) => {
+                  const memberIds = new Set(team.members.map((m) => m.userId));
+                  return (
+                    <TeamColumn
+                      key={team.id}
+                      team={team}
+                      jobs={sortByOrder(jobs.filter((j) => {
+                        if (j.teamId === team.id) return true;
+                        if (j.assignedDriverId && memberIds.has(j.assignedDriverId)) {
+                          const d = parseJobDate(j.scheduledStart);
+                          return d ? isSameDay(d, parseISO(selectedDate)) : false;
+                        }
+                        return false;
+                      }))}
+                      onDelete={deleteTeam}
+                      onCardClick={setSelectedJob}
+                    />
+                  );
+                })}
               </div>
             </section>
           </>
