@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import axiosInstance from '../api/axios';
 import { JobDetailModal } from '../components/JobDetailModal';
+import { JobCreateModal } from '../components/JobCreateModal/JobCreateModal';
 import styles from './JobsPage.module.css';
 
 type JobStatus = 'DRAFT' | 'ASSIGNED' | 'IN_PROGRESS' | 'COMPLETED';
@@ -173,6 +174,7 @@ const JobsPage: React.FC = () => {
   const [showEditDelivery, setShowEditDelivery] = useState(false);
   const [editError, setEditError] = useState<string>('');
   const [editSubmitting, setEditSubmitting] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const fetchJobs = useCallback(async () => {
     try {
@@ -433,6 +435,15 @@ const JobsPage: React.FC = () => {
         <div className={styles.headerActions}>
           {user?.role === 'Admin' && (
             <Link to="/users" className={styles.usersLink}>Users</Link>
+          )}
+          {(user?.role === 'Admin' || user?.role === 'Dispatcher') && (
+            <button
+              type="button"
+              className={styles.newJobButton}
+              onClick={() => setIsCreateModalOpen(true)}
+            >
+              New Job
+            </button>
           )}
           <button className={styles.createButton} onClick={() => setShowCreateForm(true)}>
             Create Job
@@ -1023,6 +1034,11 @@ const JobsPage: React.FC = () => {
           onEdit={() => { handleEditOpen(selectedJob); setSelectedJob(null); }}
         />
       )}
+
+      <JobCreateModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+      />
     </div>
   );
 };

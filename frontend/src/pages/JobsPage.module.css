@@ -28,6 +28,26 @@
 }
 
 /* ── Buttons ─────────────────────────────────────────────── */
+.newJobButton {
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  font-size: 0.875rem;
+}
+
+.newJobButton:hover {
+  background-color: #2563eb;
+}
+
+.newJobButton:active {
+  background-color: #1d4ed8;
+}
+
 .createButton {
   background: #2563eb;
   color: #fff;

@@ -1,0 +1,122 @@
+.schedulingSection {
+  margin-bottom: 24px;
+}
+
+.sectionTitle {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: #1a1a1a;
+}
+
+.segmentControl {
+  display: flex;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.segmentOption {
+  flex: 1;
+  position: relative;
+  cursor: pointer;
+}
+
+.segmentRadio {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.segmentLabel {
+  display: block;
+  padding: 12px 16px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+  background-color: #ffffff;
+  border-right: 1px solid #d1d5db;
+  transition: all 0.2s ease;
+}
+
+.segmentOption:last-child .segmentLabel {
+  border-right: none;
+}
+
+.segmentRadio:checked + .segmentLabel {
+  background-color: #007bff;
+  color: #ffffff;
+}
+
+.segmentLabel:hover {
+  background-color: #f3f4f6;
+}
+
+.segmentRadio:checked + .segmentLabel:hover {
+  background-color: #0056b3;
+}
+
+.schedulingInputs {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.timeWindow {
+  display: flex;
+  gap: 16px;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.inputLabel {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.required {
+  color: #dc3545;
+}
+
+.dateInput,
+.timeInput {
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 14px;
+  background-color: #ffffff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dateInput:focus,
+.timeInput:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.noteTextarea {
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 14px;
+  background-color: #ffffff;
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.noteTextarea:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}

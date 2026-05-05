@@ -1,0 +1,67 @@
+.servicesSection {
+  margin-bottom: 24px;
+}
+
+.sectionTitle {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: #1a1a1a;
+}
+
+.servicesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.serviceItem {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.serviceLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.serviceLabel:hover {
+  background-color: #f5f5f5;
+}
+
+.serviceCheckbox {
+  width: 16px;
+  height: 16px;
+}
+
+.serviceName {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.defaultService {
+  color: #007bff;
+  font-weight: 600;
+}
+
+.otherInput {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  margin-left: 24px;
+  width: calc(100% - 24px);
+}
+
+.otherInput:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
