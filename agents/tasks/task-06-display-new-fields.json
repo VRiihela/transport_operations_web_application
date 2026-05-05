@@ -1,0 +1,28 @@
+{
+  "taskId": "display-new-fields",
+  "title": "Display new job fields in JobDetailModal and job cards",
+  "profile": "React/TypeScript Frontend",
+  "repo": "work_management_system",
+  "tech": "React 18, TypeScript, Vite, CSS Modules",
+  "keyConstraints": "No inline styles — CSS Modules only. No layout regressions on existing fields.",
+  "description": "Update JobDetailModal and JobCard to display the new fields added in task-02: jobType badge, services list, customer info, pickup address, and scheduling mode.",
+  "acceptanceCriteria": [
+    "JobDetailModal shows jobType as a styled badge, services as comma-separated text, customer name + phone (if present), pickup address block (if pickupStreet present), scheduling as human-readable text",
+    "Scheduling display logic: scheduledStart present → Finnish datetime format; no scheduledStart but schedulingNote → show schedulingNote; neither → show 'Aika sopimatta'",
+    "Customer section in JobDetailModal only rendered when job.customer relation is present",
+    "JobCard shows jobType badge alongside existing status badge",
+    "JobCard shows customer name as secondary line if present",
+    "npx tsc --noEmit passes with no errors"
+  ],
+  "affectedFiles": [
+    "frontend/src/components/JobDetailModal.tsx",
+    "frontend/src/components/JobDetailModal.module.css",
+    "frontend/src/components/JobCard/JobCard.tsx",
+    "frontend/src/components/JobCard/JobCard.module.css"
+  ],
+  "implementationNotes": [
+    "JobType badge colors (CSS classes): DELIVERY=teal, PICKUP=orange, DELIVERY_AND_PICKUP=purple, INSTALLATION=indigo, SERVICE=pink, COMBINED=gray",
+    "Reuse existing badge CSS pattern from status badges",
+    "customer data comes from job.customer relation — type as optional in Job interface"
+  ]
+}

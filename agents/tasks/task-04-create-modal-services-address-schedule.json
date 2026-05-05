@@ -1,0 +1,31 @@
+{
+  "taskId": "create-modal-services-address-schedule",
+  "title": "Job creation modal — services, addresses, and scheduling sections",
+  "profile": "React/TypeScript Frontend",
+  "repo": "work_management_system",
+  "tech": "React 18, TypeScript, Vite, CSS Modules",
+  "keyConstraints": "No inline styles — CSS Modules only. No UI component libraries. Conditional rendering based on jobType prop.",
+  "description": "Add ServicesSection, AddressSection, and SchedulingSection to JobCreateModal. Sections render conditionally based on selected job type.",
+  "acceptanceCriteria": [
+    "ServicesSection renders checkboxes: Delivery, Pickup/collection, Installation, Removal/disposal, Assembly, Other (Other shows free-text input when checked). Defaults pre-selected based on jobType.",
+    "AddressSection renders one address block for INSTALLATION and SERVICE; two blocks (pickup + delivery) for DELIVERY_AND_PICKUP; single delivery block for DELIVERY; single pickup block for PICKUP. Each block: street, postalCode, city (required), floorStair, doorCode, accessNotes (optional).",
+    "SchedulingSection renders a 3-option segment control: Exact time | Time window | TBC. Exact time: date + start time. Time window: date + window start + window end. TBC: required schedulingNote text input. Default: TBC.",
+    "Switching jobType updates address layout and pre-selected services without clearing already-typed data in unchanged fields",
+    "All section state lifted to JobCreateModal"
+  ],
+  "affectedFiles": [
+    "frontend/src/components/JobCreateModal/ServicesSection.tsx",
+    "frontend/src/components/JobCreateModal/ServicesSection.module.css",
+    "frontend/src/components/JobCreateModal/AddressSection.tsx",
+    "frontend/src/components/JobCreateModal/AddressSection.module.css",
+    "frontend/src/components/JobCreateModal/SchedulingSection.tsx",
+    "frontend/src/components/JobCreateModal/SchedulingSection.module.css",
+    "frontend/src/components/JobCreateModal/JobCreateModal.tsx"
+  ],
+  "implementationNotes": [
+    "Segment control: styled radio inputs or button group in CSS Modules",
+    "Date inputs: type='date', time inputs: type='time'",
+    "schedulingNote maps to existing backend field; scheduledStart/End map to existing DateTime fields",
+    "Required field validation on submit only — no live validation"
+  ]
+}

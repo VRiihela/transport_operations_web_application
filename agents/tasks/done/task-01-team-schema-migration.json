@@ -1,0 +1,27 @@
+{
+  "taskId": "team-schema-migration",
+  "title": "Driver Teams — Schema Migration",
+  "profile": "Node/TypeScript Backend",
+  "repo": "work_management_system",
+  "tech": "Node.js, TypeScript, Express, PostgreSQL, Prisma, Zod",
+  "keyConstraints": "TypeScript strict, Prisma 6 (pinned — do not upgrade), no raw SQL, run npx prisma generate after schema changes",
+  "description": "Add assignedTeamId to Job model so jobs can be assigned to a team. Wire the foreign key to the existing Team model.",
+  "acceptanceCriteria": [
+    "Job model has optional assignedTeamId String? field with @relation to Team",
+    "Team model has a jobs Job[] relation back-reference",
+    "Migration created and applied with npx prisma migrate dev --name add-job-team-assignment",
+    "npx prisma generate runs clean after migration",
+    "npx tsc --noEmit passes with no errors",
+    "All existing Prisma select objects in jobs.ts include assignedTeamId so the field is returned in API responses"
+  ],
+  "affectedFiles": [
+    "backend/prisma/schema.prisma",
+    "backend/src/routes/jobs.ts"
+  ],
+  "implementationNotes": [
+    "Add to Job model: assignedTeamId String? and relation field team Team? @relation(fields: [assignedTeamId], references: [id])",
+    "Add @@index([assignedTeamId]) to Job model",
+    "Add jobs Job[] back-reference to Team model",
+    "Add assignedTeamId to every Prisma select object in jobs.ts that returns job data — same pattern as other fields"
+  ]
+}

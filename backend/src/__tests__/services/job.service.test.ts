@@ -62,7 +62,7 @@ describe('JobService', () => {
       mockCreate.mockResolvedValue(baseJob);
 
       const result = await service.createJob(
-        { title: 'Test Job' },
+        { title: 'Test Job', jobType: 'DELIVERY' as const },
         'user-admin'
       );
 
@@ -76,7 +76,7 @@ describe('JobService', () => {
 
     it('converts scheduledAt string to Date', async () => {
       mockCreate.mockResolvedValue(baseJob);
-      await service.createJob({ title: 'Job', scheduledAt: '2025-06-01T10:00:00Z' }, 'user-1');
+      await service.createJob({ title: 'Job', jobType: 'DELIVERY' as const, scheduledAt: '2025-06-01T10:00:00Z' }, 'user-1');
       expect(mockCreate).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({ scheduledAt: new Date('2025-06-01T10:00:00Z') }),

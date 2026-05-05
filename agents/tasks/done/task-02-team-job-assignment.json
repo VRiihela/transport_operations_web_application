@@ -1,0 +1,27 @@
+{
+  "taskId": "team-job-assignment",
+  "title": "Driver Teams — Job Assignment",
+  "profile": "Node/TypeScript Backend + React Frontend",
+  "repo": "work_management_system",
+  "tech": "Node.js, TypeScript, Express, PostgreSQL, Prisma, JWT, Zod, React 18, Vite",
+  "keyConstraints": "TypeScript strict, server-side validation with Zod, no trust of frontend input, Prisma for all DB queries, CSS Modules only (no inline styles)",
+  "description": "When a driver is added to a team, their ASSIGNED/IN_PROGRESS jobs auto-reassign to the team. Drivers in an active team are excluded from the individual driver assignment pool. Dispatcher can assign jobs to a team. Team dissolution is blocked if active team jobs exist.",
+  "acceptanceCriteria": [
+    "POST /api/teams/:id/members — adding a driver auto-reassigns their ASSIGNED/IN_PROGRESS jobs to the team in a single DB transaction (assignedDriverId → null, teamId → team id)",
+    "DELETE /api/teams/:id — returns 409 if any team jobs have status ASSIGNED or IN_PROGRESS; on success bulk-sets team jobs to DRAFT and clears teamId in same transaction as team deletion",
+    "Driver assignment pool (dispatcher UI) excludes drivers who have a TeamMember record (where: { role: DRIVER, teamMemberships: { none: {} } })",
+    "Dispatcher/Admin can assign a job to a team via the job edit modal — team picker available alongside driver picker",
+    "npx tsc --noEmit passes with no errors"
+  ],
+  "affectedFiles": [
+    "backend/src/routes/teams.ts",
+    "backend/src/routes/jobs.ts",
+    "frontend/src/pages/JobsPage.tsx"
+  ],
+  "implementationNotes": [
+    "POST /api/teams/:id/members body: { userId: string } — prisma.$transaction: create TeamMember + updateMany jobs where assignedDriverId = userId AND status IN ['ASSIGNED', 'IN_PROGRESS'] SET assignedDriverId = null, teamId = team id",
+    "DELETE /api/teams/:id: count jobs where teamId = id AND status IN ['ASSIGNED', 'IN_PROGRESS'], return 409 if count > 0; else prisma.$transaction: updateMany jobs SET status = DRAFT + teamId = null, delete TeamMembers, delete Team",
+    "Driver pool for dispatcher: where: { role: 'DRIVER', teamMemberships: { none: {} } }",
+    "Job edit modal: fetch GET /api/teams for team dropdown; PATCH /api/jobs/:id with teamId set and assignedDriverId: null when assigning to team"
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "taskId": "team-jobs-visibility",
+  "title": "Driver Teams — My Jobs Visibility",
+  "profile": "Node/TypeScript Backend + React Frontend",
+  "repo": "work_management_system",
+  "tech": "Node.js, TypeScript, Express, PostgreSQL, Prisma, JWT, Zod, React 18, Vite",
+  "keyConstraints": "TypeScript strict, server-side validation with Zod, Prisma for all DB queries, CSS Modules only (no inline styles)",
+  "description": "Team members see team-assigned jobs in their my-jobs view, in addition to their individually assigned jobs.",
+  "acceptanceCriteria": [
+    "GET /api/jobs/my-jobs returns jobs where assignedDriverId = me OR teamId is in teams the driver belongs to (via TeamMember records)",
+    "Team-assigned jobs display correctly in MyJobsPage with all existing fields (status, schedule, address)",
+    "Driver can transition team job status (ASSIGNED → IN_PROGRESS → COMPLETED) via PATCH /api/jobs/:id/status",
+    "npx tsc --noEmit passes with no errors"
+  ],
+  "affectedFiles": [
+    "backend/src/routes/jobs.ts",
+    "frontend/src/pages/MyJobsPage.tsx"
+  ],
+  "implementationNotes": [
+    "My-jobs query: first fetch driver's team IDs — const memberships = await prisma.teamMember.findMany({ where: { userId }, select: { teamId: true } }); const teamIds = memberships.map(m => m.teamId)",
+    "Then query jobs: where: { deletedAt: null, OR: [{ assignedDriverId: userId }, { teamId: { in: teamIds } }] }",
+    "Status transition auth: allow PATCH /api/jobs/:id/status if job.assignedDriverId = userId OR job.teamId is in driver's teamIds — same lookup pattern",
+    "Frontend: no changes expected if MyJobsPage already maps over the jobs array — verify the job card renders teamId assignment correctly (show team name if assignedDriverId is null and teamId is set)"
+  ]
+}

@@ -175,3 +175,7 @@ PORT                  Server port (default: 3001)
 | Database | Railway PostgreSQL — run `npx prisma migrate deploy` on first deploy |
 
 Update `FRONTEND_URL` in backend env to the Vercel production URL before deploy.
+
+## After Each Task
+
+Append a one-line entry to `./agents/orchestrator/run_log_notes.md` with: date, task ID, files touched, and any gotchas discovered.

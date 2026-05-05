@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { JobStatus, JobType } from '@prisma/client';
 
 const schedulingDateRefinement = (data: { scheduledStart?: string | null; scheduledEnd?: string | null }) => {
   if (data.scheduledStart && data.scheduledEnd) {
@@ -11,8 +12,11 @@ export const createJobSchema = z
   .object({
     title: z.string().min(1, 'Title is required').max(255, 'Title too long').trim(),
     description: z.string().max(1000, 'Description too long').trim().optional(),
+    jobType: z.nativeEnum(JobType),
     assignedDriverId: z.string().cuid().optional(),
     teamId: z.string().cuid().optional(),
+    customerId: z.string().cuid().nullish(),
+    services: z.array(z.string()).nullish(),
     scheduledAt: z.string().datetime().optional(),
     scheduledStart: z.string().datetime().nullish(),
     scheduledEnd: z.string().datetime().nullish(),
@@ -29,6 +33,12 @@ export const createJobSchema = z
     deliveryStair: z.string().max(50).trim().optional(),
     deliveryPostalCode: z.string().max(20).trim().optional(),
     deliveryCity: z.string().max(255).trim().optional(),
+    pickupStreet: z.string().max(255).trim().nullish(),
+    pickupPostalCode: z.string().max(20).trim().nullish(),
+    pickupCity: z.string().max(255).trim().nullish(),
+    floorStair: z.string().max(100).trim().nullish(),
+    doorCode: z.string().max(50).trim().nullish(),
+    accessNotes: z.string().max(500).trim().nullish(),
   })
   .refine(
     (data) => {
@@ -50,10 +60,13 @@ export const updateJobSchema = z
   .object({
     title: z.string().min(1, 'Title is required').max(255, 'Title too long').trim().optional(),
     description: z.string().max(1000, 'Description too long').trim().optional(),
+    jobType: z.nativeEnum(JobType).optional(),
     status: z.enum(['DRAFT', 'ASSIGNED', 'IN_PROGRESS', 'COMPLETED']).optional(),
     assignedDriverId: z.string().cuid().nullable().optional(),
     teamId: z.string().cuid().nullable().optional(),
+    customerId: z.string().cuid().nullish(),
     sortOrder: z.number().int().optional(),
+    services: z.array(z.string()).nullish(),
     scheduledAt: z.string().datetime().nullable().optional(),
     scheduledStart: z.string().datetime().nullish(),
     scheduledEnd: z.string().datetime().nullish(),
@@ -70,6 +83,12 @@ export const updateJobSchema = z
     deliveryStair: z.string().max(50).trim().optional(),
     deliveryPostalCode: z.string().max(20).trim().optional(),
     deliveryCity: z.string().max(255).trim().optional(),
+    pickupStreet: z.string().max(255).trim().nullish(),
+    pickupPostalCode: z.string().max(20).trim().nullish(),
+    pickupCity: z.string().max(255).trim().nullish(),
+    floorStair: z.string().max(100).trim().nullish(),
+    doorCode: z.string().max(50).trim().nullish(),
+    accessNotes: z.string().max(500).trim().nullish(),
   })
   .refine(
     (data) => {
@@ -112,3 +131,16 @@ export type UpdateJobRequest = z.infer<typeof updateJobSchema>;
 export type UpdateJobStatusRequest = z.infer<typeof updateJobStatusSchema>;
 export type UpdateDriverNotesRequest = z.infer<typeof updateDriverNotesSchema>;
 export type JobQuery = z.infer<typeof jobQuerySchema>;
+
+export interface JobWithDetails {
+  id: string;
+  status: JobStatus;
+  jobType: JobType;
+  services: string[] | null;
+  scheduledStart: Date | null;
+  scheduledEnd: Date | null;
+  schedulingNote: string | null;
+  assignedDriverId: string | null;
+  teamId: string | null;
+  [key: string]: unknown;
+}

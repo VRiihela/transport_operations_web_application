@@ -20,6 +20,10 @@ export const createJob = async (req: AuthenticatedRequest, res: Response): Promi
     const job = await jobService.createJob(parsed.data, req.user!.id);
     res.status(201).json({ data: job });
   } catch (error) {
+    if (error instanceof Error && error.message === 'CUSTOMER_NOT_FOUND') {
+      res.status(400).json({ error: 'Invalid customerId: Customer not found' });
+      return;
+    }
     console.error('Create job error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
@@ -95,6 +99,10 @@ export const updateJob = async (req: AuthenticatedRequest, res: Response): Promi
     }
     if (error instanceof Error && error.message === 'COMPLETION_REPORT_REQUIRED') {
       res.status(400).json({ error: 'Completion report with customer approval required before marking job as completed' });
+      return;
+    }
+    if (error instanceof Error && error.message === 'CUSTOMER_NOT_FOUND') {
+      res.status(400).json({ error: 'Invalid customerId: Customer not found' });
       return;
     }
     console.error('Update job error:', error);

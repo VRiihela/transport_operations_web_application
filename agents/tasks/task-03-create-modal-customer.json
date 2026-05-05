@@ -1,0 +1,30 @@
+{
+  "taskId": "create-modal-customer",
+  "title": "Job creation modal — job type and customer sections",
+  "profile": "React/TypeScript Frontend",
+  "repo": "work_management_system",
+  "tech": "React 18, TypeScript, Vite, CSS Modules, Axios",
+  "keyConstraints": "No inline styles — CSS Modules only. No UI component libraries. No token or user data in localStorage.",
+  "description": "Build the JobCreateModal component with the first two sections: job type selection (button group) and customer lookup/create with phone-first search.",
+  "acceptanceCriteria": [
+    "JobCreateModal component renders a modal overlay with job type and customer sections. JobsPage has a 'New job' button (Admin/Dispatcher only) that opens it.",
+    "Job type rendered as a horizontal button group: DELIVERY, PICKUP, DELIVERY_AND_PICKUP, INSTALLATION, SERVICE, COMBINED. Default: DELIVERY. Selected type stored in component state.",
+    "CustomerSection has a phone input that calls GET /api/customers?phone=<value> after 400ms debounce and shows a dropdown of up to 5 matches",
+    "Selecting a match pre-fills name, companyName, and PRIVATE/BUSINESS toggle. Customer id stored in state for later submission.",
+    "If no match found: user fills name and phone manually; PRIVATE/BUSINESS toggle shown. No match required — customer fields are optional.",
+    "All customer and jobType state lifted to JobCreateModal parent state"
+  ],
+  "affectedFiles": [
+    "frontend/src/components/JobCreateModal/JobCreateModal.tsx",
+    "frontend/src/components/JobCreateModal/JobCreateModal.module.css",
+    "frontend/src/components/JobCreateModal/CustomerSection.tsx",
+    "frontend/src/components/JobCreateModal/CustomerSection.module.css",
+    "frontend/src/pages/JobsPage.tsx"
+  ],
+  "implementationNotes": [
+    "Debounce with setTimeout/clearTimeout — no external library",
+    "Use axiosInstance from api/axios.ts for the customer lookup call",
+    "Dropdown closes on outside click (use useEffect + mousedown listener)",
+    "Job type button group: active state via CSS class, not inline style"
+  ]
+}

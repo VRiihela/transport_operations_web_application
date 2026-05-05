@@ -1,5 +1,5 @@
-import { PrismaClient, JobStatus, UserRole, Prisma } from '@prisma/client';
-import { CreateJobRequest, UpdateJobRequest, JobQuery } from '../types/job.types';
+import { PrismaClient, JobStatus, JobType, UserRole, Prisma } from '@prisma/client';
+import { CreateJobRequest, UpdateJobRequest, JobQuery, JobWithDetails } from '../types/job.types';
 
 const userSelect = {
   select: { id: true, name: true, email: true },
@@ -10,6 +10,7 @@ const jobInclude = {
     createdBy: userSelect,
     assignedDriver: userSelect,
     completionReport: true,
+    customer: true,
     team: {
       include: {
         members: {
@@ -47,11 +48,45 @@ export class JobService {
     }
   }
 
-  async createJob(data: CreateJobRequest, createdById: string) {
-    return this.prisma.job.create({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private transformJob(job: any): JobWithDetails {
+    let parsedServices: string[] | null = null;
+    if (job.services && typeof job.services === 'string') {
+      try {
+        parsedServices = JSON.parse(job.services);
+      } catch (error) {
+        console.error('Error parsing services JSON:', error);
+        parsedServices = null;
+      }
+    } else if (Array.isArray(job.services)) {
+      parsedServices = job.services;
+    }
+    return {
+      ...job,
+      services: parsedServices,
+    };
+  }
+
+  private async validateCustomer(customerId: string): Promise<void> {
+    const exists = await this.prisma.customer.findUnique({
+      where: { id: customerId },
+      select: { id: true },
+    });
+    if (!exists) throw new Error('CUSTOMER_NOT_FOUND');
+  }
+
+  async createJob(data: CreateJobRequest, createdById: string): Promise<JobWithDetails> {
+    if (data.customerId) {
+      await this.validateCustomer(data.customerId);
+    }
+
+    const { services, jobType, ...restData } = data;
+    const job = await this.prisma.job.create({
       data: {
-        ...data,
+        ...restData,
+        jobType: jobType as JobType,
         createdById,
+        services: services ? JSON.stringify(services) : null,
         scheduledAt: data.scheduledAt ? new Date(data.scheduledAt) : undefined,
         scheduledStart: data.scheduledStart != null ? new Date(data.scheduledStart) : undefined,
         scheduledEnd: data.scheduledEnd != null ? new Date(data.scheduledEnd) : undefined,
@@ -59,6 +94,7 @@ export class JobService {
       },
       ...jobInclude,
     });
+    return this.transformJob(job);
   }
 
   async getJobs(query: JobQuery, userRole: UserRole, userId: string) {
@@ -105,19 +141,19 @@ export class JobService {
     ]);
 
     return {
-      jobs,
+      jobs: jobs.map((j) => this.transformJob(j)),
       pagination: { page, limit, total, pages: Math.ceil(total / limit) },
     };
   }
 
-  async getMyJobs(userId: string) {
+  async getMyJobs(userId: string): Promise<JobWithDetails[]> {
     const memberships = await this.prisma.teamMember.findMany({
       where: { userId },
       select: { teamId: true },
     });
     const teamIds = memberships.map((m) => m.teamId);
 
-    return this.prisma.job.findMany({
+    const jobs = await this.prisma.job.findMany({
       where: {
         deletedAt: null,
         OR: [
@@ -128,16 +164,18 @@ export class JobService {
       ...jobInclude,
       orderBy: [{ scheduledStart: 'asc' }, { createdAt: 'desc' }],
     });
+    return jobs.map((j) => this.transformJob(j));
   }
 
-  async getJobById(id: string, userRole: UserRole, userId: string) {
-    return this.prisma.job.findFirst({
+  async getJobById(id: string, userRole: UserRole, userId: string): Promise<JobWithDetails | null> {
+    const job = await this.prisma.job.findFirst({
       where: { id, ...this.baseWhere(userRole, userId) },
       ...jobInclude,
     });
+    return job ? this.transformJob(job) : null;
   }
 
-  async updateJob(id: string, data: UpdateJobRequest, userRole: UserRole, userId: string) {
+  async updateJob(id: string, data: UpdateJobRequest, userRole: UserRole, userId: string): Promise<JobWithDetails | null> {
     const existing = await this.getJobById(id, userRole, userId);
     if (!existing) return null;
 
@@ -168,10 +206,18 @@ export class JobService {
       throw new Error('SCHEDULING_NOTE_REQUIRED');
     }
 
-    return this.prisma.job.update({
+    if (data.customerId) {
+      await this.validateCustomer(data.customerId);
+    }
+
+    const { services, jobType, ...restData } = data;
+
+    const job = await this.prisma.job.update({
       where: { id },
       data: {
-        ...data,
+        ...restData,
+        ...(jobType !== undefined ? { jobType: jobType as JobType } : {}),
+        services: services !== undefined ? (services ? JSON.stringify(services) : null) : undefined,
         scheduledAt:
           data.scheduledAt !== undefined
             ? data.scheduledAt
@@ -196,9 +242,11 @@ export class JobService {
       },
       ...jobInclude,
     });
+
+    return this.transformJob(job);
   }
 
-  async updateDriverNotes(id: string, driverNotes: string, userId: string) {
+  async updateDriverNotes(id: string, driverNotes: string, userId: string): Promise<JobWithDetails | null> {
     const job = await this.prisma.job.findFirst({
       where: { id, deletedAt: null },
       include: { team: { include: { members: true } } },
@@ -209,11 +257,12 @@ export class JobService {
     const isTeamMember = job.team !== null && job.team.members.some((m) => m.userId === userId);
     if (!isDirectlyAssigned && !isTeamMember) throw new Error('FORBIDDEN');
 
-    return this.prisma.job.update({
+    const updated = await this.prisma.job.update({
       where: { id },
       data: { driverNotes },
       ...jobInclude,
     });
+    return this.transformJob(updated);
   }
 
   async deleteJob(id: string) {

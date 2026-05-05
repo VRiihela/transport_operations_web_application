@@ -1,0 +1,40 @@
+{
+  "_comment": "TASK SPEC TEMPLATE — copy this file, rename it, fill in the fields. Delete _comment before running.",
+
+  "taskId": "kebab-case-id",
+  "title": "Human-readable title of the task",
+  "profile": "Node/TypeScript Backend | React/TypeScript Frontend | Node/TypeScript Full-Stack",
+  "repo": "work_management_system",
+  "tech": "Node.js, TypeScript, Express, PostgreSQL, Prisma 6, Zod, Vitest, React 18, Vite, CSS Modules, Axios",
+  "keyConstraints": "TypeScript strict mode, Zod validation server-side, .nullish() not .optional().nullable(), Prisma selects must include all returned fields (jobInclude is source of truth), no UI component libraries, CSS Modules only",
+
+  "description": "One paragraph. What needs to be built and why. Include the user-facing goal and any key constraints not covered above.",
+
+  "acceptanceCriteria": [
+    "Max 6 items. Each must be independently testable.",
+    "Be specific: include endpoint path, HTTP method, field names, status codes.",
+    "Backend criteria: route, Zod validation, response shape { data: ... } or { error: string }.",
+    "Frontend criteria: component name, user action, expected outcome.",
+    "Always include: npx tsc --noEmit passes with no errors."
+  ],
+
+  "affectedFiles": [
+    "backend/prisma/schema.prisma",
+    "backend/src/routes/example.routes.ts",
+    "backend/src/services/example.service.ts",
+    "backend/src/types/example.types.ts",
+    "backend/src/app.ts",
+    "frontend/src/pages/ExamplePage.tsx",
+    "frontend/src/pages/ExamplePage.module.css"
+  ],
+
+  "implementationNotes": [
+    "Patterns to follow or pitfalls to avoid.",
+    "Reference existing code by name: jobInclude, adminOrDispatcher, axiosInstance.",
+    "Prisma: after schema change run npx prisma generate before starting server.",
+    "Zod: use z.nativeEnum() for enums, z.string().min(1) for FK fields (not z.string().cuid()).",
+    "Do not rewrite working code — only add what is missing."
+  ],
+
+  "securityConsiderations": "Optional. List specific threats: e.g. ensure createdById is taken from JWT not request body, never return passwordHash, rate limit this endpoint."
+}

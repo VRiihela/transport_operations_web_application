@@ -1,0 +1,29 @@
+{
+  "taskId": "create-modal-submit",
+  "title": "Job creation modal — notes, submit, and API integration",
+  "profile": "React/TypeScript Frontend",
+  "repo": "work_management_system",
+  "tech": "React 18, TypeScript, Vite, CSS Modules, Axios",
+  "keyConstraints": "No inline styles — CSS Modules only. Use axiosInstance from api/axios.ts.",
+  "description": "Add the notes section to JobCreateModal and wire the full form to POST /api/jobs. Handle validation, loading state, errors, and list refresh on success.",
+  "acceptanceCriteria": [
+    "NotesSection has 'Job content' textarea (what is being delivered/installed) and 'Dispatcher notes' textarea — both optional",
+    "Client-side validation on submit: name OR customerId required, jobType required, at least one address block must have street + city filled. Show inline error if not met.",
+    "Submit button reads 'Create job'; disabled and shows loading state while request is in flight",
+    "POST /api/jobs called with all form data mapped to backend field names; services sent as string array; scheduledStart/End sent as ISO strings or null",
+    "On success: modal closes and job list in JobsPage refreshes (refetch)",
+    "On API error: display error.response.data.error inside modal; modal stays open"
+  ],
+  "affectedFiles": [
+    "frontend/src/components/JobCreateModal/NotesSection.tsx",
+    "frontend/src/components/JobCreateModal/NotesSection.module.css",
+    "frontend/src/components/JobCreateModal/JobCreateModal.tsx",
+    "frontend/src/pages/JobsPage.tsx"
+  ],
+  "implementationNotes": [
+    "Map form state to API body before POST — do not send raw form state object",
+    "services array: string values matching backend enum keys e.g. ['DELIVERY', 'INSTALLATION']",
+    "Job list refresh: call existing fetch function after modal close",
+    "New jobs always created as DRAFT — do not send status in body"
+  ]
+}
