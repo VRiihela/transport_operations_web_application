@@ -176,6 +176,10 @@ PORT                  Server port (default: 3001)
 
 Update `FRONTEND_URL` in backend env to the Vercel production URL before deploy.
 
+
 ## After Each Task
 
-Append a one-line entry to `./agents/orchestrator/run_log_notes.md` with: date, task ID, files touched, and any gotchas discovered.
+Append a one-line entry to `claude_run_log_notes.md` in the project root:
+
+| Date | Task ID / Description | Files Touched | Gotchas |
+|---|---|---|---|
