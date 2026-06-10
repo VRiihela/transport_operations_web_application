@@ -1,14 +1,36 @@
 .card {
   position: relative;
   display: flex;
-  align-items: baseline;
-  gap: 6px;
+  flex-direction: column;
+  gap: 2px;
   padding: 7px 9px;
   background: #fff;
   border: 1px solid #e5e7eb;
   border-radius: 5px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
   transition: box-shadow 0.12s, border-color 0.12s;
+}
+
+.row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.customer {
+  font-size: 11px;
+  color: #6b7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.address {
+  font-size: 11px;
+  color: #6b7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .dropTarget::before {

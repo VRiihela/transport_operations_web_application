@@ -16,6 +16,8 @@ export const createJobSchema = z
     assignedDriverId: z.string().cuid().optional(),
     teamId: z.string().cuid().optional(),
     customerId: z.string().cuid().nullish(),
+    customerName: z.string().max(255, 'Customer name too long').trim().nullish(),
+    customerPhone: z.string().max(50, 'Customer phone too long').trim().nullish(),
     services: z.array(z.string()).nullish(),
     scheduledAt: z.string().datetime().optional(),
     scheduledStart: z.string().datetime().nullish(),
@@ -65,6 +67,8 @@ export const updateJobSchema = z
     assignedDriverId: z.string().cuid().nullable().optional(),
     teamId: z.string().cuid().nullable().optional(),
     customerId: z.string().cuid().nullish(),
+    customerName: z.string().max(255, 'Customer name too long').trim().nullish(),
+    customerPhone: z.string().max(50, 'Customer phone too long').trim().nullish(),
     sortOrder: z.number().int().optional(),
     services: z.array(z.string()).nullish(),
     scheduledAt: z.string().datetime().nullable().optional(),
@@ -142,5 +146,7 @@ export interface JobWithDetails {
   schedulingNote: string | null;
   assignedDriverId: string | null;
   teamId: string | null;
+  customerName: string | null;
+  customerPhone: string | null;
   [key: string]: unknown;
 }

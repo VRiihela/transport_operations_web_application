@@ -1,0 +1,37 @@
+{
+  "taskId": "task-01-customer-fields-backend",
+  "title": "Add customerName and customerPhone fields to Job",
+  "profile": "Node/TypeScript Backend",
+  "repo": "work_management_system",
+  "tech": "Node.js, TypeScript, Express, PostgreSQL, Prisma 6, Zod, Vitest",
+  "keyConstraints": "TypeScript strict mode, Zod validation server-side, .nullish() not .optional().nullable(), Prisma selects must include all returned fields (jobInclude is source of truth), no UI component libraries, CSS Modules only",
+
+  "description": "Add customerName and customerPhone as optional fields on the Job model. These allow dispatchers to record who the job is for and how to reach them. Both fields are optional strings. They must be included in jobInclude so they are returned by all job endpoints, and accepted in create and update Zod schemas.",
+
+  "acceptanceCriteria": [
+    "Job model in schema.prisma has customerName String? and customerPhone String?",
+    "jobInclude in job.service.ts includes customerName and customerPhone",
+    "POST /api/jobs Zod schema accepts customerName and customerPhone as optional strings",
+    "PATCH /api/jobs/:id Zod schema accepts customerName and customerPhone as optional strings",
+    "GET /api/jobs and GET /api/jobs/:id responses include customerName and customerPhone",
+    "npx tsc --noEmit passes with no errors"
+  ],
+
+  "affectedFiles": [
+    "backend/prisma/schema.prisma",
+    "backend/src/services/job.service.ts",
+    "backend/src/routes/job.routes.ts",
+    "backend/src/types/job.types.ts"
+  ],
+
+  "implementationNotes": [
+    "Add customerName String? and customerPhone String? to the Job model in schema.prisma.",
+    "Run npx prisma migrate dev --name add-customer-fields after schema change.",
+    "Run npx prisma generate after migration.",
+    "jobInclude in job.service.ts is the single source of truth — add both fields there.",
+    "Use .nullish() not .optional().nullable() in Zod schemas.",
+    "Do not rewrite working code — only add what is missing."
+  ],
+
+  "securityConsiderations": "customerName and customerPhone are dispatcher-supplied data. No special access control needed beyond existing adminOrDispatcher middleware on create/update routes."
+}

@@ -1,0 +1,40 @@
+{
+  "taskId": "task-02-customer-fields-frontend",
+  "title": "Show customer info and address on dispatcher job cards",
+  "profile": "React/TypeScript Frontend",
+  "repo": "work_management_system",
+  "tech": "React 18, TypeScript, Vite, CSS Modules, Axios",
+  "keyConstraints": "TypeScript strict mode, no UI component libraries, CSS Modules only, no inline styles",
+
+  "description": "Update JobCard and SortableJobCard to show full pickup address and customer name below the title. The card should display street on one line, postal code + city + customer name on the second line. Also add customerName and customerPhone input fields to JobEditModal so dispatchers can set them when creating or editing a job.",
+
+  "acceptanceCriteria": [
+    "JobCard and SortableJobCard show street (line 1), postalCode + city + customerName (line 2) below the title row",
+    "Address lines are only rendered when the field has a value — no empty lines for missing fields",
+    "JobEditModal has customerName (text input) and customerPhone (text input) fields, optional",
+    "JobEditModal submits customerName and customerPhone to PATCH /api/jobs/:id",
+    "Job and JobFormData types in DispatcherBoard/types.ts include customerName and customerPhone as optional strings",
+    "npx tsc --noEmit passes with no errors"
+  ],
+
+  "affectedFiles": [
+    "frontend/src/pages/DispatcherBoard/types.ts",
+    "frontend/src/pages/DispatcherBoard/components/JobCard/JobCard.tsx",
+    "frontend/src/pages/DispatcherBoard/components/JobCard/JobCard.module.css",
+    "frontend/src/pages/DispatcherBoard/components/JobCard/SortableJobCard.tsx",
+    "frontend/src/components/JobEditModal.tsx",
+    "frontend/src/components/JobEditModal.module.css"
+  ],
+
+  "implementationNotes": [
+    "Card layout goal: '08:00–10:00  Title   DRAFT' on row 1, 'Aleksanterinkatu 15' on row 2, '00100 Helsinki  •  Yritys Oy' on row 3.",
+    "Use CSS Modules for layout — no inline styles.",
+    "Only render address rows when the relevant fields are non-empty strings.",
+    "SortableJobCard wraps JobCard — if JobCard accepts props correctly, SortableJobCard may need no logic changes beyond passing the new fields through.",
+    "In JobEditModal, add customerName and customerPhone as optional text inputs in the existing form layout.",
+    "Use axiosInstance from api/axios.ts for the PATCH call (not apiService), unless the modal already uses a different pattern — do not change the existing HTTP client pattern.",
+    "Do not rewrite working code — only add what is missing."
+  ],
+
+  "securityConsiderations": "No special considerations — these are plain optional text fields submitted by authenticated dispatchers."
+}

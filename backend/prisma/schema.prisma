@@ -95,6 +95,8 @@ model Job {
   assignedDriverId String?
   teamId           String?
   customerId       String?
+  customerName     String?   @db.VarChar(255)
+  customerPhone    String?   @db.VarChar(50)
   sortOrder        Int       @default(0)
   services         String?
   scheduledAt      DateTime?

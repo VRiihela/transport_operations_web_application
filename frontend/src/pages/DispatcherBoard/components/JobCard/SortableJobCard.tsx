@@ -49,11 +49,31 @@ const SortableJobCard: React.FC<SortableJobCardProps> = ({ job }) => {
         .filter(Boolean)
         .join(' ')}
     >
-      {time && <span className={styles.time}>{time}</span>}
-      <span className={styles.title}>{job.title}</span>
-      <span className={`${styles.badge} ${styles[`status${job.status}`]}`}>
-        {job.status}
-      </span>
+      <div className={styles.row}>
+        {time && <span className={styles.time}>{time}</span>}
+        <span className={styles.title}>{job.title}</span>
+        <span className={`${styles.badge} ${styles[`status${job.status}`]}`}>
+          {job.status}
+        </span>
+      </div>
+      {job.street && (
+        <span className={styles.address}>
+          {job.street}{job.houseNumber ? ` ${job.houseNumber}` : ''}
+        </span>
+      )}
+      {(job.postalCode || job.city) && (
+        <span className={styles.address}>
+          {[job.postalCode, job.city].filter(Boolean).join(' ')}
+        </span>
+      )}
+      {job.customer && (
+        <span className={styles.customer}>
+          {job.customer.companyName
+            ? `${job.customer.companyName} (${job.customer.name})`
+            : job.customer.name}
+          {job.customer.phone && ` · ${job.customer.phone}`}
+        </span>
+      )}
     </div>
   );
 };
