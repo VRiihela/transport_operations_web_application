@@ -1,11 +1,34 @@
 import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { JOB_TYPE_LABELS, JobType } from '../types/job';
 import styles from './JobDetailModal.module.css';
+
+interface CompletionReport {
+  id: string;
+  workDescription: string;
+  actualStart: string;
+  actualEnd: string;
+  totalHours: number;
+  customerName: string;
+  customerSignature: string;
+  approvedAt: string | null;
+}
+
+interface Customer {
+  id: string;
+  name: string;
+  phone: string;
+  email: string | null;
+  companyName: string | null;
+}
 
 export interface DetailJob {
   id: string;
   title: string;
   status: string;
+  jobType?: string | null;
+  services?: string[] | null;
+  customer?: Customer | null;
   description?: string | null;
   assignedDriverId?: string | null;
   assignedDriver?: { id: string; name: string | null; email: string } | null;
@@ -23,6 +46,7 @@ export interface DetailJob {
   deliveryPostalCode?: string | null;
   deliveryCity?: string | null;
   driverNotes?: string | null;
+  completionReport?: CompletionReport | null;
 }
 
 interface JobDetailModalProps {
@@ -106,6 +130,35 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({ job, isOpen, onC
             </dd>
           </div>
 
+          {job.jobType && (
+            <div className={styles.field}>
+              <dt className={styles.label}>Job type</dt>
+              <dd className={styles.value}>
+                {JOB_TYPE_LABELS[job.jobType as JobType] ?? job.jobType}
+              </dd>
+            </div>
+          )}
+
+          {job.services && job.services.length > 0 && (
+            <div className={styles.field}>
+              <dt className={styles.label}>Services</dt>
+              <dd className={styles.value}>{job.services.join(', ')}</dd>
+            </div>
+          )}
+
+          {job.customer && (
+            <div className={styles.field}>
+              <dt className={styles.label}>Customer</dt>
+              <dd className={styles.value}>
+                {job.customer.companyName
+                  ? `${job.customer.companyName} (${job.customer.name})`
+                  : job.customer.name}
+                {job.customer.phone && <> · {job.customer.phone}</>}
+                {job.customer.email && <> · {job.customer.email}</>}
+              </dd>
+            </div>
+          )}
+
           {job.description != null && (
             <div className={styles.field}>
               <dt className={styles.label}>Description</dt>
@@ -154,6 +207,51 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({ job, isOpen, onC
             </div>
           )}
         </dl>
+
+        {job.completionReport && (
+          <div className={styles.completionSection}>
+            <h3 className={styles.sectionTitle}>
+              Completion report
+              {job.completionReport.approvedAt && (
+                <span className={styles.approvedBadge}>
+                  Approved {formatFinnishDateTime(job.completionReport.approvedAt)}
+                </span>
+              )}
+            </h3>
+            <dl className={styles.fields}>
+              <div className={styles.field}>
+                <dt className={styles.label}>Work done</dt>
+                <dd className={styles.value}>{job.completionReport.workDescription}</dd>
+              </div>
+              <div className={styles.field}>
+                <dt className={styles.label}>Actual time</dt>
+                <dd className={styles.value}>
+                  {formatFinnishDateTime(job.completionReport.actualStart)}
+                  {' – '}
+                  {formatFinnishDateTime(job.completionReport.actualEnd)}
+                </dd>
+              </div>
+              <div className={styles.field}>
+                <dt className={styles.label}>Hours</dt>
+                <dd className={styles.value}>{job.completionReport.totalHours.toFixed(2)} h</dd>
+              </div>
+              <div className={styles.field}>
+                <dt className={styles.label}>Customer</dt>
+                <dd className={styles.value}>{job.completionReport.customerName}</dd>
+              </div>
+              <div className={styles.field}>
+                <dt className={styles.label}>Signature</dt>
+                <dd className={styles.value}>
+                  <img
+                    src={job.completionReport.customerSignature}
+                    alt="Customer signature"
+                    className={styles.signatureImage}
+                  />
+                </dd>
+              </div>
+            </dl>
+          </div>
+        )}
       </div>
     </div>
   );

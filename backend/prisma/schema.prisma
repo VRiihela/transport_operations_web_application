@@ -19,6 +19,7 @@ enum AuditEvent {
   LOGOUT
   TOKEN_REFRESH
   TOKEN_REUSE_DETECTED
+  COMPLETION_REPORT_UNLOCKED
 }
 
 enum JobStatus {

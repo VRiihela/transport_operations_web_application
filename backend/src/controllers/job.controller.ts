@@ -1,9 +1,10 @@
 import { Response } from 'express';
-import { PrismaClient, UserRole } from '@prisma/client';
+import { PrismaClient, UserRole, AuditEvent } from '@prisma/client';
 import { JobService } from '../services/job.service';
 import { createJobSchema, updateJobSchema, updateJobStatusSchema, jobQuerySchema, updateDriverNotesSchema } from '../types/job.types';
 import { upsertCompletionReportSchema } from '../types/completion-report.types';
 import { CompletionReportService } from '../services/completion-report.service';
+import { AuditService } from '../services/audit.service';
 import { AuthenticatedRequest } from '../types/auth.types';
 
 const jobService = new JobService(new PrismaClient());
@@ -192,6 +193,10 @@ export const upsertCompletionReport = async (req: AuthenticatedRequest, res: Res
       res.status(404).json({ error: 'Job not found' });
       return;
     }
+    if (error instanceof Error && error.message === 'REPORT_LOCKED') {
+      res.status(403).json({ error: 'Completion report is locked after approval. Admin must unlock before editing.' });
+      return;
+    }
     console.error('Upsert completion report error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
@@ -212,11 +217,65 @@ export const approveCompletionReport = async (req: AuthenticatedRequest, res: Re
       res.status(404).json({ error: 'Completion report not found' });
       return;
     }
+    if (error instanceof Error && error.message === 'ALREADY_APPROVED') {
+      res.status(403).json({ error: 'Completion report is already approved' });
+      return;
+    }
     if (error instanceof Error && error.message === 'SIGNATURE_REQUIRED') {
       res.status(400).json({ error: 'Customer signature is required for approval' });
       return;
     }
     console.error('Approve completion report error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const unlockCompletionReport = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const jobId = req.params['id'] as string;
+    const report = await completionReportService.unlock(jobId);
+    await AuditService.logFromRequest(req, AuditEvent.COMPLETION_REPORT_UNLOCKED, req.user!.id, { jobId });
+    res.json({ data: report });
+  } catch (error) {
+    if (error instanceof Error && error.message === 'REPORT_NOT_FOUND') {
+      res.status(404).json({ error: 'Completion report not found' });
+      return;
+    }
+    console.error('Unlock completion report error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const getCompletionReportPdf = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const jobId = req.params['id'] as string;
+    const job = await completionReportService.getJobForPdf(jobId);
+    if (!job) {
+      res.status(404).json({ error: 'Job not found' });
+      return;
+    }
+
+    if (req.user!.role === UserRole.Driver) {
+      const isAssigned = job.assignedDriverId === req.user!.id;
+      const isTeamMember = job.team !== null && job.team.members.some((m) => m.userId === req.user!.id);
+      if (!isAssigned && !isTeamMember) {
+        res.status(403).json({ error: 'Not authorized to access this job' });
+        return;
+      }
+    }
+
+    if (!job.completionReport?.approvedAt) {
+      res.status(404).json({ error: 'No approved completion report found for this job' });
+      return;
+    }
+
+    const doc = completionReportService.generatePdf(job);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="completion-report-${jobId}.pdf"`);
+    doc.pipe(res);
+    doc.end();
+  } catch (error) {
+    console.error('Generate completion report PDF error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

@@ -1,0 +1,36 @@
+{
+  "taskId": "completion-report-pdf-frontend",
+  "title": "Completion report PDF download button",
+  "profile": "React/TypeScript Frontend",
+  "repo": "work_management_system",
+  "tech": "React 18, TypeScript, Vite, CSS Modules, Axios",
+  "keyConstraints": "TypeScript strict mode, no UI component libraries, CSS Modules only, no localStorage or sessionStorage",
+
+  "description": "Add a Download PDF button to the completion report section. Visible to all roles (Admin, Dispatcher, Driver) when a completion report exists and is approved (approvedAt is not null). Clicking it calls GET /api/jobs/:id/completion-report/pdf and triggers a browser file download.",
+
+  "acceptanceCriteria": [
+    "CompletionModal shows a 'Download PDF' button when job.completionReport.approvedAt is not null",
+    "Clicking the button calls GET /api/jobs/:id/completion-report/pdf using axiosInstance with responseType: 'blob', then triggers a browser download with filename completion-report-<jobId>.pdf",
+    "Button shows a loading state while the request is in flight and displays an error message on failure",
+    "JobDetailModal also shows the Download PDF button under the same condition (approvedAt not null) for all roles",
+    "npx tsc --noEmit passes with no errors"
+  ],
+
+  "affectedFiles": [
+    "frontend/src/components/CompletionModal.tsx",
+    "frontend/src/components/CompletionModal.module.css",
+    "frontend/src/components/JobDetailModal.tsx",
+    "frontend/src/components/JobDetailModal.module.css"
+  ],
+
+  "implementationNotes": [
+    "Do not rewrite working code — only add what is missing.",
+    "CSS Modules only — no inline styles.",
+    "Blob download pattern: call axiosInstance.get(url, { responseType: 'blob' }), then create an object URL with URL.createObjectURL(blob), attach to a temporary <a> element, click it, then revoke the URL.",
+    "Use axiosInstance from api/axios.ts — it has the withCredentials cookie and auth header set.",
+    "Button label: 'Download PDF'. Place it near the locked banner in CompletionModal and at the bottom of the completion report section in JobDetailModal.",
+    "Show button only when job.completionReport?.approvedAt is not null — not just when completionReport exists."
+  ],
+
+  "securityConsiderations": "No sensitive data handled client-side beyond what is already displayed. The backend enforces access control — frontend just triggers the download."
+}

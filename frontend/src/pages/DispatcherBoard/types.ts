@@ -38,6 +38,19 @@ export interface Job {
   deliveryPostalCode?: string | null;
   deliveryCity?: string | null;
   driverNotes?: string | null;
+  jobType?: string | null;
+  services?: string[] | null;
+  customer?: { id: string; name: string; phone: string; email: string | null; companyName: string | null } | null;
+  completionReport?: {
+    id: string;
+    workDescription: string;
+    actualStart: string;
+    actualEnd: string;
+    totalHours: number;
+    customerName: string;
+    customerSignature: string;
+    approvedAt: string | null;
+  } | null;
 }
 
 export interface Driver {

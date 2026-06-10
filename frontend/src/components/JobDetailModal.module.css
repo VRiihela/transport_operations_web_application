@@ -107,6 +107,40 @@
 .statusIN_PROGRESS { background: #fef3c7; color: #92400e; }
 .statusCOMPLETED   { background: #d1fae5; color: #065f46; }
 
+.completionSection {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.sectionTitle {
+  margin: 0 0 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1a1a2e;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.approvedBadge {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #065f46;
+  background: #d1fae5;
+  padding: 0.15rem 0.5rem;
+  border-radius: 12px;
+}
+
+.signatureImage {
+  max-width: 100%;
+  max-height: 120px;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  background: #fff;
+}
+
 @media (max-width: 480px) {
   .field { grid-template-columns: 1fr; gap: 0.2rem; }
   .label { font-size: 0.75rem; }

@@ -1,0 +1,40 @@
+{
+  "taskId": "completion-report-pdf-backend",
+  "title": "Completion report PDF generation endpoint",
+  "profile": "Node/TypeScript Backend",
+  "repo": "work_management_system",
+  "tech": "Node.js, TypeScript, Express, PostgreSQL, Prisma 6, Zod, PDFKit",
+  "keyConstraints": "TypeScript strict mode, Zod validation server-side, .nullish() not .optional().nullable(), Prisma selects must include all returned fields (jobInclude is source of truth)",
+
+  "description": "Add a GET /api/jobs/:id/completion-report/pdf endpoint that generates and streams a PDF of the completion report. Accessible by Admin, Dispatcher, and Driver roles (Driver only if the job is assigned to them or their team). The PDF includes job details, completion report fields, and the customer signature image decoded from the base64 data URL stored in customerSignature. No company logo yet — placeholder space at top for future branding.",
+
+  "acceptanceCriteria": [
+    "GET /api/jobs/:id/completion-report/pdf returns a PDF file stream with Content-Type: application/pdf and Content-Disposition: attachment; filename=completion-report-<jobId>.pdf",
+    "Returns 404 if the job has no approved completion report (approvedAt is null or no report exists)",
+    "Driver role can only download PDF for jobs assigned to them directly or via team membership — returns 403 otherwise; Admin and Dispatcher have unrestricted access",
+    "PDF contains: job title, job ID, scheduled start/end, pickup address, completion report fields (workDescription, actualStart, actualEnd, totalHours, customerName), and customer signature image decoded from the base64 customerSignature field",
+    "PDFKit is used for generation (install as production dependency: npm install pdfkit @types/pdfkit --save)",
+    "npx tsc --noEmit passes with no errors"
+  ],
+
+  "affectedFiles": [
+    "backend/src/routes/job.routes.ts",
+    "backend/src/services/completion-report.service.ts",
+    "backend/src/types/completion-report.types.ts"
+  ],
+
+  "implementationNotes": [
+    "Do not rewrite working code — only add what is missing.",
+    "Install PDFKit: npm install pdfkit @types/pdfkit --save",
+    "Route: GET /api/jobs/:id/completion-report/pdf — register it before generic /:id routes to avoid Express param conflict.",
+    "Auth: authenticateToken middleware, then role check — Admin and Dispatcher pass freely; Driver must match assignedDriverId OR be in a team assigned to the job (same OR query pattern used in getMyJobs).",
+    "Signature image: customerSignature is a base64 data URL (data:image/png;base64,...). Strip the prefix to get raw base64, convert to Buffer with Buffer.from(base64str, 'base64'), then pass to PDFKit doc.image(buffer, ...).",
+    "Stream the PDF directly to the response: const doc = new PDFDocument(); doc.pipe(res); ... doc.end(). Set headers before piping.",
+    "PDF layout (top to bottom): header area (empty, reserved for logo), job title + job ID, scheduled times formatted as Finnish datetime, pickup address, then completion report section with all fields, then signature image at bottom with customerName label beneath it.",
+    "Use Finnish datetime formatting consistent with the rest of the app for scheduledStart/scheduledEnd.",
+    "jobInclude already includes completionReport — reuse the existing job fetch from job.service.ts rather than writing a new query.",
+    "createdById / auth must come from req.user.id (JWT), never from request body."
+  ],
+
+  "securityConsiderations": "Driver access must be enforced server-side — check assignedDriverId and team membership, do not trust any role claim from the request body. Never expose other drivers' job PDFs."
+}

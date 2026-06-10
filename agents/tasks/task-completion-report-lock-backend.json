@@ -1,0 +1,40 @@
+{
+  "taskId": "completion-report-lock-backend",
+  "title": "Lock approved completion reports + admin unlock endpoint",
+  "profile": "Node/TypeScript Backend",
+  "repo": "work_management_system",
+  "tech": "Node.js, TypeScript, Express, PostgreSQL, Prisma 6, Zod, Vitest",
+  "keyConstraints": "TypeScript strict mode, Zod validation server-side, .nullish() not .optional().nullable(), Prisma selects must include all returned fields (jobInclude is source of truth)",
+
+  "description": "Approved completion reports must be locked — no edits allowed once approvedAt is set. This protects the customer signature and the agreed job record. An Admin-only unlock endpoint resets approvedAt to null, allowing re-editing when a genuine correction is needed. All lock checks happen server-side; the frontend relies on the 403 response to reflect state.",
+
+  "acceptanceCriteria": [
+    "POST /api/jobs/:id/completion-report returns 403 with { error: 'Completion report is locked after approval. Admin must unlock before editing.' } if completionReport.approvedAt is not null",
+    "POST /api/jobs/:id/completion-report/approve returns 403 if completionReport.approvedAt is already set (prevent double-approve)",
+    "POST /api/jobs/:id/completion-report/unlock is added, Admin role only; sets completionReport.approvedAt to null and returns { data: updatedCompletionReport }; returns 404 if no completion report exists",
+    "Unlock action is recorded in audit_logs with event type COMPLETION_REPORT_UNLOCKED (add to AuditEvent enum) including jobId and unlockedBy userId",
+    "npx tsc --noEmit passes with no errors"
+  ],
+
+  "affectedFiles": [
+    "backend/prisma/schema.prisma",
+    "backend/src/routes/job.routes.ts",
+    "backend/src/services/completion-report.service.ts",
+    "backend/src/services/audit.service.ts",
+    "backend/src/types/audit.types.ts"
+  ],
+
+  "implementationNotes": [
+    "Do not rewrite working code — only add what is missing.",
+    "Lock check in completion-report.service.ts: before upsert, query existing report and check approvedAt; if set, throw a 403-equivalent error that the route handler catches and returns as { error: '...' } with status 403.",
+    "Double-approve check: same pattern — query before approve, if approvedAt already set return 403.",
+    "Unlock endpoint: PATCH or POST /api/jobs/:id/completion-report/unlock — use POST to avoid confusion with job PATCH. Route must be registered before the generic /:id routes to avoid param conflicts.",
+    "AuditEvent enum is in backend/prisma/schema.prisma — add COMPLETION_REPORT_UNLOCKED there, then run npx prisma generate.",
+    "jobInclude in job.service.ts is the source of truth for job response shape — completionReport fields are already included; verify approvedAt is in the select.",
+    "Prisma: after schema change run npx prisma generate before starting server.",
+    "adminOnly middleware is already exported from middleware/requireRole.ts — use it on the unlock route.",
+    "createdById / unlockedBy must come from req.user.id (JWT), never from request body."
+  ],
+
+  "securityConsiderations": "Unlock is Admin-only — enforce with adminOnly middleware, not just a role check in the handler. Audit log the unlock so there is a traceable record of who unlocked and when. Never allow a Driver or Dispatcher to call the unlock endpoint."
+}

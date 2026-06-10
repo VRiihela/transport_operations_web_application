@@ -1,0 +1,36 @@
+{
+  "taskId": "completion-report-lock-frontend",
+  "title": "Completion report lock UI — locked state display + admin unlock button",
+  "profile": "React/TypeScript Frontend",
+  "repo": "work_management_system",
+  "tech": "React 18, TypeScript, Vite, CSS Modules, Axios",
+  "keyConstraints": "TypeScript strict mode, no UI component libraries, CSS Modules only, no localStorage or sessionStorage",
+
+  "description": "When a completion report has been approved (approvedAt is set), the UI must clearly show it is locked and prevent re-submission. Admins see an Unlock button that calls the unlock endpoint and re-enables editing. Drivers and Dispatchers see a locked notice only — no unlock option.",
+
+  "acceptanceCriteria": [
+    "CompletionModal shows a locked banner (e.g. 'Approved — locked for editing') and disables the submit button when job.completionReport.approvedAt is not null",
+    "Admin role sees an Unlock button inside the locked banner; clicking it calls POST /api/jobs/:id/completion-report/unlock via axiosInstance and reloads the completion report state on success",
+    "Unlock button shows a loading state while the request is in flight and displays the error message from the API response on failure",
+    "After successful unlock, the locked banner disappears and the completion report form becomes editable again without a full page reload",
+    "npx tsc --noEmit passes with no errors"
+  ],
+
+  "affectedFiles": [
+    "frontend/src/components/CompletionModal.tsx",
+    "frontend/src/components/CompletionModal.module.css"
+  ],
+
+  "implementationNotes": [
+    "Do not rewrite working code — only add what is missing.",
+    "CSS Modules only — no inline styles.",
+    "Read approvedAt from job.completionReport.approvedAt (already returned by jobInclude on the backend).",
+    "Use AuthContext to get current user role for the Admin-only Unlock button conditional render.",
+    "Use axiosInstance from api/axios.ts for the unlock API call.",
+    "Locked banner should be visually distinct — use a warning/amber color class in the CSS module, not a generic info style.",
+    "Unlock button label: 'Unlock for editing'. Confirm dialog is optional — keep it simple for v1.",
+    "After unlock success, update local state to set completionReport.approvedAt = null so the UI reacts without refetching the full job."
+  ],
+
+  "securityConsiderations": "The Unlock button must only render for Admin role — check via AuthContext. The backend enforces the real security; this is UX-only protection."
+}

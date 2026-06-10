@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { isAxiosError } from 'axios';
 import axiosInstance from '../api/axios';
+import { useAuth } from '../contexts/AuthContext';
 import { SignatureCanvas, SignatureCanvasHandle } from './SignatureCanvas';
 import styles from './CompletionModal.module.css';
 
@@ -14,6 +15,7 @@ interface CompletionModalJob {
   postalCode?: string | null;
   city?: string | null;
   location?: string | null;
+  completionReport?: { approvedAt: string | null } | null;
 }
 
 interface CompletionModalProps {
@@ -79,9 +81,28 @@ export const CompletionModal: React.FC<CompletionModalProps> = ({
   onClose,
   onApproved,
 }) => {
+  const { user } = useAuth();
   const [step, setStep] = useState<ModalStep>('report');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [approvedAt, setApprovedAt] = useState(job.completionReport?.approvedAt ?? null);
+  const [unlocking, setUnlocking] = useState(false);
+  const [unlockError, setUnlockError] = useState<string | null>(null);
+  const isLocked = approvedAt !== null;
+
+  const handleUnlock = async () => {
+    setUnlocking(true);
+    setUnlockError(null);
+    try {
+      await axiosInstance.post(`/api/jobs/${job.id}/completion-report/unlock`);
+      setApprovedAt(null);
+    } catch (err) {
+      setUnlockError(getApiError(err, 'Failed to unlock completion report'));
+    } finally {
+      setUnlocking(false);
+    }
+  };
 
   const [workDescription, setWorkDescription] = useState('');
   const [actualStart, setActualStart] = useState(
@@ -167,6 +188,25 @@ export const CompletionModal: React.FC<CompletionModalProps> = ({
           </button>
         </div>
 
+        {isLocked && (
+          <div className={styles.lockedBanner}>
+            <span className={styles.lockedMessage}>Approved — locked for editing</span>
+            {user?.role === 'Admin' && (
+              <div className={styles.unlockSection}>
+                <button
+                  type="button"
+                  className={styles.unlockButton}
+                  onClick={() => void handleUnlock()}
+                  disabled={unlocking}
+                >
+                  {unlocking ? 'Unlocking…' : 'Unlock for editing'}
+                </button>
+                {unlockError && <div className={styles.unlockError}>{unlockError}</div>}
+              </div>
+            )}
+          </div>
+        )}
+
         {error && <div className={styles.errorBox}>{error}</div>}
 
         {step === 'report' && (
@@ -230,7 +270,7 @@ export const CompletionModal: React.FC<CompletionModalProps> = ({
               <button
                 type="submit"
                 className={styles.primaryButton}
-                disabled={!workDescription.trim() || !actualStart || !actualEnd || !endIsAfterStart}
+                disabled={isLocked || !workDescription.trim() || !actualStart || !actualEnd || !endIsAfterStart}
               >
                 Next: Signature
               </button>
@@ -299,7 +339,7 @@ export const CompletionModal: React.FC<CompletionModalProps> = ({
                 <button
                   type="submit"
                   className={styles.approveButton}
-                  disabled={loading || !customerName.trim() || !hasSignature}
+                  disabled={isLocked || loading || !customerName.trim() || !hasSignature}
                 >
                   {loading ? 'Approving…' : 'Approve & Sign'}
                 </button>
