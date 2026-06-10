@@ -13,6 +13,14 @@ const teamInclude = {
   },
 } as const;
 
+function getDayBounds(date: Date): { start: Date; end: Date } {
+  const start = new Date(date);
+  start.setUTCHours(0, 0, 0, 0);
+  const end = new Date(start);
+  end.setUTCDate(end.getUTCDate() + 1);
+  return { start, end };
+}
+
 export const createTeam = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const parsed = createTeamSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -32,14 +40,34 @@ export const createTeam = async (req: AuthenticatedRequest, res: Response): Prom
       return;
     }
 
-    const team = await prisma.team.create({
-      data: {
-        name,
-        date: new Date(date),
-        createdById: req.user!.id,
-        members: { create: driverIds.map((userId) => ({ userId })) },
-      },
-      include: teamInclude,
+    const { start: teamDateStart, end: teamDateEnd } = getDayBounds(new Date(date));
+
+    const team = await prisma.$transaction(async (tx) => {
+      const createdTeam = await tx.team.create({
+        data: {
+          name,
+          date: new Date(date),
+          createdById: req.user!.id,
+          members: { create: driverIds.map((userId) => ({ userId })) },
+        },
+        include: teamInclude,
+      });
+
+      for (const driverId of driverIds) {
+        await tx.job.updateMany({
+          where: {
+            assignedDriverId: driverId,
+            deletedAt: null,
+            OR: [
+              { scheduledStart: null },
+              { scheduledStart: { gte: teamDateStart, lt: teamDateEnd } },
+            ],
+          },
+          data: { assignedDriverId: null, teamId: createdTeam.id },
+        });
+      }
+
+      return createdTeam;
     });
 
     res.status(201).json({ data: team });
@@ -92,7 +120,10 @@ export const updateTeam = async (req: AuthenticatedRequest, res: Response): Prom
   const { name, driverIds } = parsed.data;
 
   try {
-    const existing = await prisma.team.findUnique({ where: { id } });
+    const existing = await prisma.team.findUnique({
+      where: { id },
+      include: { members: true },
+    });
     if (!existing) {
       res.status(404).json({ error: 'Team not found' });
       return;
@@ -109,18 +140,40 @@ export const updateTeam = async (req: AuthenticatedRequest, res: Response): Prom
       }
     }
 
-    const team = await prisma.team.update({
-      where: { id },
-      data: {
-        ...(name !== undefined && { name }),
-        ...(driverIds !== undefined && {
-          members: {
-            deleteMany: {},
-            create: driverIds.map((userId) => ({ userId })),
+    const existingMemberIds = new Set(existing.members.map((m) => m.userId));
+    const addedDriverIds = (driverIds ?? []).filter((userId) => !existingMemberIds.has(userId));
+    const { start: teamDateStart, end: teamDateEnd } = getDayBounds(existing.date);
+
+    const team = await prisma.$transaction(async (tx) => {
+      const updatedTeam = await tx.team.update({
+        where: { id },
+        data: {
+          ...(name !== undefined && { name }),
+          ...(driverIds !== undefined && {
+            members: {
+              deleteMany: {},
+              create: driverIds.map((userId) => ({ userId })),
+            },
+          }),
+        },
+        include: teamInclude,
+      });
+
+      for (const driverId of addedDriverIds) {
+        await tx.job.updateMany({
+          where: {
+            assignedDriverId: driverId,
+            deletedAt: null,
+            OR: [
+              { scheduledStart: null },
+              { scheduledStart: { gte: teamDateStart, lt: teamDateEnd } },
+            ],
           },
-        }),
-      },
-      include: teamInclude,
+          data: { assignedDriverId: null, teamId: id },
+        });
+      }
+
+      return updatedTeam;
     });
 
     res.json({ data: team });
@@ -134,19 +187,14 @@ export const deleteTeam = async (req: AuthenticatedRequest, res: Response): Prom
   const { id } = req.params as { id: string };
 
   try {
-    const activeJobs = await prisma.job.count({
-      where: {
-        teamId: id,
-        status: { in: [JobStatus.ASSIGNED, JobStatus.IN_PROGRESS] },
-        deletedAt: null,
-      },
+    await prisma.$transaction(async (tx) => {
+      await tx.job.updateMany({
+        where: { teamId: id, deletedAt: null },
+        data: { teamId: null, assignedDriverId: null, status: JobStatus.DRAFT },
+      });
+      await tx.team.delete({ where: { id } });
     });
-    if (activeJobs > 0) {
-      res.status(400).json({ error: 'Cannot delete team with active job assignments' });
-      return;
-    }
 
-    await prisma.team.delete({ where: { id } });
     res.json({ data: { message: 'Team deleted successfully' } });
   } catch (error) {
     if (

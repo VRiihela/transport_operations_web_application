@@ -80,6 +80,11 @@ function getDayBounds(dateStr: string): { from: string; to: string } {
   return { from: start.toISOString(), to: end.toISOString() };
 }
 
+function isSameHelsinkiDate(isoString: string, dateStr: string): boolean {
+  const d = new Date(isoString);
+  return d.toLocaleDateString('en-CA', { timeZone: 'Europe/Helsinki' }) === dateStr;
+}
+
 function sortByScheduledStart(jobs: Job[]): Job[] {
   return [...jobs].sort((a, b) => {
     if (!a.scheduledStart && !b.scheduledStart) return 0;
@@ -208,6 +213,16 @@ const MyJobsPage: React.FC = () => {
     return [streetPart, cityPart].filter(Boolean).join(', ');
   };
 
+  const visibleJobs = jobs.filter((job) => {
+    if (job.status === 'COMPLETED' && job.completionReport?.actualEnd) {
+      return isSameHelsinkiDate(job.completionReport.actualEnd, selectedDate);
+    }
+    if (job.scheduledStart) {
+      return isSameHelsinkiDate(job.scheduledStart, selectedDate);
+    }
+    return selectedDate === todayISO();
+  });
+
   const getStatusBadgeClass = (status: JobStatus): string => {
     switch (status) {
       case 'ASSIGNED':    return styles.statusAssigned;
@@ -267,14 +282,14 @@ const MyJobsPage: React.FC = () => {
         </div>
       )}
 
-      {jobs.length === 0 ? (
+      {visibleJobs.length === 0 ? (
         <div className={styles.emptyState}>
           <p>Ei töitä valitulle päivälle.</p>
           <p>Valitse toinen päivämäärä tai ota yhteyttä dispatcheriin.</p>
         </div>
       ) : (
         <div className={styles.jobsGrid}>
-          {jobs.map((job) => (
+          {visibleJobs.map((job) => (
             <div
               key={job.id}
               className={`${styles.jobCard} ${job.status === 'COMPLETED' ? styles.completedJob : ''}`}

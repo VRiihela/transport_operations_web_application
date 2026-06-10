@@ -112,7 +112,10 @@ export class JobService {
         ...(status && { status }),
         OR: [
           { assignedDriverId: userId, scheduledStart: dateFilter },
-          { team: { members: { some: { userId } }, date: dateFilter } },
+          {
+            team: { members: { some: { userId } }, date: dateFilter },
+            OR: [{ scheduledStart: dateFilter }, { scheduledStart: null }],
+          },
         ],
       };
     } else {

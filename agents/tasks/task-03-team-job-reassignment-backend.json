@@ -1,0 +1,36 @@
+{
+  "taskId": "task-03-team-job-reassignment-backend",
+  "title": "Auto-reassign jobs when driver added to team or team deleted",
+  "profile": "Node/TypeScript Backend",
+  "repo": "work_management_system",
+  "tech": "Node.js, TypeScript, Express, PostgreSQL, Prisma 6, Zod, Vitest",
+  "keyConstraints": "TypeScript strict mode, Zod validation server-side, .nullish() not .optional().nullable(), Prisma selects must include all returned fields (jobInclude is source of truth), no UI component libraries, CSS Modules only",
+
+  "description": "When a driver is added to a team, all jobs currently assigned to that driver (assignedDriverId = driverId) should be moved to the team (teamId = team.id, assignedDriverId = null). This applies regardless of whether the job has a scheduledStart. Removing a driver from a team does not change job assignments. When a team is deleted, all jobs assigned to that team are unassigned: teamId = null, assignedDriverId = null, status = DRAFT — they return to the unassigned pool.",
+
+  "acceptanceCriteria": [
+    "PATCH /api/teams/:id adding a new member triggers reassignment: all jobs where assignedDriverId = addedDriverId are updated to teamId = teamId and assignedDriverId = null in the same transaction",
+    "PATCH /api/teams/:id removing a member does not change any job assignments",
+    "DELETE /api/teams/:id sets teamId = null, assignedDriverId = null, status = DRAFT on all jobs that had teamId = deletedTeamId, in the same transaction as the team deletion",
+    "All job updates use Prisma transactions — no partial state if something fails",
+    "Existing team delete logic that blocks deletion when active jobs are assigned is removed or updated to allow deletion (jobs are unassigned instead of blocking)",
+    "npx tsc --noEmit passes with no errors"
+  ],
+
+  "affectedFiles": [
+    "backend/src/routes/team.routes.ts",
+    "backend/src/services/job.service.ts"
+  ],
+
+  "implementationNotes": [
+    "Use prisma.$transaction([]) to wrap both the team member update and the job reassignment updates atomically.",
+    "For add member: find the diff between current members and new members list to identify added drivers. For each added driver, run prisma.job.updateMany({ where: { assignedDriverId: driverId }, data: { assignedDriverId: null, teamId: teamId } }).",
+    "For remove member: no job changes needed — just update TeamMember records as before.",
+    "For DELETE /api/teams/:id: before deleting the team, run prisma.job.updateMany({ where: { teamId: id }, data: { teamId: null, assignedDriverId: null, status: 'DRAFT' } }) inside the same transaction.",
+    "The existing guard that blocks team deletion when jobs are assigned should be removed — deletion now unassigns jobs instead of blocking.",
+    "Do not rewrite working code — only modify the member diff logic and delete handler.",
+    "jobInclude in job.service.ts does not need changes — no new fields are added."
+  ],
+
+  "securityConsiderations": "All endpoints already require adminOrDispatcher middleware. No new attack surface. Ensure job reassignment only affects jobs belonging to the correct team/driver — use exact Prisma where clauses."
+}
