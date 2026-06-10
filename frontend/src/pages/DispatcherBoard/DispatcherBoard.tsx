@@ -554,7 +554,6 @@ const DispatcherBoard: React.FC = () => {
       {editingJob && (
         <JobEditModal
           job={editingJob}
-          drivers={drivers.map((d) => ({ id: d.id, name: d.name, email: '', isActive: true }))}
           isOpen={true}
           onClose={() => setEditingJob(null)}
           onSave={handleSave}

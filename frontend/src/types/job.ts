@@ -4,7 +4,6 @@ export enum JobType {
   DELIVERY_AND_PICKUP = 'DELIVERY_AND_PICKUP',
   INSTALLATION = 'INSTALLATION',
   SERVICE = 'SERVICE',
-  COMBINED = 'COMBINED',
 }
 
 export const JOB_TYPE_LABELS: Record<JobType, string> = {
@@ -13,7 +12,6 @@ export const JOB_TYPE_LABELS: Record<JobType, string> = {
   [JobType.DELIVERY_AND_PICKUP]: 'Delivery & Pickup',
   [JobType.INSTALLATION]: 'Installation',
   [JobType.SERVICE]: 'Service',
-  [JobType.COMBINED]: 'Combined',
 };
 
 export enum ServiceType {

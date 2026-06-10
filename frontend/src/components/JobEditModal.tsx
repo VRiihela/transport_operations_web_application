@@ -1,358 +1,479 @@
-import React, { useState, useEffect } from 'react';
-import styles from './JobEditModal.module.css';
-
-interface Driver {
-  id: string;
-  name: string | null;
-  email: string;
-  isActive: boolean;
-}
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  JobType,
+  JOB_TYPE_LABELS,
+  ServiceType,
+  SchedulingType,
+  ServicesData,
+  AddressData,
+  SchedulingData,
+} from '../types/job';
+import { CustomerSearchResult } from '../types/customer';
+import { customerService } from '../services/customerService';
+import { useDebounce } from '../hooks/useDebounce';
+import { ServicesSection, AddressSection, SchedulingSection } from './JobCreateModal/sections';
+import styles from './JobCreateModal/JobCreateModal.module.css';
 
 interface Job {
   id: string;
   title: string;
   description?: string | null;
-  status: 'DRAFT' | 'ASSIGNED' | 'IN_PROGRESS' | 'COMPLETED';
-  assignedDriverId: string | null;
+  status: string;
+  jobType?: string | null;
+  services?: string[] | null;
   scheduledStart?: string | null;
   scheduledEnd?: string | null;
   schedulingNote?: string | null;
   street?: string | null;
-  houseNumber?: string | null;
-  stair?: string | null;
   postalCode?: string | null;
   city?: string | null;
   deliveryStreet?: string | null;
-  deliveryHouseNumber?: string | null;
-  deliveryStair?: string | null;
   deliveryPostalCode?: string | null;
   deliveryCity?: string | null;
+  customerName?: string | null;
+  customerPhone?: string | null;
 }
 
-interface EditFormData {
-  title: string;
-  description: string;
-  scheduledStart: string;
-  scheduledEnd: string;
-  schedulingNote: string;
-  assignedDriverId: string;
-  street: string;
-  houseNumber: string;
-  stair: string;
-  postalCode: string;
-  city: string;
-  deliveryStreet: string;
-  deliveryHouseNumber: string;
-  deliveryStair: string;
-  deliveryPostalCode: string;
-  deliveryCity: string;
+interface CustomerData {
+  id?: string;
+  name: string;
+  phone: string;
+  companyName: string;
+  type: 'PRIVATE' | 'BUSINESS';
 }
 
 export interface JobUpdatePayload {
   title?: string;
+  jobType?: string;
+  services?: string[];
   description?: string;
   scheduledStart?: string | null;
   scheduledEnd?: string | null;
   schedulingNote?: string;
-  assignedDriverId?: string;
   street?: string;
-  houseNumber?: string;
-  stair?: string;
   postalCode?: string;
   city?: string;
   deliveryStreet?: string;
-  deliveryHouseNumber?: string;
-  deliveryStair?: string;
   deliveryPostalCode?: string;
   deliveryCity?: string;
+  floorStair?: string;
+  doorCode?: string;
+  accessNotes?: string;
+  customerName?: string | null;
+  customerPhone?: string | null;
 }
 
 interface JobEditModalProps {
   job: Job;
-  drivers: Driver[];
-  loadingDrivers?: boolean;
   isOpen: boolean;
   onClose: () => void;
   onSave: (updates: JobUpdatePayload) => Promise<void>;
 }
 
-function formatDateTimeForInput(value: string | null): string {
-  if (!value) return '';
-  const d = new Date(value);
-  return isNaN(d.getTime()) ? '' : d.toISOString().slice(0, 16);
-}
+const getDefaultServices = (jobType: JobType): ServiceType[] => {
+  switch (jobType) {
+    case JobType.DELIVERY: return [ServiceType.DELIVERY];
+    case JobType.PICKUP: return [ServiceType.PICKUP_COLLECTION];
+    case JobType.DELIVERY_AND_PICKUP: return [ServiceType.DELIVERY, ServiceType.PICKUP_COLLECTION];
+    case JobType.INSTALLATION: return [ServiceType.INSTALLATION];
+    default: return [];
+  }
+};
 
-export const JobEditModal: React.FC<JobEditModalProps> = ({
-  job,
-  drivers,
-  loadingDrivers = false,
-  isOpen,
-  onClose,
-  onSave,
-}) => {
-  const [form, setForm] = useState<EditFormData>({
-    title: '', description: '', scheduledStart: '', scheduledEnd: '',
-    schedulingNote: '', assignedDriverId: '',
-    street: '', houseNumber: '', stair: '', postalCode: '', city: '',
-    deliveryStreet: '', deliveryHouseNumber: '', deliveryStair: '',
-    deliveryPostalCode: '', deliveryCity: '',
-  });
-  const [showDelivery, setShowDelivery] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+const createEmptyAddress = (): AddressData => ({
+  street: '', postalCode: '', city: '', floorStair: '', doorCode: '', accessNotes: '',
+});
+
+const parseJobType = (jt: string | null | undefined): JobType =>
+  Object.values(JobType).includes(jt as JobType) ? (jt as JobType) : JobType.DELIVERY;
+
+const parseServices = (raw: string[] | null | undefined, jobType: JobType): ServiceType[] => {
+  if (raw && raw.length > 0) {
+    return raw.filter((s) => Object.values(ServiceType).includes(s as ServiceType)) as ServiceType[];
+  }
+  return getDefaultServices(jobType);
+};
+
+const parseScheduling = (
+  start?: string | null, end?: string | null, note?: string | null,
+): SchedulingData => {
+  if (start) {
+    const d = new Date(start);
+    const date = d.toLocaleDateString('sv');
+    const startTime = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    if (end) {
+      const e = new Date(end);
+      const endTime = `${String(e.getHours()).padStart(2, '0')}:${String(e.getMinutes()).padStart(2, '0')}`;
+      return { type: SchedulingType.TIME_WINDOW, date, exactTime: '', windowStart: startTime, windowEnd: endTime, schedulingNote: '' };
+    }
+    return { type: SchedulingType.EXACT_TIME, date, exactTime: startTime, windowStart: '', windowEnd: '', schedulingNote: '' };
+  }
+  return { type: SchedulingType.TBC, date: '', exactTime: '', windowStart: '', windowEnd: '', schedulingNote: note ?? '' };
+};
+
+export const JobEditModal: React.FC<JobEditModalProps> = ({ job, isOpen, onClose, onSave }) => {
+  const [jobType, setJobType] = useState<JobType>(JobType.DELIVERY);
+  const [title, setTitle] = useState('');
+  const [customerName, setCustomerName] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+
+  const [customerData, setCustomerData] = useState<CustomerData>({ name: '', phone: '', companyName: '', type: 'PRIVATE' });
+  const [phoneInput, setPhoneInput] = useState('');
+  const [searchResults, setSearchResults] = useState<CustomerSearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [searchError, setSearchError] = useState('');
+
+  const [services, setServices] = useState<ServicesData>({ selectedServices: [], otherServiceText: '' });
+  const [pickupAddress, setPickupAddress] = useState<AddressData>(createEmptyAddress());
+  const [deliveryAddress, setDeliveryAddress] = useState<AddressData>(createEmptyAddress());
+  const [serviceAddress, setServiceAddress] = useState<AddressData>(createEmptyAddress());
+  const [scheduling, setScheduling] = useState<SchedulingData>(parseScheduling());
+
+  const debouncedPhone = useDebounce(phoneInput, 400);
 
   useEffect(() => {
-    if (isOpen && job) {
-      setForm({
-        title: job.title,
-        description: job.description ?? '',
-        scheduledStart: formatDateTimeForInput(job.scheduledStart ?? null),
-        scheduledEnd: formatDateTimeForInput(job.scheduledEnd ?? null),
-        schedulingNote: job.schedulingNote ?? '',
-        assignedDriverId: job.assignedDriverId ?? '',
-        street: job.street ?? '',
-        houseNumber: job.houseNumber ?? '',
-        stair: job.stair ?? '',
-        postalCode: job.postalCode ?? '',
-        city: job.city ?? '',
-        deliveryStreet: job.deliveryStreet ?? '',
-        deliveryHouseNumber: job.deliveryHouseNumber ?? '',
-        deliveryStair: job.deliveryStair ?? '',
-        deliveryPostalCode: job.deliveryPostalCode ?? '',
-        deliveryCity: job.deliveryCity ?? '',
-      });
-      setShowDelivery(Boolean(
-        job.deliveryStreet || job.deliveryHouseNumber || job.deliveryPostalCode || job.deliveryCity
-      ));
-      setError(null);
+    if (!isOpen) return;
+    const jt = parseJobType(job.jobType);
+    setJobType(jt);
+    setTitle(job.title);
+    setCustomerName(job.customerName ?? '');
+    setCustomerPhone(job.customerPhone ?? '');
+    const svc = parseServices(job.services, jt);
+    setServices({ selectedServices: svc, otherServiceText: '' });
+    const hasPickup = svc.includes(ServiceType.PICKUP_COLLECTION);
+    const hasDelivery = svc.includes(ServiceType.DELIVERY);
+    if (hasPickup) {
+      setPickupAddress({ street: job.street ?? '', postalCode: job.postalCode ?? '', city: job.city ?? '', floorStair: '', doorCode: '', accessNotes: '' });
+    } else {
+      setPickupAddress(createEmptyAddress());
     }
-  }, [isOpen, job]);
+    if (hasDelivery) {
+      setDeliveryAddress({ street: job.deliveryStreet ?? '', postalCode: job.deliveryPostalCode ?? '', city: job.deliveryCity ?? '', floorStair: '', doorCode: '', accessNotes: '' });
+    } else {
+      setDeliveryAddress(createEmptyAddress());
+    }
+    if (!hasPickup && !hasDelivery) {
+      setServiceAddress({ street: job.street ?? '', postalCode: job.postalCode ?? '', city: job.city ?? '', floorStair: '', doorCode: '', accessNotes: '' });
+    } else {
+      setServiceAddress(createEmptyAddress());
+    }
+    setScheduling(parseScheduling(job.scheduledStart, job.scheduledEnd, job.schedulingNote));
+    setCustomerData({ name: '', phone: '', companyName: '', type: 'PRIVATE' });
+    setPhoneInput('');
+    setSubmitError('');
+  }, [isOpen, job]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const validate = (): string | null => {
-    if (!form.title.trim()) return 'Title is required';
-    if (!form.scheduledStart && !form.scheduledEnd && !form.schedulingNote.trim()) {
-      return 'Scheduling note is required when no times are set';
-    }
-    if (form.scheduledStart && form.scheduledEnd) {
-      if (new Date(form.scheduledEnd) <= new Date(form.scheduledStart)) {
-        return 'End time must be after start time';
-      }
-    }
-    return null;
-  };
-
-  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
-    e.preventDefault();
-    const validationError = validate();
-    if (validationError) {
-      setError(validationError);
-      return;
-    }
-    setIsSubmitting(true);
-    setError(null);
+  const handleCustomerSearch = useCallback(async (phone: string) => {
+    if (phone.length < 3) { setSearchResults([]); setShowDropdown(false); return; }
+    setIsSearching(true);
+    setSearchError('');
     try {
-      const payload: JobUpdatePayload = {
-        title: form.title.trim(),
-        description: form.description.trim() || undefined,
-        scheduledStart: form.scheduledStart ? new Date(form.scheduledStart).toISOString() : null,
-        scheduledEnd: form.scheduledEnd ? new Date(form.scheduledEnd).toISOString() : null,
-        schedulingNote: form.schedulingNote.trim() || undefined,
-        assignedDriverId: form.assignedDriverId || undefined,
-        street: form.street.trim() || undefined,
-        houseNumber: form.houseNumber.trim() || undefined,
-        stair: form.stair.trim() || undefined,
-        postalCode: form.postalCode.trim() || undefined,
-        city: form.city.trim() || undefined,
-        ...(showDelivery && {
-          deliveryStreet: form.deliveryStreet.trim() || undefined,
-          deliveryHouseNumber: form.deliveryHouseNumber.trim() || undefined,
-          deliveryStair: form.deliveryStair.trim() || undefined,
-          deliveryPostalCode: form.deliveryPostalCode.trim() || undefined,
-          deliveryCity: form.deliveryCity.trim() || undefined,
-        }),
-      };
-      await onSave(payload);
-      onClose();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save changes');
+      const results = await customerService.searchByPhone(phone);
+      setSearchResults(results.slice(0, 5));
+      setShowDropdown(results.length > 0);
+    } catch {
+      setSearchError('Failed to search customers');
+      setSearchResults([]);
+      setShowDropdown(false);
     } finally {
-      setIsSubmitting(false);
+      setIsSearching(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (debouncedPhone !== phoneInput) return;
+    void handleCustomerSearch(debouncedPhone);
+  }, [debouncedPhone, handleCustomerSearch, phoneInput]);
+
+  const handleCustomerSelect = (customer: CustomerSearchResult) => {
+    setCustomerData({ id: customer.id, name: customer.name, phone: customer.phone, companyName: customer.companyName ?? '', type: customer.type });
+    setPhoneInput(customer.phone);
+    setShowDropdown(false);
+  };
+
+  const handlePhoneChange = (value: string) => {
+    setPhoneInput(value);
+    setCustomerData((prev) => ({ ...prev, phone: value, id: undefined }));
+    if (value.length === 0) { setShowDropdown(false); setSearchResults([]); }
+  };
+
+  const handleJobTypeChange = (type: JobType) => {
+    setJobType(type);
+    setServices((prev) => ({ ...prev, selectedServices: getDefaultServices(type) }));
+  };
+
+  const handleClose = () => {
+    setSubmitting(false);
+    setSubmitError('');
+    setPhoneInput('');
+    setSearchResults([]);
+    setShowDropdown(false);
+    setSearchError('');
+    onClose();
+  };
+
+  const handleSubmit = async () => {
+    setSubmitError('');
+    if (!title.trim()) { setSubmitError('Title is required'); return; }
+
+    const hasPickup = services.selectedServices.includes(ServiceType.PICKUP_COLLECTION);
+    const hasDelivery = services.selectedServices.includes(ServiceType.DELIVERY);
+    const hasServiceAddress = !hasPickup && !hasDelivery && services.selectedServices.length > 0;
+
+    let scheduledStart: string | null = null;
+    let scheduledEnd: string | null = null;
+    let schedulingNote: string | undefined;
+
+    if (scheduling.type === SchedulingType.EXACT_TIME && scheduling.date && scheduling.exactTime) {
+      scheduledStart = new Date(`${scheduling.date}T${scheduling.exactTime}`).toISOString();
+    } else if (scheduling.type === SchedulingType.TIME_WINDOW && scheduling.date) {
+      if (scheduling.windowStart) scheduledStart = new Date(`${scheduling.date}T${scheduling.windowStart}`).toISOString();
+      if (scheduling.windowEnd) scheduledEnd = new Date(`${scheduling.date}T${scheduling.windowEnd}`).toISOString();
+    } else if (scheduling.type === SchedulingType.TBC) {
+      schedulingNote = scheduling.schedulingNote || undefined;
+    }
+
+    const payload: JobUpdatePayload = {
+      title: title.trim(),
+      jobType,
+      services: services.selectedServices,
+      scheduledStart,
+      scheduledEnd,
+      schedulingNote,
+      customerName: customerName.trim() || null,
+      customerPhone: customerPhone.trim() || null,
+      ...(hasPickup && {
+        street: pickupAddress.street || undefined,
+        postalCode: pickupAddress.postalCode || undefined,
+        city: pickupAddress.city || undefined,
+        floorStair: pickupAddress.floorStair || undefined,
+        doorCode: pickupAddress.doorCode || undefined,
+        accessNotes: pickupAddress.accessNotes || undefined,
+      }),
+      ...(hasDelivery && {
+        deliveryStreet: deliveryAddress.street || undefined,
+        deliveryPostalCode: deliveryAddress.postalCode || undefined,
+        deliveryCity: deliveryAddress.city || undefined,
+        floorStair: deliveryAddress.floorStair || undefined,
+        doorCode: deliveryAddress.doorCode || undefined,
+        accessNotes: deliveryAddress.accessNotes || undefined,
+      }),
+      ...(hasServiceAddress && {
+        street: serviceAddress.street || undefined,
+        postalCode: serviceAddress.postalCode || undefined,
+        city: serviceAddress.city || undefined,
+        floorStair: serviceAddress.floorStair || undefined,
+        doorCode: serviceAddress.doorCode || undefined,
+        accessNotes: serviceAddress.accessNotes || undefined,
+      }),
+    };
+
+    try {
+      setSubmitting(true);
+      await onSave(payload);
+      handleClose();
+    } catch {
+      setSubmitError('Failed to save changes. Please try again.');
+      setSubmitting(false);
     }
   };
+
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') handleClose();
+    };
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!isOpen) return null;
 
-  const set = (field: keyof EditFormData) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
-    setForm((p) => ({ ...p, [field]: e.target.value }));
-
   return (
-    <div className={styles.overlay} onClick={onClose}>
+    <div className={styles.overlay} onClick={handleClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-        <div className={styles.modalHeader}>
-          <h2 className={styles.modalTitle}>Edit Job</h2>
-          <button className={styles.closeButton} onClick={onClose} aria-label="Close">×</button>
+        <div className={styles.header}>
+          <h2>Edit Job</h2>
+          <button type="button" className={styles.closeButton} onClick={handleClose} aria-label="Close modal">×</button>
         </div>
 
-        {error && <div className={styles.errorBox}>{error}</div>}
-
-        <form onSubmit={(e) => void handleSubmit(e)} noValidate>
-          <div className={styles.formGroup}>
-            <label htmlFor="jej-title" className={styles.label}>
-              Title <span className={styles.required}>*</span>
-            </label>
-            <input
-              id="jej-title"
-              type="text"
-              value={form.title}
-              onChange={set('title')}
-              className={styles.input}
-              maxLength={255}
-            />
-          </div>
-
-          <div className={styles.formGroup}>
-            <label htmlFor="jej-description" className={styles.label}>Description</label>
-            <textarea
-              id="jej-description"
-              value={form.description}
-              onChange={set('description')}
-              className={styles.textarea}
-              rows={3}
-              maxLength={1000}
-            />
-          </div>
-
-          <div className={styles.timeRow}>
-            <div className={styles.formGroup}>
-              <label htmlFor="jej-start" className={styles.label}>Start Time</label>
+        <div className={styles.content}>
+          <section className={styles.section}>
+            <div className={styles.inputGroup}>
+              <label htmlFor="edit-jobTitle">Title <span style={{ color: '#dc2626' }}>*</span></label>
               <input
-                id="jej-start"
-                type="datetime-local"
-                value={form.scheduledStart}
-                onChange={set('scheduledStart')}
-                className={styles.input}
+                id="edit-jobTitle"
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Job title"
+                className={`${styles.input} ${submitError && !title.trim() ? styles.errorInput : ''}`}
+                maxLength={255}
+                disabled={submitting}
               />
             </div>
-            <div className={styles.formGroup}>
-              <label htmlFor="jej-end" className={styles.label}>End Time</label>
+          </section>
+
+          <section className={styles.section}>
+            <h3>Contact Details</h3>
+            <div className={styles.inputGroup}>
+              <label htmlFor="edit-job-customerName">Customer Name</label>
               <input
-                id="jej-end"
-                type="datetime-local"
-                value={form.scheduledEnd}
-                onChange={set('scheduledEnd')}
+                id="edit-job-customerName"
+                type="text"
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                placeholder="Customer name"
                 className={styles.input}
+                maxLength={255}
+                disabled={submitting}
               />
             </div>
-          </div>
+            <div className={styles.inputGroup}>
+              <label htmlFor="edit-job-customerPhone">Customer Phone</label>
+              <input
+                id="edit-job-customerPhone"
+                type="tel"
+                value={customerPhone}
+                onChange={(e) => setCustomerPhone(e.target.value)}
+                placeholder="Customer phone"
+                className={styles.input}
+                maxLength={50}
+                disabled={submitting}
+              />
+            </div>
+          </section>
 
-          <div className={styles.formGroup}>
-            <label htmlFor="jej-note" className={styles.label}>
-              Scheduling Note
-              {!form.scheduledStart && !form.scheduledEnd && (
-                <span className={styles.required}> *</span>
-              )}
-            </label>
-            <input
-              id="jej-note"
-              type="text"
-              value={form.schedulingNote}
-              onChange={set('schedulingNote')}
-              className={styles.input}
-              maxLength={500}
-              placeholder={!form.scheduledStart && !form.scheduledEnd ? 'Required when no times set' : ''}
-            />
-          </div>
-
-          <div className={styles.formGroup}>
-            <label htmlFor="jej-driver" className={styles.label}>Assigned Driver</label>
-            <select
-              id="jej-driver"
-              value={form.assignedDriverId}
-              onChange={set('assignedDriverId')}
-              className={styles.input}
-              disabled={loadingDrivers}
-            >
-              <option value="">{loadingDrivers ? 'Loading…' : 'Unassigned'}</option>
-              {drivers.filter((d) => d.isActive).map((d) => (
-                <option key={d.id} value={d.id}>{d.name ?? d.email}</option>
+          <section className={styles.section}>
+            <h3>Job Type</h3>
+            <div className={styles.jobTypeGroup}>
+              {Object.values(JobType).map((type) => (
+                <button
+                  key={type}
+                  type="button"
+                  className={`${styles.jobTypeButton} ${jobType === type ? styles.active : ''}`}
+                  onClick={() => handleJobTypeChange(type)}
+                >
+                  {JOB_TYPE_LABELS[type]}
+                </button>
               ))}
-            </select>
-          </div>
-
-          <div className={styles.addressSection}>
-            <div className={styles.addressSectionLabel}>Pickup address</div>
-            <div className={styles.formGroup}>
-              <label htmlFor="jej-street" className={styles.label}>Street</label>
-              <input id="jej-street" type="text" value={form.street} onChange={set('street')} className={styles.input} maxLength={255} />
             </div>
-            <div className={styles.timeRow}>
-              <div className={styles.formGroup}>
-                <label htmlFor="jej-houseNumber" className={styles.label}>House no.</label>
-                <input id="jej-houseNumber" type="text" value={form.houseNumber} onChange={set('houseNumber')} className={styles.input} maxLength={20} />
+          </section>
+
+          <section className={styles.section}>
+            <h3>Customer</h3>
+            <div className={styles.customerSearch}>
+              <div className={styles.inputGroup}>
+                <label htmlFor="edit-phone">Phone Number</label>
+                <input
+                  id="edit-phone"
+                  type="tel"
+                  value={phoneInput}
+                  onChange={(e) => handlePhoneChange(e.target.value)}
+                  placeholder="Search by phone number..."
+                  className={styles.input}
+                  autoComplete="off"
+                />
+                {isSearching && <div className={styles.searchingIndicator}>Searching...</div>}
               </div>
-              <div className={styles.formGroup}>
-                <label htmlFor="jej-stair" className={styles.label}>Stair</label>
-                <input id="jej-stair" type="text" value={form.stair} onChange={set('stair')} className={styles.input} maxLength={20} placeholder="Optional" />
+              {showDropdown && searchResults.length > 0 && (
+                <div className={styles.dropdown}>
+                  {searchResults.map((customer) => (
+                    <button
+                      key={customer.id}
+                      type="button"
+                      className={styles.dropdownItem}
+                      onClick={() => handleCustomerSelect(customer)}
+                    >
+                      <div className={styles.customerInfo}>
+                        <div className={styles.customerName}>{customer.name}</div>
+                        <div className={styles.customerDetails}>
+                          {customer.phone}
+                          {customer.companyName && ` • ${customer.companyName}`}
+                          <span className={styles.customerType}>{customer.type}</span>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+              {searchError && <div className={styles.errorMessage}>{searchError}</div>}
+            </div>
+            <div className={styles.customerForm}>
+              <div className={styles.inputGroup}>
+                <label htmlFor="edit-customerName">Name</label>
+                <input
+                  id="edit-customerName"
+                  type="text"
+                  value={customerData.name}
+                  onChange={(e) => setCustomerData((prev) => ({ ...prev, name: e.target.value }))}
+                  placeholder="Customer name"
+                  className={styles.input}
+                />
+              </div>
+              <div className={styles.inputGroup}>
+                <label htmlFor="edit-companyName">Company Name</label>
+                <input
+                  id="edit-companyName"
+                  type="text"
+                  value={customerData.companyName}
+                  onChange={(e) => setCustomerData((prev) => ({ ...prev, companyName: e.target.value }))}
+                  placeholder="Company name (optional)"
+                  className={styles.input}
+                />
+              </div>
+              <div className={styles.customerTypeToggle}>
+                <button
+                  type="button"
+                  className={`${styles.toggleButton} ${customerData.type === 'PRIVATE' ? styles.active : ''}`}
+                  onClick={() => setCustomerData((prev) => ({ ...prev, type: 'PRIVATE' }))}
+                >
+                  Private
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.toggleButton} ${customerData.type === 'BUSINESS' ? styles.active : ''}`}
+                  onClick={() => setCustomerData((prev) => ({ ...prev, type: 'BUSINESS' }))}
+                >
+                  Business
+                </button>
               </div>
             </div>
-            <div className={styles.timeRow}>
-              <div className={styles.formGroup}>
-                <label htmlFor="jej-postalCode" className={styles.label}>Postal code</label>
-                <input id="jej-postalCode" type="text" value={form.postalCode} onChange={set('postalCode')} className={styles.input} maxLength={10} />
-              </div>
-              <div className={styles.formGroup}>
-                <label htmlFor="jej-city" className={styles.label}>City</label>
-                <input id="jej-city" type="text" value={form.city} onChange={set('city')} className={styles.input} maxLength={100} />
-              </div>
-            </div>
-          </div>
+          </section>
 
-          <div className={styles.formGroup}>
-            <label className={styles.deliveryToggle}>
-              <input type="checkbox" checked={showDelivery} onChange={(e) => setShowDelivery(e.target.checked)} />
-              Delivery address (optional)
-            </label>
-          </div>
+          <ServicesSection jobType={jobType} data={services} onChange={setServices} />
 
-          {showDelivery && (
-            <div className={styles.addressSection}>
-              <div className={styles.addressSectionLabel}>Delivery address</div>
-              <div className={styles.formGroup}>
-                <label htmlFor="jej-deliveryStreet" className={styles.label}>Street</label>
-                <input id="jej-deliveryStreet" type="text" value={form.deliveryStreet} onChange={set('deliveryStreet')} className={styles.input} maxLength={255} />
-              </div>
-              <div className={styles.timeRow}>
-                <div className={styles.formGroup}>
-                  <label htmlFor="jej-deliveryHouseNumber" className={styles.label}>House no.</label>
-                  <input id="jej-deliveryHouseNumber" type="text" value={form.deliveryHouseNumber} onChange={set('deliveryHouseNumber')} className={styles.input} maxLength={20} />
-                </div>
-                <div className={styles.formGroup}>
-                  <label htmlFor="jej-deliveryStair" className={styles.label}>Stair</label>
-                  <input id="jej-deliveryStair" type="text" value={form.deliveryStair} onChange={set('deliveryStair')} className={styles.input} maxLength={20} placeholder="Optional" />
-                </div>
-              </div>
-              <div className={styles.timeRow}>
-                <div className={styles.formGroup}>
-                  <label htmlFor="jej-deliveryPostalCode" className={styles.label}>Postal code</label>
-                  <input id="jej-deliveryPostalCode" type="text" value={form.deliveryPostalCode} onChange={set('deliveryPostalCode')} className={styles.input} maxLength={10} />
-                </div>
-                <div className={styles.formGroup}>
-                  <label htmlFor="jej-deliveryCity" className={styles.label}>City</label>
-                  <input id="jej-deliveryCity" type="text" value={form.deliveryCity} onChange={set('deliveryCity')} className={styles.input} maxLength={100} />
-                </div>
-              </div>
-            </div>
-          )}
+          <AddressSection
+            selectedServices={services.selectedServices}
+            pickupAddress={pickupAddress}
+            deliveryAddress={deliveryAddress}
+            serviceAddress={serviceAddress}
+            onPickupChange={setPickupAddress}
+            onDeliveryChange={setDeliveryAddress}
+            onServiceChange={setServiceAddress}
+          />
 
-          <div className={styles.actions}>
-            <button type="button" className={styles.cancelButton} onClick={onClose} disabled={isSubmitting}>
+          <SchedulingSection data={scheduling} onChange={setScheduling} />
+
+          {submitError && <div className={styles.apiError}>{submitError}</div>}
+
+          <div className={styles.modalFooter}>
+            <button type="button" className={styles.cancelButton} onClick={handleClose} disabled={submitting}>
               Cancel
             </button>
-            <button type="submit" className={styles.primaryButton} disabled={isSubmitting}>
-              {isSubmitting ? 'Saving…' : 'Save Changes'}
+            <button type="button" className={styles.submitButton} onClick={() => void handleSubmit()} disabled={submitting}>
+              {submitting ? 'Saving…' : 'Save Changes'}
             </button>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );

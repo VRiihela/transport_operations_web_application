@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import axiosInstance from '../api/axios';
 import { JobDetailModal } from '../components/JobDetailModal';
 import { JobCreateModal } from '../components/JobCreateModal/JobCreateModal';
+import { JobEditModal, JobUpdatePayload } from '../components/JobEditModal';
 import styles from './JobsPage.module.css';
 
 type JobStatus = 'DRAFT' | 'ASSIGNED' | 'IN_PROGRESS' | 'COMPLETED';
@@ -23,6 +24,7 @@ interface CompletionReport {
   actualEnd: string;
   totalHours: number;
   customerName: string;
+  customerSignature: string;
   approvedAt: string | null;
 }
 
@@ -56,6 +58,9 @@ interface Job {
   deliveryStair?: string | null;
   deliveryPostalCode?: string | null;
   deliveryCity?: string | null;
+  jobType?: string | null;
+  services?: string[] | null;
+  customer?: { id: string; name: string; phone: string; email: string | null; companyName: string | null } | null;
   // legacy field
   location?: string | null;
   completionReport?: CompletionReport | null;
@@ -68,44 +73,6 @@ interface Driver {
   name: string | null;
   email: string;
   isActive: boolean;
-}
-
-interface EditFormData {
-  title: string;
-  description: string;
-  scheduledStart: string;
-  scheduledEnd: string;
-  schedulingNote: string;
-  assignedDriverId: string;
-  teamId: string;
-  street: string;
-  houseNumber: string;
-  stair: string;
-  postalCode: string;
-  city: string;
-  deliveryStreet: string;
-  deliveryHouseNumber: string;
-  deliveryStair: string;
-  deliveryPostalCode: string;
-  deliveryCity: string;
-}
-
-interface CreateJobFormData {
-  title: string;
-  description: string;
-  scheduledStart: string;
-  scheduledEnd: string;
-  schedulingNote: string;
-  street: string;
-  houseNumber: string;
-  stair: string;
-  postalCode: string;
-  city: string;
-  deliveryStreet: string;
-  deliveryHouseNumber: string;
-  deliveryStair: string;
-  deliveryPostalCode: string;
-  deliveryCity: string;
 }
 
 interface JobsApiResponse {
@@ -123,9 +90,6 @@ interface UsersApiResponse {
   data: Driver[];
 }
 
-interface TeamsApiResponse {
-  data: Team[];
-}
 
 function getApiError(err: unknown, fallback: string): string {
   if (isAxiosError(err)) {
@@ -148,32 +112,12 @@ const JobsPage: React.FC = () => {
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
-  const [showCreateForm, setShowCreateForm] = useState<boolean>(false);
-  const [createFormData, setCreateFormData] = useState<CreateJobFormData>({
-    title: '', description: '', scheduledStart: '', scheduledEnd: '', schedulingNote: '',
-    street: '', houseNumber: '', stair: '', postalCode: '', city: '',
-    deliveryStreet: '', deliveryHouseNumber: '', deliveryStair: '', deliveryPostalCode: '', deliveryCity: '',
-  });
-  const [showCreateDelivery, setShowCreateDelivery] = useState(false);
-  const [titleError, setTitleError] = useState<string>('');
-  const [submitting, setSubmitting] = useState<boolean>(false);
   const [loadingDrivers, setLoadingDrivers] = useState<boolean>(false);
   const [assigningJobs, setAssigningJobs] = useState<Set<string>>(new Set());
   const [updatingStatus, setUpdatingStatus] = useState<Set<string>>(new Set());
   const [openDriverDropdown, setOpenDriverDropdown] = useState<string | null>(null);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [editingJob, setEditingJob] = useState<Job | null>(null);
-  const [editForm, setEditForm] = useState<EditFormData>({
-    title: '', description: '', scheduledStart: '', scheduledEnd: '', schedulingNote: '',
-    assignedDriverId: '', teamId: '',
-    street: '', houseNumber: '', stair: '', postalCode: '', city: '',
-    deliveryStreet: '', deliveryHouseNumber: '', deliveryStair: '', deliveryPostalCode: '', deliveryCity: '',
-  });
-  const [editTeams, setEditTeams] = useState<Team[]>([]);
-  const [loadingTeams, setLoadingTeams] = useState(false);
-  const [showEditDelivery, setShowEditDelivery] = useState(false);
-  const [editError, setEditError] = useState<string>('');
-  const [editSubmitting, setEditSubmitting] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const fetchJobs = useCallback(async () => {
@@ -209,47 +153,6 @@ const JobsPage: React.FC = () => {
   const handleOpenAssign = (jobId: string) => {
     setOpenDriverDropdown((prev) => (prev === jobId ? null : jobId));
     void fetchDrivers();
-  };
-
-  const handleCreateJob = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setTitleError('');
-    if (!createFormData.title.trim()) {
-      setTitleError('Title is required');
-      return;
-    }
-
-    try {
-      setSubmitting(true);
-      const payload = {
-        title: createFormData.title.trim(),
-        description: createFormData.description.trim() || undefined,
-        scheduledStart: createFormData.scheduledStart ? new Date(createFormData.scheduledStart).toISOString() : null,
-        scheduledEnd: createFormData.scheduledEnd ? new Date(createFormData.scheduledEnd).toISOString() : null,
-        schedulingNote: createFormData.schedulingNote.trim() || undefined,
-        street: createFormData.street.trim() || undefined,
-        houseNumber: createFormData.houseNumber.trim() || undefined,
-        stair: createFormData.stair.trim() || undefined,
-        postalCode: createFormData.postalCode.trim() || undefined,
-        city: createFormData.city.trim() || undefined,
-        ...(showCreateDelivery && {
-          deliveryStreet: createFormData.deliveryStreet.trim() || undefined,
-          deliveryHouseNumber: createFormData.deliveryHouseNumber.trim() || undefined,
-          deliveryStair: createFormData.deliveryStair.trim() || undefined,
-          deliveryPostalCode: createFormData.deliveryPostalCode.trim() || undefined,
-          deliveryCity: createFormData.deliveryCity.trim() || undefined,
-        }),
-      };
-      const response = await axiosInstance.post<SingleJobApiResponse>('/api/jobs', payload);
-      setJobs((prev) => [response.data.data, ...prev]);
-      setShowCreateForm(false);
-      setCreateFormData({ title: '', description: '', scheduledStart: '', scheduledEnd: '', schedulingNote: '', street: '', houseNumber: '', stair: '', postalCode: '', city: '', deliveryStreet: '', deliveryHouseNumber: '', deliveryStair: '', deliveryPostalCode: '', deliveryCity: '' });
-      setShowCreateDelivery(false);
-    } catch (err) {
-      setError(getApiError(err, 'Failed to create job. Please try again.'));
-    } finally {
-      setSubmitting(false);
-    }
   };
 
   const handleAssignDriver = async (jobId: string, driverId: string) => {
@@ -294,85 +197,15 @@ const JobsPage: React.FC = () => {
     }
   };
 
-  const formatDateTimeForInput = (value: string | null): string => {
-    if (!value) return '';
-    const d = new Date(value);
-    return isNaN(d.getTime()) ? '' : d.toISOString().slice(0, 16);
-  };
-
   const handleEditOpen = (job: Job) => {
-    void fetchDrivers();
-
-    const jobDate = job.scheduledStart
-      ? new Date(job.scheduledStart).toISOString().split('T')[0]
-      : new Date().toISOString().split('T')[0];
-    setLoadingTeams(true);
-    axiosInstance
-      .get<TeamsApiResponse>(`/api/teams?date=${jobDate}`)
-      .then((res) => setEditTeams(res.data.data))
-      .catch(() => setEditTeams([]))
-      .finally(() => setLoadingTeams(false));
-
-    setEditForm({
-      title: job.title,
-      description: job.description ?? '',
-      scheduledStart: formatDateTimeForInput(job.scheduledStart),
-      scheduledEnd: formatDateTimeForInput(job.scheduledEnd),
-      schedulingNote: job.schedulingNote ?? '',
-      assignedDriverId: job.assignedDriverId ?? '',
-      teamId: job.teamId ?? '',
-      street: job.street ?? '',
-      houseNumber: job.houseNumber ?? '',
-      stair: job.stair ?? '',
-      postalCode: job.postalCode ?? '',
-      city: job.city ?? '',
-      deliveryStreet: job.deliveryStreet ?? '',
-      deliveryHouseNumber: job.deliveryHouseNumber ?? '',
-      deliveryStair: job.deliveryStair ?? '',
-      deliveryPostalCode: job.deliveryPostalCode ?? '',
-      deliveryCity: job.deliveryCity ?? '',
-    });
-    setShowEditDelivery(Boolean(
-      job.deliveryStreet || job.deliveryHouseNumber || job.deliveryPostalCode || job.deliveryCity
-    ));
-    setEditError('');
     setEditingJob(job);
   };
 
-  const handleEditSubmit = async (e: React.FormEvent): Promise<void> => {
-    e.preventDefault();
+  const handleEditSave = async (updates: JobUpdatePayload): Promise<void> => {
     if (!editingJob) return;
-    setEditSubmitting(true);
-    setEditError('');
-    try {
-      const isTeamAssigned = Boolean(editForm.teamId);
-      const payload = {
-        title: editForm.title.trim(),
-        description: editForm.description.trim() || undefined,
-        scheduledStart: editForm.scheduledStart ? new Date(editForm.scheduledStart).toISOString() : null,
-        scheduledEnd: editForm.scheduledEnd ? new Date(editForm.scheduledEnd).toISOString() : null,
-        schedulingNote: editForm.schedulingNote.trim() || undefined,
-        assignedDriverId: isTeamAssigned ? null : (editForm.assignedDriverId || undefined),
-        teamId: editForm.teamId || null,
-        street: editForm.street.trim() || undefined,
-        houseNumber: editForm.houseNumber.trim() || undefined,
-        stair: editForm.stair.trim() || undefined,
-        postalCode: editForm.postalCode.trim() || undefined,
-        city: editForm.city.trim() || undefined,
-        deliveryStreet: showEditDelivery ? (editForm.deliveryStreet.trim() || undefined) : undefined,
-        deliveryHouseNumber: showEditDelivery ? (editForm.deliveryHouseNumber.trim() || undefined) : undefined,
-        deliveryStair: showEditDelivery ? (editForm.deliveryStair.trim() || undefined) : undefined,
-        deliveryPostalCode: showEditDelivery ? (editForm.deliveryPostalCode.trim() || undefined) : undefined,
-        deliveryCity: showEditDelivery ? (editForm.deliveryCity.trim() || undefined) : undefined,
-      };
-      const response = await axiosInstance.patch<SingleJobApiResponse>(`/api/jobs/${editingJob.id}`, payload);
-      setJobs((prev) => prev.map((j) => (j.id === editingJob.id ? response.data.data : j)));
-      setEditingJob(null);
-    } catch (err) {
-      setEditError(getApiError(err, 'Failed to save changes'));
-    } finally {
-      setEditSubmitting(false);
-    }
+    const response = await axiosInstance.patch<SingleJobApiResponse>(`/api/jobs/${editingJob.id}`, updates);
+    setJobs((prev) => prev.map((j) => (j.id === editingJob.id ? response.data.data : j)));
+    setEditingJob(null);
   };
 
   const formatFinnishDateTime = (value: string | null): string => {
@@ -445,9 +278,6 @@ const JobsPage: React.FC = () => {
               New Job
             </button>
           )}
-          <button className={styles.createButton} onClick={() => setShowCreateForm(true)}>
-            Create Job
-          </button>
           <button className={styles.logoutButton} onClick={() => void logout()}>
             Logout
           </button>
@@ -463,417 +293,15 @@ const JobsPage: React.FC = () => {
         </div>
       )}
 
-      {showCreateForm && (
-        <div className={styles.modalOverlay} onClick={() => setShowCreateForm(false)}>
-          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.modalHeader}>
-              <h2 className={styles.modalTitle}>Create New Job</h2>
-              <button
-                className={styles.modalClose}
-                onClick={() => setShowCreateForm(false)}
-                aria-label="Close"
-              >
-                ×
-              </button>
-            </div>
-            <form onSubmit={(e) => void handleCreateJob(e)} className={styles.form} noValidate>
-              <div className={styles.formGroup}>
-                <label htmlFor="title" className={styles.formLabel}>
-                  Title <span className={styles.required}>*</span>
-                </label>
-                <input
-                  id="title"
-                  type="text"
-                  value={createFormData.title}
-                  onChange={(e) =>
-                    setCreateFormData((prev) => ({ ...prev, title: e.target.value }))
-                  }
-                  className={`${styles.formInput} ${titleError ? styles.inputError : ''}`}
-                  maxLength={200}
-                />
-                {titleError && <span className={styles.fieldError}>{titleError}</span>}
-              </div>
 
-              <div className={styles.formGroup}>
-                <label htmlFor="description" className={styles.formLabel}>
-                  Description
-                </label>
-                <textarea
-                  id="description"
-                  value={createFormData.description}
-                  onChange={(e) =>
-                    setCreateFormData((prev) => ({ ...prev, description: e.target.value }))
-                  }
-                  className={styles.formTextarea}
-                  rows={3}
-                  maxLength={1000}
-                />
-              </div>
 
-              <div className={styles.formGroup}>
-                <label htmlFor="scheduledStart" className={styles.formLabel}>
-                  Start Time
-                </label>
-                <input
-                  id="scheduledStart"
-                  type="datetime-local"
-                  value={createFormData.scheduledStart}
-                  onChange={(e) =>
-                    setCreateFormData((prev) => ({ ...prev, scheduledStart: e.target.value }))
-                  }
-                  className={styles.formInput}
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label htmlFor="scheduledEnd" className={styles.formLabel}>
-                  End Time
-                </label>
-                <input
-                  id="scheduledEnd"
-                  type="datetime-local"
-                  value={createFormData.scheduledEnd}
-                  onChange={(e) =>
-                    setCreateFormData((prev) => ({ ...prev, scheduledEnd: e.target.value }))
-                  }
-                  className={styles.formInput}
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label htmlFor="schedulingNote" className={styles.formLabel}>
-                  Scheduling Note{!createFormData.scheduledStart && !createFormData.scheduledEnd && (
-                    <span className={styles.required}> *</span>
-                  )}
-                </label>
-                <input
-                  id="schedulingNote"
-                  type="text"
-                  value={createFormData.schedulingNote}
-                  onChange={(e) =>
-                    setCreateFormData((prev) => ({ ...prev, schedulingNote: e.target.value }))
-                  }
-                  className={styles.formInput}
-                  maxLength={500}
-                  placeholder={!createFormData.scheduledStart && !createFormData.scheduledEnd ? 'Required when no times set' : ''}
-                />
-              </div>
-
-              <div className={styles.addressSection}>
-                <div className={styles.addressSectionLabel}>Address</div>
-                <div className={styles.formGroup}>
-                  <label htmlFor="create-street" className={styles.formLabel}>Street</label>
-                  <input id="create-street" type="text" value={createFormData.street}
-                    onChange={(e) => setCreateFormData((p) => ({ ...p, street: e.target.value }))}
-                    className={styles.formInput} maxLength={255} />
-                </div>
-                <div className={styles.formRow}>
-                  <div className={styles.formGroup}>
-                    <label htmlFor="create-houseNumber" className={styles.formLabel}>House no.</label>
-                    <input id="create-houseNumber" type="text" value={createFormData.houseNumber}
-                      onChange={(e) => setCreateFormData((p) => ({ ...p, houseNumber: e.target.value }))}
-                      className={styles.formInput} maxLength={20} />
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label htmlFor="create-stair" className={styles.formLabel}>Stair</label>
-                    <input id="create-stair" type="text" value={createFormData.stair}
-                      onChange={(e) => setCreateFormData((p) => ({ ...p, stair: e.target.value }))}
-                      className={styles.formInput} maxLength={20} placeholder="Optional" />
-                  </div>
-                </div>
-                <div className={styles.formRow}>
-                  <div className={styles.formGroup}>
-                    <label htmlFor="create-postalCode" className={styles.formLabel}>Postal code</label>
-                    <input id="create-postalCode" type="text" value={createFormData.postalCode}
-                      onChange={(e) => setCreateFormData((p) => ({ ...p, postalCode: e.target.value }))}
-                      className={styles.formInput} maxLength={10} />
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label htmlFor="create-city" className={styles.formLabel}>City</label>
-                    <input id="create-city" type="text" value={createFormData.city}
-                      onChange={(e) => setCreateFormData((p) => ({ ...p, city: e.target.value }))}
-                      className={styles.formInput} maxLength={100} />
-                  </div>
-                </div>
-              </div>
-
-              <div className={styles.formGroup}>
-                <label className={styles.deliveryToggle}>
-                  <input type="checkbox" checked={showCreateDelivery}
-                    onChange={(e) => setShowCreateDelivery(e.target.checked)} />
-                  Delivery address (optional)
-                </label>
-              </div>
-
-              {showCreateDelivery && (
-                <div className={styles.addressSection}>
-                  <div className={styles.addressSectionLabel}>Delivery address</div>
-                  <div className={styles.formGroup}>
-                    <label htmlFor="create-deliveryStreet" className={styles.formLabel}>Street</label>
-                    <input id="create-deliveryStreet" type="text" value={createFormData.deliveryStreet}
-                      onChange={(e) => setCreateFormData((p) => ({ ...p, deliveryStreet: e.target.value }))}
-                      className={styles.formInput} maxLength={255} />
-                  </div>
-                  <div className={styles.formRow}>
-                    <div className={styles.formGroup}>
-                      <label htmlFor="create-deliveryHouseNumber" className={styles.formLabel}>House no.</label>
-                      <input id="create-deliveryHouseNumber" type="text" value={createFormData.deliveryHouseNumber}
-                        onChange={(e) => setCreateFormData((p) => ({ ...p, deliveryHouseNumber: e.target.value }))}
-                        className={styles.formInput} maxLength={20} />
-                    </div>
-                    <div className={styles.formGroup}>
-                      <label htmlFor="create-deliveryStair" className={styles.formLabel}>Stair</label>
-                      <input id="create-deliveryStair" type="text" value={createFormData.deliveryStair}
-                        onChange={(e) => setCreateFormData((p) => ({ ...p, deliveryStair: e.target.value }))}
-                        className={styles.formInput} maxLength={20} placeholder="Optional" />
-                    </div>
-                  </div>
-                  <div className={styles.formRow}>
-                    <div className={styles.formGroup}>
-                      <label htmlFor="create-deliveryPostalCode" className={styles.formLabel}>Postal code</label>
-                      <input id="create-deliveryPostalCode" type="text" value={createFormData.deliveryPostalCode}
-                        onChange={(e) => setCreateFormData((p) => ({ ...p, deliveryPostalCode: e.target.value }))}
-                        className={styles.formInput} maxLength={10} />
-                    </div>
-                    <div className={styles.formGroup}>
-                      <label htmlFor="create-deliveryCity" className={styles.formLabel}>City</label>
-                      <input id="create-deliveryCity" type="text" value={createFormData.deliveryCity}
-                        onChange={(e) => setCreateFormData((p) => ({ ...p, deliveryCity: e.target.value }))}
-                        className={styles.formInput} maxLength={100} />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <div className={styles.formActions}>
-                <button type="submit" className={styles.submitButton} disabled={submitting}>
-                  {submitting ? 'Creating…' : 'Create Job'}
-                </button>
-                <button
-                  type="button"
-                  className={styles.cancelButton}
-                  onClick={() => setShowCreateForm(false)}
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Edit Job Modal */}
       {editingJob && (
-        <div className={styles.modalOverlay} onClick={() => setEditingJob(null)}>
-          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.modalHeader}>
-              <h2 className={styles.modalTitle}>Edit Job</h2>
-              <button className={styles.modalClose} onClick={() => setEditingJob(null)} aria-label="Close">×</button>
-            </div>
-            <form onSubmit={(e) => void handleEditSubmit(e)} className={styles.form} noValidate>
-              {editError && (
-                <div className={styles.errorBanner} role="alert">
-                  {editError}
-                  <button className={styles.errorDismiss} onClick={() => setEditError('')}>×</button>
-                </div>
-              )}
-
-              <div className={styles.formGroup}>
-                <label htmlFor="edit-title" className={styles.formLabel}>
-                  Title <span className={styles.required}>*</span>
-                </label>
-                <input
-                  id="edit-title"
-                  type="text"
-                  required
-                  value={editForm.title}
-                  onChange={(e) => setEditForm((p) => ({ ...p, title: e.target.value }))}
-                  className={styles.formInput}
-                  maxLength={255}
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label htmlFor="edit-description" className={styles.formLabel}>Description</label>
-                <textarea
-                  id="edit-description"
-                  value={editForm.description}
-                  onChange={(e) => setEditForm((p) => ({ ...p, description: e.target.value }))}
-                  className={styles.formTextarea}
-                  rows={3}
-                  maxLength={1000}
-                />
-              </div>
-
-              <div className={styles.formRow}>
-                <div className={styles.formGroup}>
-                  <label htmlFor="edit-scheduledStart" className={styles.formLabel}>Start Time</label>
-                  <input
-                    id="edit-scheduledStart"
-                    type="datetime-local"
-                    value={editForm.scheduledStart}
-                    onChange={(e) => setEditForm((p) => ({ ...p, scheduledStart: e.target.value }))}
-                    className={styles.formInput}
-                  />
-                </div>
-                <div className={styles.formGroup}>
-                  <label htmlFor="edit-scheduledEnd" className={styles.formLabel}>End Time</label>
-                  <input
-                    id="edit-scheduledEnd"
-                    type="datetime-local"
-                    value={editForm.scheduledEnd}
-                    onChange={(e) => setEditForm((p) => ({ ...p, scheduledEnd: e.target.value }))}
-                    className={styles.formInput}
-                  />
-                </div>
-              </div>
-
-              <div className={styles.formGroup}>
-                <label htmlFor="edit-schedulingNote" className={styles.formLabel}>
-                  Scheduling Note{!editForm.scheduledStart && !editForm.scheduledEnd && (
-                    <span className={styles.required}> *</span>
-                  )}
-                </label>
-                <input
-                  id="edit-schedulingNote"
-                  type="text"
-                  value={editForm.schedulingNote}
-                  onChange={(e) => setEditForm((p) => ({ ...p, schedulingNote: e.target.value }))}
-                  className={styles.formInput}
-                  maxLength={500}
-                  placeholder="Time to be agreed with customer"
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label htmlFor="edit-driver" className={styles.formLabel}>Assigned Driver</label>
-                <select
-                  id="edit-driver"
-                  value={editForm.assignedDriverId}
-                  onChange={(e) => setEditForm((p) => ({ ...p, assignedDriverId: e.target.value, ...(e.target.value ? { teamId: '' } : {}) }))}
-                  className={styles.formInput}
-                  disabled={loadingDrivers}
-                >
-                  <option value="">{loadingDrivers ? 'Loading…' : 'Unassigned'}</option>
-                  {drivers.filter((d) => d.isActive).map((d) => (
-                    <option key={d.id} value={d.id}>{d.name ?? d.email}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className={styles.formGroup}>
-                <label htmlFor="edit-team" className={styles.formLabel}>Assigned Team</label>
-                <select
-                  id="edit-team"
-                  value={editForm.teamId}
-                  onChange={(e) => setEditForm((p) => ({ ...p, teamId: e.target.value, ...(e.target.value ? { assignedDriverId: '' } : {}) }))}
-                  className={styles.formInput}
-                  disabled={loadingTeams}
-                >
-                  <option value="">{loadingTeams ? 'Loading…' : 'No team'}</option>
-                  {editTeams.map((t) => (
-                    <option key={t.id} value={t.id}>{t.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className={styles.addressSection}>
-                <div className={styles.addressSectionLabel}>Address</div>
-                <div className={styles.formGroup}>
-                  <label htmlFor="edit-street" className={styles.formLabel}>Street</label>
-                  <input id="edit-street" type="text" value={editForm.street}
-                    onChange={(e) => setEditForm((p) => ({ ...p, street: e.target.value }))}
-                    className={styles.formInput} maxLength={255} />
-                </div>
-                <div className={styles.formRow}>
-                  <div className={styles.formGroup}>
-                    <label htmlFor="edit-houseNumber" className={styles.formLabel}>House no.</label>
-                    <input id="edit-houseNumber" type="text" value={editForm.houseNumber}
-                      onChange={(e) => setEditForm((p) => ({ ...p, houseNumber: e.target.value }))}
-                      className={styles.formInput} maxLength={20} />
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label htmlFor="edit-stair" className={styles.formLabel}>Stair</label>
-                    <input id="edit-stair" type="text" value={editForm.stair}
-                      onChange={(e) => setEditForm((p) => ({ ...p, stair: e.target.value }))}
-                      className={styles.formInput} maxLength={20} placeholder="Optional" />
-                  </div>
-                </div>
-                <div className={styles.formRow}>
-                  <div className={styles.formGroup}>
-                    <label htmlFor="edit-postalCode" className={styles.formLabel}>Postal code</label>
-                    <input id="edit-postalCode" type="text" value={editForm.postalCode}
-                      onChange={(e) => setEditForm((p) => ({ ...p, postalCode: e.target.value }))}
-                      className={styles.formInput} maxLength={10} />
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label htmlFor="edit-city" className={styles.formLabel}>City</label>
-                    <input id="edit-city" type="text" value={editForm.city}
-                      onChange={(e) => setEditForm((p) => ({ ...p, city: e.target.value }))}
-                      className={styles.formInput} maxLength={100} />
-                  </div>
-                </div>
-              </div>
-
-              <div className={styles.formGroup}>
-                <label className={styles.deliveryToggle}>
-                  <input type="checkbox" checked={showEditDelivery}
-                    onChange={(e) => setShowEditDelivery(e.target.checked)} />
-                  Delivery address (optional)
-                </label>
-              </div>
-
-              {showEditDelivery && (
-                <div className={styles.addressSection}>
-                  <div className={styles.addressSectionLabel}>Delivery address</div>
-                  <div className={styles.formGroup}>
-                    <label htmlFor="edit-deliveryStreet" className={styles.formLabel}>Street</label>
-                    <input id="edit-deliveryStreet" type="text" value={editForm.deliveryStreet}
-                      onChange={(e) => setEditForm((p) => ({ ...p, deliveryStreet: e.target.value }))}
-                      className={styles.formInput} maxLength={255} />
-                  </div>
-                  <div className={styles.formRow}>
-                    <div className={styles.formGroup}>
-                      <label htmlFor="edit-deliveryHouseNumber" className={styles.formLabel}>House no.</label>
-                      <input id="edit-deliveryHouseNumber" type="text" value={editForm.deliveryHouseNumber}
-                        onChange={(e) => setEditForm((p) => ({ ...p, deliveryHouseNumber: e.target.value }))}
-                        className={styles.formInput} maxLength={20} />
-                    </div>
-                    <div className={styles.formGroup}>
-                      <label htmlFor="edit-deliveryStair" className={styles.formLabel}>Stair</label>
-                      <input id="edit-deliveryStair" type="text" value={editForm.deliveryStair}
-                        onChange={(e) => setEditForm((p) => ({ ...p, deliveryStair: e.target.value }))}
-                        className={styles.formInput} maxLength={20} placeholder="Optional" />
-                    </div>
-                  </div>
-                  <div className={styles.formRow}>
-                    <div className={styles.formGroup}>
-                      <label htmlFor="edit-deliveryPostalCode" className={styles.formLabel}>Postal code</label>
-                      <input id="edit-deliveryPostalCode" type="text" value={editForm.deliveryPostalCode}
-                        onChange={(e) => setEditForm((p) => ({ ...p, deliveryPostalCode: e.target.value }))}
-                        className={styles.formInput} maxLength={10} />
-                    </div>
-                    <div className={styles.formGroup}>
-                      <label htmlFor="edit-deliveryCity" className={styles.formLabel}>City</label>
-                      <input id="edit-deliveryCity" type="text" value={editForm.deliveryCity}
-                        onChange={(e) => setEditForm((p) => ({ ...p, deliveryCity: e.target.value }))}
-                        className={styles.formInput} maxLength={100} />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <div className={styles.formActions}>
-                <button type="submit" className={styles.submitButton} disabled={editSubmitting}>
-                  {editSubmitting ? 'Saving…' : 'Save Changes'}
-                </button>
-                <button type="button" className={styles.cancelButton} onClick={() => setEditingJob(null)}>
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <JobEditModal
+          job={editingJob}
+          isOpen={true}
+          onClose={() => setEditingJob(null)}
+          onSave={handleEditSave}
+        />
       )}
 
       {jobs.length === 0 ? (
@@ -1038,6 +466,7 @@ const JobsPage: React.FC = () => {
       <JobCreateModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
+        onSuccess={() => void fetchJobs()}
       />
     </div>
   );

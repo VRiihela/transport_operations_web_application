@@ -1,9 +1,9 @@
 import React from 'react';
-import { JobType, AddressData } from '../../../types/job';
+import { ServiceType, AddressData } from '../../../types/job';
 import styles from './AddressSection.module.css';
 
 interface AddressSectionProps {
-  jobType: JobType;
+  selectedServices: ServiceType[];
   pickupAddress?: AddressData;
   deliveryAddress?: AddressData;
   serviceAddress?: AddressData;
@@ -115,7 +115,7 @@ const AddressBlock: React.FC<AddressBlockProps> = ({ title, data, onChange }) =>
 };
 
 export const AddressSection: React.FC<AddressSectionProps> = ({
-  jobType,
+  selectedServices,
   pickupAddress,
   deliveryAddress,
   serviceAddress,
@@ -123,61 +123,37 @@ export const AddressSection: React.FC<AddressSectionProps> = ({
   onDeliveryChange,
   onServiceChange,
 }) => {
-  const renderAddressBlocks = () => {
-    switch (jobType) {
-      case JobType.INSTALLATION:
-      case JobType.SERVICE:
-        return (
-          <AddressBlock
-            title="Service Address"
-            data={serviceAddress ?? createEmptyAddress()}
-            onChange={onServiceChange!}
-          />
-        );
+  const hasPickup = selectedServices.includes(ServiceType.PICKUP_COLLECTION);
+  const hasDelivery = selectedServices.includes(ServiceType.DELIVERY);
+  const hasNeitherPickupNorDelivery = !hasPickup && !hasDelivery;
+  const hasAnyService = selectedServices.length > 0;
 
-      case JobType.DELIVERY_AND_PICKUP:
-        return (
-          <>
-            <AddressBlock
-              title="Pickup Address"
-              data={pickupAddress ?? createEmptyAddress()}
-              onChange={onPickupChange!}
-            />
-            <AddressBlock
-              title="Delivery Address"
-              data={deliveryAddress ?? createEmptyAddress()}
-              onChange={onDeliveryChange!}
-            />
-          </>
-        );
-
-      case JobType.DELIVERY:
-        return (
-          <AddressBlock
-            title="Delivery Address"
-            data={deliveryAddress ?? createEmptyAddress()}
-            onChange={onDeliveryChange!}
-          />
-        );
-
-      case JobType.PICKUP:
-        return (
+  return (
+    <div className={styles.addressSection}>
+      <h3 className={styles.sectionTitle}>Address Information</h3>
+      <div className={styles.addressBlocks}>
+        {hasPickup && (
           <AddressBlock
             title="Pickup Address"
             data={pickupAddress ?? createEmptyAddress()}
             onChange={onPickupChange!}
           />
-        );
-
-      default:
-        return null;
-    }
-  };
-
-  return (
-    <div className={styles.addressSection}>
-      <h3 className={styles.sectionTitle}>Address Information</h3>
-      <div className={styles.addressBlocks}>{renderAddressBlocks()}</div>
+        )}
+        {hasDelivery && (
+          <AddressBlock
+            title="Delivery Address"
+            data={deliveryAddress ?? createEmptyAddress()}
+            onChange={onDeliveryChange!}
+          />
+        )}
+        {hasNeitherPickupNorDelivery && hasAnyService && (
+          <AddressBlock
+            title="Service Address"
+            data={serviceAddress ?? createEmptyAddress()}
+            onChange={onServiceChange!}
+          />
+        )}
+      </div>
     </div>
   );
 };
