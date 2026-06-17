@@ -58,6 +58,7 @@ export const createTeam = async (req: AuthenticatedRequest, res: Response): Prom
           where: {
             assignedDriverId: driverId,
             deletedAt: null,
+            status: { not: JobStatus.COMPLETED },
             OR: [
               { scheduledStart: null },
               { scheduledStart: { gte: teamDateStart, lt: teamDateEnd } },
@@ -164,6 +165,7 @@ export const updateTeam = async (req: AuthenticatedRequest, res: Response): Prom
           where: {
             assignedDriverId: driverId,
             deletedAt: null,
+            status: { not: JobStatus.COMPLETED },
             OR: [
               { scheduledStart: null },
               { scheduledStart: { gte: teamDateStart, lt: teamDateEnd } },

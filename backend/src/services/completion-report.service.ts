@@ -61,9 +61,9 @@ export class CompletionReportService {
     if (userRole === UserRole.Driver) {
       const job = await this.prisma.job.findFirst({
         where: { id: jobId, deletedAt: null },
-        select: { assignedDriverId: true },
+        select: { assignedDriverId: true, team: { include: { members: { select: { userId: true } } } } },
       });
-      return job?.assignedDriverId === userId;
+      return job?.assignedDriverId === userId || (job?.team?.members.some((m) => m.userId === userId) ?? false);
     }
     return false;
   }
