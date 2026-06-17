@@ -3,6 +3,7 @@ import { isAxiosError } from 'axios';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import axiosInstance from '../api/axios';
+import { PageNav } from '../components/PageNav';
 import { JobDetailModal } from '../components/JobDetailModal';
 import { JobCreateModal } from '../components/JobCreateModal/JobCreateModal';
 import { JobEditModal, JobUpdatePayload } from '../components/JobEditModal';
@@ -75,12 +76,21 @@ interface Driver {
   isActive: boolean;
 }
 
+interface Pagination {
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+}
+
 interface JobsApiResponse {
   data: {
     jobs: Job[];
-    pagination: { page: number; limit: number; total: number; pages: number };
+    pagination: Pagination;
   };
 }
+
+type StatusFilter = 'active' | 'COMPLETED' | 'all';
 
 interface SingleJobApiResponse {
   data: Job;
@@ -119,13 +129,20 @@ const JobsPage: React.FC = () => {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [editingJob, setEditingJob] = useState<Job | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('active');
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState<Pagination | null>(null);
 
-  const fetchJobs = useCallback(async () => {
+  const fetchJobs = useCallback(async (filter: StatusFilter, p: number): Promise<void> => {
     try {
       setLoading(true);
       setError('');
-      const response = await axiosInstance.get<JobsApiResponse>('/api/jobs');
+      const params = new URLSearchParams({ page: String(p), pageSize: '25' });
+      if (filter === 'COMPLETED') params.set('status', 'COMPLETED');
+      else if (filter === 'all') params.set('includeCompleted', 'true');
+      const response = await axiosInstance.get<JobsApiResponse>(`/api/jobs?${params}`);
       setJobs(response.data.data.jobs);
+      setPagination(response.data.data.pagination);
     } catch (err) {
       setError(getApiError(err, 'Failed to load jobs. Please try again.'));
     } finally {
@@ -147,8 +164,13 @@ const JobsPage: React.FC = () => {
   }, [drivers.length]);
 
   useEffect(() => {
-    void fetchJobs();
-  }, [fetchJobs]);
+    void fetchJobs(statusFilter, page);
+  }, [fetchJobs, statusFilter, page]);
+
+  const handleFilterChange = (filter: StatusFilter): void => {
+    setStatusFilter(filter);
+    setPage(1);
+  };
 
   const handleOpenAssign = (jobId: string) => {
     setOpenDriverDropdown((prev) => (prev === jobId ? null : jobId));
@@ -265,6 +287,7 @@ const JobsPage: React.FC = () => {
     <div className={styles.container}>
       <div className={styles.header}>
         <h1 className={styles.heading}>Jobs Management</h1>
+        <PageNav />
         <div className={styles.headerActions}>
           {user?.role === 'Admin' && (
             <Link to="/users" className={styles.usersLink}>Users</Link>
@@ -293,7 +316,18 @@ const JobsPage: React.FC = () => {
         </div>
       )}
 
-
+      <div className={styles.filterBar}>
+        {(['active', 'COMPLETED', 'all'] as const).map((f) => (
+          <button
+            key={f}
+            type="button"
+            className={`${styles.filterButton} ${statusFilter === f ? styles.filterButtonActive : ''}`}
+            onClick={() => handleFilterChange(f)}
+          >
+            {f === 'active' ? 'Active' : f === 'COMPLETED' ? 'Completed' : 'All'}
+          </button>
+        ))}
+      </div>
 
       {editingJob && (
         <JobEditModal
@@ -306,9 +340,16 @@ const JobsPage: React.FC = () => {
 
       {jobs.length === 0 ? (
         <div className={styles.emptyState}>
-          <p>No jobs yet. Create your first job to get started.</p>
+          <p>
+            {statusFilter === 'active'
+              ? 'No active jobs. Create a new job to get started.'
+              : statusFilter === 'COMPLETED'
+                ? 'No completed jobs.'
+                : 'No jobs found.'}
+          </p>
         </div>
       ) : (
+        <>
         <div className={styles.tableContainer}>
           <table className={styles.table}>
             <thead>
@@ -452,6 +493,30 @@ const JobsPage: React.FC = () => {
             </tbody>
           </table>
         </div>
+        {pagination && pagination.totalPages > 1 && (
+          <div className={styles.pagination}>
+            <button
+              type="button"
+              className={styles.pageButton}
+              onClick={() => setPage((p) => p - 1)}
+              disabled={page <= 1}
+            >
+              ← Prev
+            </button>
+            <span className={styles.pageInfo}>
+              Page {page} of {pagination.totalPages}
+            </span>
+            <button
+              type="button"
+              className={styles.pageButton}
+              onClick={() => setPage((p) => p + 1)}
+              disabled={page >= pagination.totalPages}
+            >
+              Next →
+            </button>
+          </div>
+        )}
+        </>
       )}
 
       {selectedJob && (
@@ -466,7 +531,7 @@ const JobsPage: React.FC = () => {
       <JobCreateModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        onSuccess={() => void fetchJobs()}
+        onSuccess={() => void fetchJobs(statusFilter, 1)}
       />
     </div>
   );

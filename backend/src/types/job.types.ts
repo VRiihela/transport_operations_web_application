@@ -114,12 +114,13 @@ export const updateJobSchema = z
   );
 
 export const jobQuerySchema = z.object({
-  status: z.enum(['DRAFT', 'ASSIGNED', 'IN_PROGRESS', 'COMPLETED']).optional(),
+  status: z.nativeEnum(JobStatus).optional(),
   assignedDriverId: z.string().cuid().optional(),
   scheduledFrom: z.string().datetime().optional(),
   scheduledTo: z.string().datetime().optional(),
-  page: z.string().regex(/^\d+$/).transform(Number).optional(),
-  limit: z.string().regex(/^\d+$/).transform(Number).optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(200).default(25),
+  includeCompleted: z.coerce.boolean().optional(),
 });
 
 export const updateJobStatusSchema = z.object({

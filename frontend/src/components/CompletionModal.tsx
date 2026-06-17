@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { isAxiosError } from 'axios';
 import axiosInstance from '../api/axios';
+import { downloadCompletionReportPdf } from '../utils/downloadPdf';
 import { useAuth } from '../contexts/AuthContext';
 import { SignatureCanvas, SignatureCanvasHandle } from './SignatureCanvas';
 import styles from './CompletionModal.module.css';
@@ -204,6 +205,22 @@ export const CompletionModal: React.FC<CompletionModalProps> = ({
                 {unlockError && <div className={styles.unlockError}>{unlockError}</div>}
               </div>
             )}
+          </div>
+        )}
+
+        {isLocked && (
+          <div className={styles.actions}>
+            <button
+              type="button"
+              className={styles.downloadButton}
+              onClick={() => {
+                void downloadCompletionReportPdf(job.id).catch(() => {
+                  alert('Could not download report. It may have been unlocked or removed.');
+                });
+              }}
+            >
+              Download PDF
+            </button>
           </div>
         )}
 

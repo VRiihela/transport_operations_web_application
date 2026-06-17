@@ -97,8 +97,18 @@ export class JobService {
     return this.transformJob(job);
   }
 
-  async getJobs(query: JobQuery, userRole: UserRole, userId: string) {
-    const { status, assignedDriverId, scheduledFrom, scheduledTo, page = 1, limit = 10 } = query;
+  async getJobs(
+    query: JobQuery,
+    userRole: UserRole,
+    userId: string,
+  ): Promise<{ jobs: JobWithDetails[]; pagination: { page: number; pageSize: number; total: number; totalPages: number } }> {
+    const { status, assignedDriverId, scheduledFrom, scheduledTo, page, pageSize, includeCompleted } = query;
+
+    const statusClause = status
+      ? { status }
+      : !includeCompleted
+        ? { status: { not: JobStatus.COMPLETED } }
+        : {};
 
     let where: Prisma.JobWhereInput;
 
@@ -109,7 +119,7 @@ export class JobService {
       };
       where = {
         deletedAt: null,
-        ...(status && { status }),
+        ...statusClause,
         OR: [
           { assignedDriverId: userId, scheduledStart: dateFilter },
           {
@@ -121,7 +131,7 @@ export class JobService {
     } else {
       where = {
         ...this.baseWhere(userRole, userId),
-        ...(status && { status }),
+        ...statusClause,
         ...(assignedDriverId && userRole !== UserRole.Driver && { assignedDriverId }),
         ...((scheduledFrom || scheduledTo) && {
           scheduledStart: {
@@ -136,16 +146,16 @@ export class JobService {
       this.prisma.job.findMany({
         where,
         ...jobInclude,
-        orderBy: { createdAt: 'desc' },
-        skip: (page - 1) * limit,
-        take: limit,
+        orderBy: { updatedAt: 'desc' },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
       }),
       this.prisma.job.count({ where }),
     ]);
 
     return {
       jobs: jobs.map((j) => this.transformJob(j)),
-      pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+      pagination: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) },
     };
   }
 

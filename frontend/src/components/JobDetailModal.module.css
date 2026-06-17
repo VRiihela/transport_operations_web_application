@@ -141,6 +141,21 @@
   background: #fff;
 }
 
+.downloadButton {
+  display: block;
+  margin-top: 1rem;
+  padding: 0.35rem 0.9rem;
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  border-radius: 5px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.downloadButton:hover { background: #e5e7eb; }
+
 @media (max-width: 480px) {
   .field { grid-template-columns: 1fr; gap: 0.2rem; }
   .label { font-size: 0.75rem; }

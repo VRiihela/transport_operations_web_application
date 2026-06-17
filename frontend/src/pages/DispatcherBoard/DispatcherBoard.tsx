@@ -33,6 +33,7 @@ import { JobEditModal, JobUpdatePayload } from '../../components/JobEditModal';
 import { useTeams } from './hooks/useTeams';
 import styles from './DispatcherBoard.module.css';
 import { Job, Driver } from './types';
+import { PageNav } from '../../components/PageNav';
 
 const FI_WEEKDAYS = ['Ma', 'Ti', 'Ke', 'To', 'Pe', 'La', 'Su'];
 
@@ -172,8 +173,8 @@ const DispatcherBoard: React.FC = () => {
       setLoading(true);
       setError(null);
       const [draftRes, assignedRes, driversRes] = await Promise.all([
-        apiService.axios.get<{ data: { jobs: Job[] } }>('/api/jobs?status=DRAFT&limit=100'),
-        apiService.axios.get<{ data: { jobs: Job[] } }>('/api/jobs?status=ASSIGNED&limit=200'),
+        apiService.axios.get<{ data: { jobs: Job[] } }>('/api/jobs?status=DRAFT&pageSize=100'),
+        apiService.axios.get<{ data: { jobs: Job[] } }>('/api/jobs?status=ASSIGNED&pageSize=200'),
         apiService.axios.get<{ data: Driver[] }>('/api/users?role=Driver'),
       ]);
       setJobs([...draftRes.data.data.jobs, ...assignedRes.data.data.jobs]);
@@ -384,6 +385,7 @@ const DispatcherBoard: React.FC = () => {
       <div className={styles.board}>
         <header className={styles.header}>
           <h1 className={styles.title}>Dispatcher Board</h1>
+          <PageNav />
           <div className={styles.viewToggle}>
             <button
               className={`${styles.viewBtn} ${view === 'assign' ? styles.viewBtnActive : ''}`}

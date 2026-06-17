@@ -241,6 +241,18 @@
   color: #111827;
 }
 
+.downloadButton {
+  padding: 0.6rem 1.25rem;
+  background: white;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.downloadButton:hover { background: #f9fafb; }
+
 @media (max-width: 500px) {
   .timeRow { grid-template-columns: 1fr; }
   .actions { flex-direction: column; }

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { isAxiosError } from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import axiosInstance from '../api/axios';
+import { downloadCompletionReportPdf } from '../utils/downloadPdf';
 import { CompletionModal } from '../components/CompletionModal';
 import styles from './MyJobsPage.module.css';
 
@@ -112,7 +113,7 @@ const MyJobsPage: React.FC = () => {
       setError(null);
       const { from, to } = getDayBounds(date);
       const response = await axiosInstance.get<JobsApiResponse>(
-        `/api/jobs?scheduledFrom=${encodeURIComponent(from)}&scheduledTo=${encodeURIComponent(to)}&limit=100`,
+        `/api/jobs?scheduledFrom=${encodeURIComponent(from)}&scheduledTo=${encodeURIComponent(to)}&pageSize=100&includeCompleted=true`,
       );
       setJobs(sortByScheduledStart(response.data.data.jobs));
     } catch (err) {
@@ -403,6 +404,20 @@ const MyJobsPage: React.FC = () => {
                       </button>
                     )
                   )}
+                </div>
+              )}
+              {job.completionReport?.approvedAt && (
+                <div className={styles.jobActions}>
+                  <button
+                    onClick={() => {
+                      void downloadCompletionReportPdf(job.id).catch(() => {
+                        alert('Could not download report. It may have been unlocked or removed.');
+                      });
+                    }}
+                    className={styles.downloadButton}
+                  >
+                    Download PDF
+                  </button>
                 </div>
               )}
             </div>

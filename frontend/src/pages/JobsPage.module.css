@@ -540,6 +540,61 @@
   color: #111827;
 }
 
+/* ── Filter bar ──────────────────────────────────────────── */
+.filterBar {
+  display: flex;
+  gap: 0.375rem;
+  margin-bottom: 1rem;
+}
+
+.filterButton {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  padding: 0.4rem 0.875rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.filterButton:hover { background: #e5e7eb; }
+
+.filterButtonActive {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-color: #bfdbfe;
+}
+.filterButtonActive:hover { background: #dbeafe; }
+
+/* ── Pagination ──────────────────────────────────────────── */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1rem 0 0.25rem;
+}
+
+.pageButton {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  padding: 0.4rem 0.875rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.pageButton:hover:not(:disabled) { background: #e5e7eb; }
+.pageButton:disabled { opacity: 0.4; cursor: default; }
+
+.pageInfo {
+  font-size: 0.875rem;
+  color: #6b7280;
+  min-width: 100px;
+  text-align: center;
+}
+
 /* ── Responsive ──────────────────────────────────────────── */
 @media (max-width: 640px) {
   .container { padding: 1rem; }

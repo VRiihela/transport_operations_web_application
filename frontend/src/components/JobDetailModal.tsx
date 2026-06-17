@@ -1,6 +1,7 @@
 import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { JOB_TYPE_LABELS, JobType } from '../types/job';
+import { downloadCompletionReportPdf } from '../utils/downloadPdf';
 import styles from './JobDetailModal.module.css';
 
 interface CompletionReport {
@@ -250,6 +251,18 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({ job, isOpen, onC
                 </dd>
               </div>
             </dl>
+            {job.completionReport?.approvedAt && (
+              <button
+                className={styles.downloadButton}
+                onClick={() => {
+                  void downloadCompletionReportPdf(job.id).catch(() => {
+                    alert('Could not download report. It may have been unlocked or removed.');
+                  });
+                }}
+              >
+                Download PDF
+              </button>
+            )}
           </div>
         )}
       </div>

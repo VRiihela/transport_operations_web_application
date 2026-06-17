@@ -90,10 +90,10 @@ describe('JobService', () => {
       mockFindMany.mockResolvedValue([baseJob]);
       mockCount.mockResolvedValue(1);
 
-      const result = await service.getJobs({}, UserRole.Admin, 'user-admin');
+      const result = await service.getJobs({ page: 1, pageSize: 25 }, UserRole.Admin, 'user-admin');
 
       expect(result.jobs).toHaveLength(1);
-      expect(result.pagination).toMatchObject({ page: 1, limit: 10, total: 1, pages: 1 });
+      expect(result.pagination).toMatchObject({ page: 1, pageSize: 25, total: 1, totalPages: 1 });
       // Admin sees no assignedDriverId filter
       const [findManyCall] = mockFindMany.mock.calls;
       expect(findManyCall[0].where.assignedDriverId).toBeUndefined();
@@ -103,7 +103,7 @@ describe('JobService', () => {
       mockFindMany.mockResolvedValue([]);
       mockCount.mockResolvedValue(0);
 
-      await service.getJobs({}, UserRole.Driver, 'driver-1');
+      await service.getJobs({ page: 1, pageSize: 25 }, UserRole.Driver, 'driver-1');
 
       const [findManyCall] = mockFindMany.mock.calls;
       expect(findManyCall[0].where.assignedDriverId).toBe('driver-1');
@@ -113,7 +113,7 @@ describe('JobService', () => {
       mockFindMany.mockResolvedValue([]);
       mockCount.mockResolvedValue(0);
 
-      await service.getJobs({ status: 'ASSIGNED' }, UserRole.Admin, 'admin-1');
+      await service.getJobs({ status: 'ASSIGNED', page: 1, pageSize: 25 }, UserRole.Admin, 'admin-1');
 
       expect(mockFindMany.mock.calls[0][0].where.status).toBe('ASSIGNED');
     });
@@ -122,11 +122,11 @@ describe('JobService', () => {
       mockFindMany.mockResolvedValue([]);
       mockCount.mockResolvedValue(25);
 
-      const result = await service.getJobs({ page: 2, limit: 5 }, UserRole.Admin, 'admin-1');
+      const result = await service.getJobs({ page: 2, pageSize: 5 }, UserRole.Admin, 'admin-1');
 
       expect(mockFindMany.mock.calls[0][0].skip).toBe(5);
       expect(mockFindMany.mock.calls[0][0].take).toBe(5);
-      expect(result.pagination.pages).toBe(5);
+      expect(result.pagination.totalPages).toBe(5);
     });
   });
 
