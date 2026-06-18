@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { isAxiosError } from 'axios';
 import { Link } from 'react-router-dom';
+import { startOfWeek, addWeeks, subWeeks, addDays, format } from 'date-fns';
 import { useAuth } from '../contexts/AuthContext';
 import axiosInstance from '../api/axios';
 import { PageNav } from '../components/PageNav';
@@ -91,6 +92,7 @@ interface JobsApiResponse {
 }
 
 type StatusFilter = 'active' | 'COMPLETED' | 'all';
+type ViewMode = 'list' | 'week';
 
 interface SingleJobApiResponse {
   data: Job;
@@ -100,6 +102,26 @@ interface UsersApiResponse {
   data: Driver[];
 }
 
+
+function getWeekBounds(ws: Date): { from: string; to: string } {
+  const sun = addDays(ws, 6);
+  const from = new Date(ws.getFullYear(), ws.getMonth(), ws.getDate(), 0, 0, 0, 0).toISOString();
+  const to = new Date(sun.getFullYear(), sun.getMonth(), sun.getDate(), 23, 59, 59, 999).toISOString();
+  return { from, to };
+}
+
+function getWeekdayLabel(scheduledStart: string | null): string {
+  if (!scheduledStart) return '–';
+  const d = new Date(scheduledStart);
+  if (isNaN(d.getTime())) return '–';
+  const parts = new Intl.DateTimeFormat('en-US', { weekday: 'long', timeZone: 'Europe/Helsinki' }).formatToParts(d);
+  const name = parts.find((p) => p.type === 'weekday')?.value ?? '';
+  const map: Record<string, string> = {
+    Monday: 'Ma', Tuesday: 'Ti', Wednesday: 'Ke',
+    Thursday: 'To', Friday: 'Pe', Saturday: 'La', Sunday: 'Su',
+  };
+  return map[name] ?? '–';
+}
 
 function getApiError(err: unknown, fallback: string): string {
   if (isAxiosError(err)) {
@@ -132,14 +154,27 @@ const JobsPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('active');
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState<Pagination | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>('week');
+  const [weekStart, setWeekStart] = useState<Date>(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
+  const [datePickerValue, setDatePickerValue] = useState('');
 
-  const fetchJobs = useCallback(async (filter: StatusFilter, p: number): Promise<void> => {
+  const fetchJobs = useCallback(async (filter: StatusFilter, p: number, mode: ViewMode, ws: Date): Promise<void> => {
     try {
       setLoading(true);
       setError('');
-      const params = new URLSearchParams({ page: String(p), pageSize: '25' });
+      const params = new URLSearchParams();
       if (filter === 'COMPLETED') params.set('status', 'COMPLETED');
       else if (filter === 'all') params.set('includeCompleted', 'true');
+      if (mode === 'week') {
+        const { from, to } = getWeekBounds(ws);
+        params.set('scheduledFrom', from);
+        params.set('scheduledTo', to);
+        params.set('pageSize', '100');
+        params.set('page', '1');
+      } else {
+        params.set('page', String(p));
+        params.set('pageSize', '25');
+      }
       const response = await axiosInstance.get<JobsApiResponse>(`/api/jobs?${params}`);
       setJobs(response.data.data.jobs);
       setPagination(response.data.data.pagination);
@@ -164,12 +199,27 @@ const JobsPage: React.FC = () => {
   }, [drivers.length]);
 
   useEffect(() => {
-    void fetchJobs(statusFilter, page);
-  }, [fetchJobs, statusFilter, page]);
+    void fetchJobs(statusFilter, page, viewMode, weekStart);
+  }, [fetchJobs, statusFilter, page, viewMode, weekStart]);
 
   const handleFilterChange = (filter: StatusFilter): void => {
     setStatusFilter(filter);
     setPage(1);
+  };
+
+  const handleViewModeChange = (mode: ViewMode): void => {
+    setViewMode(mode);
+    setPage(1);
+  };
+
+  const handlePrevWeek = (): void => setWeekStart((w) => subWeeks(w, 1));
+  const handleNextWeek = (): void => setWeekStart((w) => addWeeks(w, 1));
+
+  const handleDatePicker = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    setDatePickerValue(e.target.value);
+    if (!e.target.value) return;
+    const d = new Date(e.target.value + 'T00:00:00');
+    if (!isNaN(d.getTime())) setWeekStart(startOfWeek(d, { weekStartsOn: 1 }));
   };
 
   const handleOpenAssign = (jobId: string) => {
@@ -275,6 +325,16 @@ const JobsPage: React.FC = () => {
     return [streetPart, cityPart].filter(Boolean).join(', ');
   };
 
+  const weekLabel = `${format(weekStart, 'd.M.')} – ${format(addDays(weekStart, 6), 'd.M.yyyy')}`;
+
+  const displayJobs = viewMode === 'week'
+    ? [...jobs].sort((a, b) => {
+        const ta = a.scheduledStart ? new Date(a.scheduledStart).getTime() : Infinity;
+        const tb = b.scheduledStart ? new Date(b.scheduledStart).getTime() : Infinity;
+        return ta - tb;
+      })
+    : jobs;
+
   if (loading) {
     return (
       <div className={styles.container}>
@@ -317,17 +377,46 @@ const JobsPage: React.FC = () => {
       )}
 
       <div className={styles.filterBar}>
-        {(['active', 'COMPLETED', 'all'] as const).map((f) => (
-          <button
-            key={f}
-            type="button"
-            className={`${styles.filterButton} ${statusFilter === f ? styles.filterButtonActive : ''}`}
-            onClick={() => handleFilterChange(f)}
-          >
-            {f === 'active' ? 'Active' : f === 'COMPLETED' ? 'Completed' : 'All'}
-          </button>
-        ))}
+        <div className={styles.filterGroup}>
+          {(['active', 'COMPLETED', 'all'] as const).map((f) => (
+            <button
+              key={f}
+              type="button"
+              className={`${styles.filterButton} ${statusFilter === f ? styles.filterButtonActive : ''}`}
+              onClick={() => handleFilterChange(f)}
+            >
+              {f === 'active' ? 'Active' : f === 'COMPLETED' ? 'Completed' : 'All'}
+            </button>
+          ))}
+        </div>
+        <div className={styles.viewToggle}>
+          {(['list', 'week'] as const).map((m) => (
+            <button
+              key={m}
+              type="button"
+              className={`${styles.viewBtn} ${viewMode === m ? styles.viewBtnActive : ''}`}
+              onClick={() => handleViewModeChange(m)}
+            >
+              {m === 'list' ? 'List' : 'Week'}
+            </button>
+          ))}
+        </div>
       </div>
+
+      {viewMode === 'week' && (
+        <div className={styles.weekNav}>
+          <button className={styles.navBtn} onClick={handlePrevWeek} aria-label="Previous week">←</button>
+          <span className={styles.weekLabel}>{weekLabel}</span>
+          <button className={styles.navBtn} onClick={handleNextWeek} aria-label="Next week">→</button>
+          <input
+            type="date"
+            className={styles.datePicker}
+            value={datePickerValue}
+            onChange={handleDatePicker}
+            aria-label="Jump to week"
+          />
+        </div>
+      )}
 
       {editingJob && (
         <JobEditModal
@@ -338,14 +427,16 @@ const JobsPage: React.FC = () => {
         />
       )}
 
-      {jobs.length === 0 ? (
+      {displayJobs.length === 0 ? (
         <div className={styles.emptyState}>
           <p>
-            {statusFilter === 'active'
-              ? 'No active jobs. Create a new job to get started.'
-              : statusFilter === 'COMPLETED'
-                ? 'No completed jobs.'
-                : 'No jobs found.'}
+            {viewMode === 'week'
+              ? `No jobs scheduled for ${weekLabel}.`
+              : statusFilter === 'active'
+                ? 'No active jobs. Create a new job to get started.'
+                : statusFilter === 'COMPLETED'
+                  ? 'No completed jobs.'
+                  : 'No jobs found.'}
           </p>
         </div>
       ) : (
@@ -354,6 +445,7 @@ const JobsPage: React.FC = () => {
           <table className={styles.table}>
             <thead>
               <tr>
+                {viewMode === 'week' && <th className={`${styles.th} ${styles.dayTh}`}>Day</th>}
                 <th className={styles.th}>Title</th>
                 <th className={styles.th}>Status</th>
                 <th className={styles.th}>Driver</th>
@@ -362,8 +454,11 @@ const JobsPage: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {jobs.map((job) => (
+              {displayJobs.map((job) => (
                 <tr key={job.id} className={styles.tr} onClick={() => setSelectedJob(job)} style={{ cursor: 'pointer' }}>
+                  {viewMode === 'week' && (
+                    <td className={`${styles.td} ${styles.dayTd}`}>{getWeekdayLabel(job.scheduledStart)}</td>
+                  )}
                   <td className={styles.td}>
                     <div className={styles.jobTitle}>{job.title}</div>
                     {job.description && (
@@ -493,7 +588,7 @@ const JobsPage: React.FC = () => {
             </tbody>
           </table>
         </div>
-        {pagination && pagination.totalPages > 1 && (
+        {viewMode === 'list' && pagination && pagination.totalPages > 1 && (
           <div className={styles.pagination}>
             <button
               type="button"
@@ -531,7 +626,7 @@ const JobsPage: React.FC = () => {
       <JobCreateModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        onSuccess={() => void fetchJobs(statusFilter, 1)}
+        onSuccess={() => void fetchJobs(statusFilter, 1, viewMode, weekStart)}
       />
     </div>
   );

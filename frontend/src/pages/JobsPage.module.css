@@ -543,8 +543,16 @@
 /* ── Filter bar ──────────────────────────────────────────── */
 .filterBar {
   display: flex;
-  gap: 0.375rem;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
   margin-bottom: 1rem;
+}
+
+.filterGroup {
+  display: flex;
+  gap: 0.375rem;
 }
 
 .filterButton {
@@ -593,6 +601,76 @@
   color: #6b7280;
   min-width: 100px;
   text-align: center;
+}
+
+/* ── View toggle (List / Week) ───────────────────────────── */
+.viewToggle {
+  display: flex;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.viewBtn {
+  background: #f9fafb;
+  border: none;
+  border-left: 1px solid #d1d5db;
+  padding: 0.375rem 0.875rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.viewBtn:first-child { border-left: none; }
+.viewBtn:hover { background: #e5e7eb; }
+
+.viewBtnActive {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+/* ── Week navigation bar ─────────────────────────────────── */
+.weekNav {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.navBtn {
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 0.35rem 0.75rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.15s;
+  line-height: 1;
+}
+.navBtn:hover { background: #e5e7eb; }
+
+.weekLabel {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  min-width: 140px;
+  text-align: center;
+}
+
+.datePicker {
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.875rem;
+  color: #374151;
+}
+
+/* ── Weekday column ──────────────────────────────────────── */
+.dayTh,
+.dayTd {
+  width: 3rem;
+  text-align: center;
+  white-space: nowrap;
+  font-weight: 600;
+  color: #4b5563;
 }
 
 /* ── Responsive ──────────────────────────────────────────── */
