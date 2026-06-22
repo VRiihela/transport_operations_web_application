@@ -1,0 +1,42 @@
+{
+  "taskId": "task-07-reschedule-jobs-backend",
+  "title": "Weekly View: Reschedule Jobs — Backend Endpoint",
+  "profile": "Node/TypeScript Backend",
+  "repo": "work_management_system",
+  "tech": "Node.js, TypeScript, Express, PostgreSQL, Prisma 6, Zod, Vitest",
+  "keyConstraints": "TypeScript strict mode, Zod validation server-side, .nullish() not .optional().nullable(), Prisma selects must include all returned fields (jobInclude is source of truth), no UI component libraries, CSS Modules only",
+
+  "description": "Add a dedicated PATCH /api/jobs/:id/schedule endpoint that updates scheduledStart, scheduledEnd, and schedulingNote on an existing job. This endpoint is restricted to Admin and Dispatcher roles and is the atomic target for the weekly view drag-to-reschedule feature. The Job model already has the relevant fields — no schema migration is required. The endpoint must enforce the existing scheduling invariant: if both scheduledStart and scheduledEnd are cleared to null, a non-empty schedulingNote is required in the same payload.",
+
+  "acceptanceCriteria": [
+    "PATCH /api/jobs/:id/schedule is registered in job.routes.ts behind authenticateToken + adminOrDispatcher middleware; returns 403 for Driver role",
+    "Request body is validated with Zod: scheduledStart and scheduledEnd accept ISO datetime strings or null (.nullish()); schedulingNote accepts string max 500 or null (.nullish()); at least one field must be present",
+    "Refinement: if the resulting job would have scheduledStart === null AND scheduledEnd === null, schedulingNote must be a non-empty string — returns 400 with { error: string } if violated",
+    "Refinement: if both scheduledStart and scheduledEnd are provided and non-null, scheduledEnd must be after scheduledStart — returns 400 with { error: string } if violated",
+    "On success the handler calls jobService.updateJob() (reuse existing service method) and returns 200 { data: job } using the jobInclude shape; returns 404 if job does not exist",
+    "npx tsc --noEmit passes with no errors"
+  ],
+
+  "affectedFiles": [
+    "backend/src/routes/job.routes.ts",
+    "backend/src/controllers/job.controller.ts",
+    "backend/src/types/job.types.ts"
+  ],
+
+  "implementationNotes": [
+    "No Prisma schema change needed — scheduledStart, scheduledEnd, schedulingNote already exist on the Job model",
+    "Add a scheduleJobSchema in job.types.ts alongside the existing updateJobSchema; reuse the same two refinements (null-null guard, end-after-start) that already exist in updateJobSchema",
+    "Use .nullish() not .optional().nullable() for scheduledStart, scheduledEnd, schedulingNote per project convention",
+    "Controller handler: validate body with scheduleJobSchema, call jobService.updateJob(id, data) — the service already handles partial updates safely via undefined vs null guards",
+    "Use adminOrDispatcher from middleware/requireRole.ts (already exported); do not add a new middleware",
+    "jobInclude is defined in job.service.ts and is the source of truth for the returned job shape — do not add a separate select",
+    "Register the route as: router.patch('/:id/schedule', authenticateToken, adminOrDispatcher, scheduleJob) — place it above the existing '/:id' route to avoid shadowing",
+    "Return 404 if Prisma throws RecordNotFound (P2025); otherwise rethrow for the global error handler"
+  ],
+
+  "securityConsiderations": [
+    "Endpoint is restricted to Admin and Dispatcher via adminOrDispatcher middleware — Drivers cannot reschedule jobs",
+    "Job ID comes from req.params.id; do not trust any ID from the request body",
+    "No sensitive fields are exposed — jobInclude already excludes passwordHash and refresh tokens"
+  ]
+}

@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { authenticateToken } from '../middleware/authenticate';
 import { requireRole } from '../middleware/requireRole';
 import { UserRole } from '../types/auth.types';
-import { createJob, getJobs, getMyJobs, getJobById, updateJob, updateJobStatus, updateDriverNotes, upsertCompletionReport, approveCompletionReport, unlockCompletionReport, getCompletionReportPdf, deleteJob } from '../controllers/job.controller';
+import { createJob, getJobs, getMyJobs, getJobById, updateJob, updateJobStatus, updateDriverNotes, upsertCompletionReport, approveCompletionReport, unlockCompletionReport, getCompletionReportPdf, deleteJob, scheduleJob } from '../controllers/job.controller';
 
 const router = Router();
 
@@ -18,6 +18,7 @@ router.post('/:id/completion-report', upsertCompletionReport);
 router.post('/:id/completion-report/approve', requireRole(UserRole.Admin, UserRole.Dispatcher, UserRole.Driver), approveCompletionReport);
 router.post('/:id/completion-report/unlock', requireRole(UserRole.Admin), unlockCompletionReport);
 router.get('/:id/completion-report/pdf', getCompletionReportPdf);
+router.patch('/:id/schedule', requireRole(UserRole.Admin, UserRole.Dispatcher), scheduleJob);
 router.patch('/:id', requireRole(UserRole.Admin, UserRole.Dispatcher), updateJob);
 router.delete('/:id', requireRole(UserRole.Admin), deleteJob);
 

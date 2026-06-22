@@ -137,6 +137,43 @@ export type UpdateJobStatusRequest = z.infer<typeof updateJobStatusSchema>;
 export type UpdateDriverNotesRequest = z.infer<typeof updateDriverNotesSchema>;
 export type JobQuery = z.infer<typeof jobQuerySchema>;
 
+export const updateJobScheduleSchema = z
+  .object({
+    scheduledStart: z.string().datetime({ message: 'scheduledStart must be a valid ISO 8601 datetime string' }).nullish(),
+    scheduledEnd: z.string().datetime({ message: 'scheduledEnd must be a valid ISO 8601 datetime string' }).nullish(),
+    schedulingNote: z.string().max(500, { message: 'schedulingNote must not exceed 500 characters' }).nullish(),
+  })
+  .refine(
+    (data) => data.scheduledStart !== undefined || data.scheduledEnd !== undefined || data.schedulingNote !== undefined,
+    { message: 'At least one field (scheduledStart, scheduledEnd, schedulingNote) must be provided' }
+  )
+  .refine(
+    (data) => {
+      if (data.scheduledStart === null && data.scheduledEnd === null) {
+        return typeof data.schedulingNote === 'string' && data.schedulingNote.trim().length > 0;
+      }
+      return true;
+    },
+    {
+      message: 'schedulingNote must be a non-empty string when both scheduledStart and scheduledEnd are cleared to null',
+      path: ['schedulingNote'],
+    }
+  )
+  .refine(
+    (data) => {
+      if (data.scheduledStart != null && data.scheduledEnd != null) {
+        return new Date(data.scheduledEnd) > new Date(data.scheduledStart);
+      }
+      return true;
+    },
+    {
+      message: 'scheduledEnd must be after scheduledStart',
+      path: ['scheduledEnd'],
+    }
+  );
+
+export type UpdateJobScheduleInput = z.infer<typeof updateJobScheduleSchema>;
+
 export interface JobWithDetails {
   id: string;
   status: JobStatus;

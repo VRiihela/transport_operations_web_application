@@ -1,7 +1,7 @@
 import { Response } from 'express';
 import { PrismaClient, UserRole, AuditEvent } from '@prisma/client';
 import { JobService } from '../services/job.service';
-import { createJobSchema, updateJobSchema, updateJobStatusSchema, jobQuerySchema, updateDriverNotesSchema } from '../types/job.types';
+import { createJobSchema, updateJobSchema, updateJobStatusSchema, jobQuerySchema, updateDriverNotesSchema, updateJobScheduleSchema, UpdateJobRequest } from '../types/job.types';
 import { upsertCompletionReportSchema } from '../types/completion-report.types';
 import { CompletionReportService } from '../services/completion-report.service';
 import { AuditService } from '../services/audit.service';
@@ -276,6 +276,39 @@ export const getCompletionReportPdf = async (req: AuthenticatedRequest, res: Res
     doc.end();
   } catch (error) {
     console.error('Generate completion report PDF error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const scheduleJob = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  const id = req.params['id'] as string;
+
+  const parsed = updateJobScheduleSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.errors[0]?.message ?? 'Invalid request body' });
+    return;
+  }
+
+  const { scheduledStart, scheduledEnd, schedulingNote } = parsed.data;
+
+  const updateData: UpdateJobRequest = {};
+  if (scheduledStart !== undefined) updateData.scheduledStart = scheduledStart;
+  if (scheduledEnd !== undefined) updateData.scheduledEnd = scheduledEnd;
+  if (schedulingNote !== undefined && schedulingNote !== null) updateData.schedulingNote = schedulingNote;
+
+  try {
+    const job = await jobService.updateJob(id, updateData, req.user!.role as UserRole, req.user!.id);
+    if (!job) {
+      res.status(404).json({ error: 'Job not found' });
+      return;
+    }
+    res.json({ data: job });
+  } catch (error) {
+    if (error instanceof Error && error.message === 'SCHEDULING_NOTE_REQUIRED') {
+      res.status(400).json({ error: 'schedulingNote must be a non-empty string when both scheduledStart and scheduledEnd are cleared to null' });
+      return;
+    }
+    console.error('Schedule job error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
