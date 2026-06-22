@@ -8,67 +8,9 @@ import { PageNav } from '../components/PageNav';
 import { JobDetailModal } from '../components/JobDetailModal';
 import { JobCreateModal } from '../components/JobCreateModal/JobCreateModal';
 import { JobEditModal, JobUpdatePayload } from '../components/JobEditModal';
+import { WeekGrid } from './WeekView/WeekGrid';
+import type { Job, JobStatus, AssignedDriver } from '../types/jobApi';
 import styles from './JobsPage.module.css';
-
-type JobStatus = 'DRAFT' | 'ASSIGNED' | 'IN_PROGRESS' | 'COMPLETED';
-
-interface AssignedDriver {
-  id: string;
-  name: string | null;
-  email: string;
-}
-
-interface CompletionReport {
-  id: string;
-  jobId: string;
-  workDescription: string;
-  actualStart: string;
-  actualEnd: string;
-  totalHours: number;
-  customerName: string;
-  customerSignature: string;
-  approvedAt: string | null;
-}
-
-interface Team {
-  id: string;
-  name: string;
-}
-
-interface Job {
-  id: string;
-  title: string;
-  description: string | null;
-  status: JobStatus;
-  assignedDriverId: string | null;
-  assignedDriver: AssignedDriver | null;
-  teamId?: string | null;
-  team?: Team | null;
-  scheduledAt: string | null;
-  scheduledStart: string | null;
-  scheduledEnd: string | null;
-  schedulingNote: string | null;
-  driverNotes: string | null;
-  // structured address (post-migration)
-  street?: string | null;
-  houseNumber?: string | null;
-  stair?: string | null;
-  postalCode?: string | null;
-  city?: string | null;
-  deliveryStreet?: string | null;
-  deliveryHouseNumber?: string | null;
-  deliveryStair?: string | null;
-  deliveryPostalCode?: string | null;
-  deliveryCity?: string | null;
-  jobType?: string | null;
-  services?: string[] | null;
-  customer?: { id: string; name: string; phone: string; email: string | null; companyName: string | null } | null;
-  // legacy field
-  location?: string | null;
-  completionReport?: CompletionReport | null;
-  createdAt: string;
-  updatedAt: string;
-}
 
 interface Driver {
   id: string;
@@ -110,18 +52,7 @@ function getWeekBounds(ws: Date): { from: string; to: string } {
   return { from, to };
 }
 
-function getWeekdayLabel(scheduledStart: string | null): string {
-  if (!scheduledStart) return '–';
-  const d = new Date(scheduledStart);
-  if (isNaN(d.getTime())) return '–';
-  const parts = new Intl.DateTimeFormat('en-US', { weekday: 'long', timeZone: 'Europe/Helsinki' }).formatToParts(d);
-  const name = parts.find((p) => p.type === 'weekday')?.value ?? '';
-  const map: Record<string, string> = {
-    Monday: 'Ma', Tuesday: 'Ti', Wednesday: 'Ke',
-    Thursday: 'To', Friday: 'Pe', Saturday: 'La', Sunday: 'Su',
-  };
-  return map[name] ?? '–';
-}
+
 
 function getApiError(err: unknown, fallback: string): string {
   if (isAxiosError(err)) {
@@ -326,6 +257,7 @@ const JobsPage: React.FC = () => {
   };
 
   const weekLabel = `${format(weekStart, 'd.M.')} – ${format(addDays(weekStart, 6), 'd.M.yyyy')}`;
+  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
   const displayJobs = viewMode === 'week'
     ? [...jobs].sort((a, b) => {
@@ -427,16 +359,23 @@ const JobsPage: React.FC = () => {
         />
       )}
 
-      {displayJobs.length === 0 ? (
+      {viewMode === 'week' ? (
+        <div className={styles.weekGridWrapper}>
+          <WeekGrid
+            weekDays={weekDays}
+            jobs={jobs}
+            setJobs={setJobs}
+            onJobClick={(job) => setSelectedJob(job)}
+          />
+        </div>
+      ) : displayJobs.length === 0 ? (
         <div className={styles.emptyState}>
           <p>
-            {viewMode === 'week'
-              ? `No jobs scheduled for ${weekLabel}.`
-              : statusFilter === 'active'
-                ? 'No active jobs. Create a new job to get started.'
-                : statusFilter === 'COMPLETED'
-                  ? 'No completed jobs.'
-                  : 'No jobs found.'}
+            {statusFilter === 'active'
+              ? 'No active jobs. Create a new job to get started.'
+              : statusFilter === 'COMPLETED'
+                ? 'No completed jobs.'
+                : 'No jobs found.'}
           </p>
         </div>
       ) : (
@@ -445,7 +384,6 @@ const JobsPage: React.FC = () => {
           <table className={styles.table}>
             <thead>
               <tr>
-                {viewMode === 'week' && <th className={`${styles.th} ${styles.dayTh}`}>Day</th>}
                 <th className={styles.th}>Title</th>
                 <th className={styles.th}>Status</th>
                 <th className={styles.th}>Driver</th>
@@ -456,9 +394,6 @@ const JobsPage: React.FC = () => {
             <tbody>
               {displayJobs.map((job) => (
                 <tr key={job.id} className={styles.tr} onClick={() => setSelectedJob(job)} style={{ cursor: 'pointer' }}>
-                  {viewMode === 'week' && (
-                    <td className={`${styles.td} ${styles.dayTd}`}>{getWeekdayLabel(job.scheduledStart)}</td>
-                  )}
                   <td className={styles.td}>
                     <div className={styles.jobTitle}>{job.title}</div>
                     {job.description && (
@@ -588,7 +523,7 @@ const JobsPage: React.FC = () => {
             </tbody>
           </table>
         </div>
-        {viewMode === 'list' && pagination && pagination.totalPages > 1 && (
+        {pagination && pagination.totalPages > 1 && (
           <div className={styles.pagination}>
             <button
               type="button"

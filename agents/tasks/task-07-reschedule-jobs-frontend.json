@@ -1,0 +1,40 @@
+{
+  "taskId": "task-07-reschedule-jobs-frontend",
+  "title": "Weekly View: Reschedule Jobs — Frontend Drag-and-Drop",
+  "profile": "React/TypeScript Frontend",
+  "repo": "work_management_system",
+  "tech": "React 18, TypeScript, Vite, CSS Modules, Axios, @dnd-kit/core",
+  "keyConstraints": "TypeScript strict mode, Zod validation server-side, .nullish() not .optional().nullable(), Prisma selects must include all returned fields (jobInclude is source of truth), no UI component libraries, CSS Modules only",
+
+  "description": "Add drag-and-drop rescheduling to the JobsPage weekly calendar view. Admin and Dispatcher users can drag a job card from one day column to another; the drop preserves the existing HH:MM from scheduledStart in Europe/Helsinki timezone (defaulting to 08:00 if scheduledStart is null), then calls PATCH /api/jobs/:id/schedule with the new scheduledStart ISO string. Driver users see read-only cards. Uses @dnd-kit/core which is already installed. Follow the existing DispatcherBoard Schedule-view DnD pattern as the reference implementation.",
+
+  "acceptanceCriteria": [
+    "In week view, job cards for Admin and Dispatcher roles are draggable via @dnd-kit/core (DndContext wrapping weekGrid, useDraggable per card, useDroppable per day column); Driver role sees read-only cards with no drag attributes",
+    "On drop to a different day column: preserves HH:MM from the card's existing scheduledStart in Europe/Helsinki timezone (defaults to 08:00 if scheduledStart is null), constructs a new UTC ISO string for the target date, and calls PATCH /api/jobs/:id/schedule via axiosInstance",
+    "Optimistic update: card moves to the new day column immediately on drop; reverts to original column and shows an inline error message if the API call fails",
+    "A DragOverlay renders a ghost clone of the weekJobCard while dragging; the hovered day column receives a visible CSS highlight class",
+    "COMPLETED job cards are non-draggable; cards with status DRAFT, ASSIGNED, or IN_PROGRESS are draggable",
+    "npx tsc --noEmit passes with no errors"
+  ],
+
+  "affectedFiles": [
+    "frontend/src/pages/JobsPage.tsx",
+    "frontend/src/pages/JobsPage.module.css"
+  ],
+
+  "implementationNotes": [
+    "Reference implementation: frontend/src/pages/DispatcherBoard/DispatcherBoard.tsx — the Schedule view uses DndContext, DroppableDayColumn (useDroppable with id = 'yyyy-MM-dd'), DraggableJobCard (useDraggable), and DragOverlay from @dnd-kit/core in exactly this pattern",
+    "Role check: read user.role from useAuth() context; only render DndContext and attach drag attributes when role is 'Admin' or 'Dispatcher'",
+    "Time preservation: convert existing scheduledStart to Helsinki time with toLocaleTimeString('fi-FI', { timeZone: 'Europe/Helsinki', hour: '2-digit', minute: '2-digit', hour12: false }), extract HH:MM, append to the target date string, then convert to UTC via new Date()",
+    "Optimistic state: derive a local useState copy of displayJobs; update it on dragEnd before awaiting the PATCH; on catch restore the pre-drag copy and set a local errorMessage state",
+    "axiosInstance is imported from frontend/src/api/axios.ts — do not use fetch or a different axios instance",
+    "PATCH payload shape: { scheduledStart: string } — send only scheduledStart; leave scheduledEnd unchanged (same as DispatcherBoard pattern)",
+    "CSS Modules only: add .weekDayColOver (highlight color when a draggable hovers) and .weekJobCardDragging (reduced opacity on the source card) to JobsPage.module.css",
+    "Droppable day column id must be the ISO date string of that day (e.g. '2026-06-23') to compute the new scheduledStart on drop"
+  ],
+
+  "securityConsiderations": [
+    "Frontend role check (Admin/Dispatcher only drag) is a UX guard; PATCH /api/jobs/:id/schedule enforces the same restriction server-side",
+    "No user data stored in localStorage or sessionStorage — auth token handling is already managed by axiosInstance"
+  ]
+}

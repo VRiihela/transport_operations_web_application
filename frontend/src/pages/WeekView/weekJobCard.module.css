@@ -1,0 +1,95 @@
+.card {
+  padding: 0.5rem 0.625rem;
+  background: #f8faff;
+  border: 1px solid #dbeafe;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, opacity 0.15s;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  touch-action: none;
+}
+
+.card:hover {
+  background: #eff6ff;
+  border-color: #93c5fd;
+}
+
+.title {
+  font-weight: 500;
+  font-size: 0.8rem;
+  color: #111827;
+  word-break: break-word;
+}
+
+.time {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.driver {
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+/* ── Status badges ─────────────────────────────────────── */
+.statusBadge {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  border-radius: 99px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  text-transform: uppercase;
+  align-self: flex-start;
+}
+
+.statusDRAFT {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+.statusASSIGNED {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.statusINPROGRESS {
+  background: #fefce8;
+  color: #92400e;
+}
+
+.statusCOMPLETED {
+  background: #f0fdf4;
+  color: #166534;
+}
+
+/* ── Drag states ───────────────────────────────────────── */
+.dragging {
+  opacity: 0.4;
+}
+
+.overlay {
+  opacity: 0.9;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  cursor: grabbing;
+}
+
+.readOnly {
+  cursor: default;
+}
+
+.readOnly:hover {
+  background: #f8faff;
+  border-color: #dbeafe;
+}
+
+/* ── Inline error ──────────────────────────────────────── */
+.error {
+  font-size: 0.7rem;
+  color: #dc2626;
+  margin-top: 0.2rem;
+  line-height: 1.3;
+}
