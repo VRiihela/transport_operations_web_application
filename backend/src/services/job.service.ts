@@ -102,7 +102,7 @@ export class JobService {
     userRole: UserRole,
     userId: string,
   ): Promise<{ jobs: JobWithDetails[]; pagination: { page: number; pageSize: number; total: number; totalPages: number } }> {
-    const { status, assignedDriverId, scheduledFrom, scheduledTo, page, pageSize, includeCompleted } = query;
+    const { status, assignedDriverId, scheduledFrom, scheduledTo, page, pageSize, includeCompleted, sortBy, sortDir } = query;
 
     const statusClause = status
       ? { status }
@@ -142,11 +142,19 @@ export class JobService {
       };
     }
 
+    const dir = sortDir ?? 'asc';
+    const orderBy: Prisma.JobOrderByWithRelationInput =
+      sortBy === 'title' ? { title: dir }
+      : sortBy === 'status' ? { status: dir }
+      : sortBy === 'driver' ? { assignedDriver: { name: dir } }
+      : sortBy === 'schedule' ? { scheduledStart: { sort: dir, nulls: 'last' } }
+      : { updatedAt: 'desc' };
+
     const [jobs, total] = await Promise.all([
       this.prisma.job.findMany({
         where,
         ...jobInclude,
-        orderBy: { updatedAt: 'desc' },
+        orderBy,
         skip: (page - 1) * pageSize,
         take: pageSize,
       }),

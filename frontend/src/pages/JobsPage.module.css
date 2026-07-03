@@ -218,6 +218,21 @@
   white-space: nowrap;
 }
 
+.thSortable {
+  cursor: pointer;
+  user-select: none;
+}
+.thSortable:hover { background: #f3f4f6; }
+
+.sortIndicator {
+  font-size: 0.7rem;
+  color: #9ca3af;
+}
+
+.sortIndicatorActive {
+  color: #2563eb;
+}
+
 .tr:hover { background: #fafafa; }
 
 .td {

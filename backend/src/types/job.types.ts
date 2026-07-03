@@ -121,6 +121,8 @@ export const jobQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(200).default(25),
   includeCompleted: z.coerce.boolean().optional(),
+  sortBy: z.enum(['title', 'status', 'driver', 'schedule']).optional(),
+  sortDir: z.enum(['asc', 'desc']).optional(),
 });
 
 export const updateJobStatusSchema = z.object({

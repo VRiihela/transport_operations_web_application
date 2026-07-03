@@ -35,6 +35,8 @@ interface JobsApiResponse {
 
 type StatusFilter = 'active' | 'COMPLETED' | 'all';
 type ViewMode = 'list' | 'week';
+type SortField = 'title' | 'status' | 'driver' | 'schedule';
+type SortDir = 'asc' | 'desc';
 
 interface SingleJobApiResponse {
   data: Job;
@@ -84,12 +86,14 @@ const JobsPage: React.FC = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('active');
   const [page, setPage] = useState(1);
+  const [sortBy, setSortBy] = useState<SortField | null>(null);
+  const [sortDir, setSortDir] = useState<SortDir>('asc');
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('week');
   const [weekStart, setWeekStart] = useState<Date>(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [datePickerValue, setDatePickerValue] = useState('');
 
-  const fetchJobs = useCallback(async (filter: StatusFilter, p: number, mode: ViewMode, ws: Date): Promise<void> => {
+  const fetchJobs = useCallback(async (filter: StatusFilter, p: number, mode: ViewMode, ws: Date, sb: SortField | null, sd: SortDir): Promise<void> => {
     try {
       setLoading(true);
       setError('');
@@ -105,6 +109,10 @@ const JobsPage: React.FC = () => {
       } else {
         params.set('page', String(p));
         params.set('pageSize', '25');
+        if (sb) {
+          params.set('sortBy', sb);
+          params.set('sortDir', sd);
+        }
       }
       const response = await axiosInstance.get<JobsApiResponse>(`/api/jobs?${params}`);
       setJobs(response.data.data.jobs);
@@ -130,8 +138,8 @@ const JobsPage: React.FC = () => {
   }, [drivers.length]);
 
   useEffect(() => {
-    void fetchJobs(statusFilter, page, viewMode, weekStart);
-  }, [fetchJobs, statusFilter, page, viewMode, weekStart]);
+    void fetchJobs(statusFilter, page, viewMode, weekStart, sortBy, sortDir);
+  }, [fetchJobs, statusFilter, page, viewMode, weekStart, sortBy, sortDir]);
 
   const handleFilterChange = (filter: StatusFilter): void => {
     setStatusFilter(filter);
@@ -140,6 +148,16 @@ const JobsPage: React.FC = () => {
 
   const handleViewModeChange = (mode: ViewMode): void => {
     setViewMode(mode);
+    setPage(1);
+  };
+
+  const handleSort = (field: SortField): void => {
+    if (sortBy === field) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortBy(field);
+      setSortDir('asc');
+    }
     setPage(1);
   };
 
@@ -384,10 +402,22 @@ const JobsPage: React.FC = () => {
           <table className={styles.table}>
             <thead>
               <tr>
-                <th className={styles.th}>Title</th>
-                <th className={styles.th}>Status</th>
-                <th className={styles.th}>Driver</th>
-                <th className={styles.th}>Scheduled</th>
+                {(['title', 'status', 'driver', 'schedule'] as const).map((field) => {
+                  const labels: Record<typeof field, string> = { title: 'Title', status: 'Status', driver: 'Driver', schedule: 'Scheduled' };
+                  const active = sortBy === field;
+                  return (
+                    <th
+                      key={field}
+                      className={`${styles.th} ${styles.thSortable}`}
+                      onClick={() => handleSort(field)}
+                    >
+                      {labels[field]}
+                      <span className={`${styles.sortIndicator} ${active ? styles.sortIndicatorActive : ''}`}>
+                        {active ? (sortDir === 'asc' ? ' ▲' : ' ▼') : ' ⇅'}
+                      </span>
+                    </th>
+                  );
+                })}
                 <th className={styles.th}>Actions</th>
               </tr>
             </thead>
@@ -561,7 +591,7 @@ const JobsPage: React.FC = () => {
       <JobCreateModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        onSuccess={() => void fetchJobs(statusFilter, 1, viewMode, weekStart)}
+        onSuccess={() => void fetchJobs(statusFilter, 1, viewMode, weekStart, sortBy, sortDir)}
       />
     </div>
   );
