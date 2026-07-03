@@ -8,7 +8,7 @@ import { WeekJobCard } from './WeekJobCard';
 import type { UserRole } from '../../types/auth.types';
 import styles from './weekGrid.module.css';
 
-const DAY_ABBR = ['Ma', 'Ti', 'Ke', 'To', 'Pe', 'La', 'Su'];
+const DAY_ABBR = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 interface WeekDayColumnProps {
   day: Date;
@@ -39,7 +39,7 @@ export const WeekDayColumn: React.FC<WeekDayColumnProps> = ({
     >
       <div className={styles.weekDayHeader}>
         <span className={styles.weekDayName}>{DAY_ABBR[dayIndex]}</span>
-        <span className={styles.weekDayDate}>{format(day, 'd.M.')}</span>
+        <span className={styles.weekDayDate}>{format(day, 'd/M')}</span>
       </div>
       <div className={styles.weekDayBody}>
         {dayJobs.map((job) => (

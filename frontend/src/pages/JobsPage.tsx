@@ -229,20 +229,20 @@ const JobsPage: React.FC = () => {
     setEditingJob(null);
   };
 
-  const formatFinnishDateTime = (value: string | null): string => {
+  const formatDateTime = (value: string | null): string => {
     if (!value) return '';
     const d = new Date(value);
     if (isNaN(d.getTime())) return value;
-    return d.toLocaleString('fi-FI', {
+    return d.toLocaleString('en-GB', {
       day: '2-digit', month: '2-digit', year: 'numeric',
       hour: '2-digit', minute: '2-digit',
       timeZone: 'Europe/Helsinki',
     });
   };
 
-  const formatFinnishTime = (value: string): string => {
+  const formatTime = (value: string): string => {
     const d = new Date(value);
-    return d.toLocaleTimeString('fi-FI', {
+    return d.toLocaleTimeString('en-GB', {
       hour: '2-digit', minute: '2-digit',
       timeZone: 'Europe/Helsinki',
     });
@@ -251,13 +251,13 @@ const JobsPage: React.FC = () => {
   const formatSchedulingInfo = (start: string | null, end: string | null, note: string | null): string => {
     if (start || end) {
       if (start && end) {
-        const sDate = new Date(start).toLocaleDateString('fi-FI', { timeZone: 'Europe/Helsinki' });
-        const eDate = new Date(end).toLocaleDateString('fi-FI', { timeZone: 'Europe/Helsinki' });
-        const s = formatFinnishDateTime(start);
-        const endPart = sDate === eDate ? formatFinnishTime(end) : formatFinnishDateTime(end);
+        const sDate = new Date(start).toLocaleDateString('en-CA', { timeZone: 'Europe/Helsinki' });
+        const eDate = new Date(end).toLocaleDateString('en-CA', { timeZone: 'Europe/Helsinki' });
+        const s = formatDateTime(start);
+        const endPart = sDate === eDate ? formatTime(end) : formatDateTime(end);
         return `${s} – ${endPart}`;
       }
-      return formatFinnishDateTime(start) || formatFinnishDateTime(end);
+      return formatDateTime(start) || formatDateTime(end);
     }
     return note ?? '—';
   };
@@ -274,7 +274,7 @@ const JobsPage: React.FC = () => {
     return [streetPart, cityPart].filter(Boolean).join(', ');
   };
 
-  const weekLabel = `${format(weekStart, 'd.M.')} – ${format(addDays(weekStart, 6), 'd.M.yyyy')}`;
+  const weekLabel = `${format(weekStart, 'd/M')} – ${format(addDays(weekStart, 6), 'd/M/yyyy')}`;
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
   const displayJobs = viewMode === 'week'
@@ -450,7 +450,7 @@ const JobsPage: React.FC = () => {
                           <span className={styles.completionReportTitle}>Completion Report</span>
                           {job.completionReport.approvedAt ? (
                             <span className={styles.approvedBadge}>
-                              Approved {formatFinnishDateTime(job.completionReport.approvedAt)}
+                              Approved {formatDateTime(job.completionReport.approvedAt)}
                             </span>
                           ) : (
                             <span className={styles.pendingBadge}>Pending approval</span>
@@ -464,11 +464,11 @@ const JobsPage: React.FC = () => {
                           {(() => {
                             const s = job.completionReport.actualStart;
                             const e = job.completionReport.actualEnd;
-                            const sDate = new Date(s).toLocaleDateString('fi-FI', { timeZone: 'Europe/Helsinki' });
-                            const eDate = new Date(e).toLocaleDateString('fi-FI', { timeZone: 'Europe/Helsinki' });
+                            const sDate = new Date(s).toLocaleDateString('en-CA', { timeZone: 'Europe/Helsinki' });
+                            const eDate = new Date(e).toLocaleDateString('en-CA', { timeZone: 'Europe/Helsinki' });
                             return sDate === eDate
-                              ? `${formatFinnishDateTime(s)} – ${formatFinnishTime(e)}`
-                              : `${formatFinnishDateTime(s)} – ${formatFinnishDateTime(e)}`;
+                              ? `${formatDateTime(s)} – ${formatTime(e)}`
+                              : `${formatDateTime(s)} – ${formatDateTime(e)}`;
                           })()}
                         </div>
                         <div className={styles.completionReportRow}>

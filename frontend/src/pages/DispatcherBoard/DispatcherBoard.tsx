@@ -35,7 +35,7 @@ import styles from './DispatcherBoard.module.css';
 import { Job, Driver } from './types';
 import { PageNav } from '../../components/PageNav';
 
-const FI_WEEKDAYS = ['Ma', 'Ti', 'Ke', 'To', 'Pe', 'La', 'Su'];
+const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 interface DroppableDayColumnProps {
   day: Date;
@@ -357,7 +357,7 @@ const DispatcherBoard: React.FC = () => {
   };
 
   const weekDays = getWeekDays(weekStart);
-  const weekLabel = `${format(weekDays[0], 'd.M.')} – ${format(weekDays[6], 'd.M.yyyy')}`;
+  const weekLabel = `${format(weekDays[0], 'd/M')} – ${format(weekDays[6], 'd/M/yyyy')}`;
 
   if (loading) {
     return (
@@ -437,10 +437,9 @@ const DispatcherBoard: React.FC = () => {
             )}
             <JobPool
               jobs={jobs.filter((j) => {
-                if (j.assignedDriverId !== null) return false;
-                if (j.teamId) return false;
+                if (j.assignedDriverId || j.teamId) return false;
                 const d = parseJobDate(j.scheduledStart);
-                return !d || isSameDay(d, parseISO(selectedDate));
+                return d ? isSameDay(d, parseISO(selectedDate)) : false;
               })}
               onCardClick={setSelectedJob}
             />
@@ -529,7 +528,7 @@ const DispatcherBoard: React.FC = () => {
                   <DroppableDayColumn
                     key={day.toISOString()}
                     day={day}
-                    dayLabel={`${FI_WEEKDAYS[i]} ${format(day, 'd.M.')}`}
+                    dayLabel={`${WEEKDAYS[i]} ${format(day, 'd/M')}`}
                     jobs={dayJobs}
                     onCardClick={setSelectedJob}
                   />

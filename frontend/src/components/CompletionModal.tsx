@@ -28,29 +28,29 @@ interface CompletionModalProps {
 
 type ModalStep = 'report' | 'signature';
 
-function formatFinnishDateTime(value: string): string {
+function formatDateTime(value: string): string {
   const d = new Date(value);
   if (isNaN(d.getTime())) return value;
-  return d.toLocaleString('fi-FI', {
+  return d.toLocaleString('en-GB', {
     day: '2-digit', month: '2-digit', year: 'numeric',
     hour: '2-digit', minute: '2-digit',
     timeZone: 'Europe/Helsinki',
   });
 }
 
-function formatFinnishTime(value: string): string {
+function formatTime(value: string): string {
   const d = new Date(value);
-  return d.toLocaleTimeString('fi-FI', {
+  return d.toLocaleTimeString('en-GB', {
     hour: '2-digit', minute: '2-digit',
     timeZone: 'Europe/Helsinki',
   });
 }
 
 function formatTimeRange(start: string, end: string): string {
-  const sDate = new Date(start).toLocaleDateString('fi-FI', { timeZone: 'Europe/Helsinki' });
-  const eDate = new Date(end).toLocaleDateString('fi-FI', { timeZone: 'Europe/Helsinki' });
-  const startFormatted = formatFinnishDateTime(start);
-  const endPart = sDate === eDate ? formatFinnishTime(end) : formatFinnishDateTime(end);
+  const sDate = new Date(start).toLocaleDateString('en-CA', { timeZone: 'Europe/Helsinki' });
+  const eDate = new Date(end).toLocaleDateString('en-CA', { timeZone: 'Europe/Helsinki' });
+  const startFormatted = formatDateTime(start);
+  const endPart = sDate === eDate ? formatTime(end) : formatDateTime(end);
   return `${startFormatted} – ${endPart}`;
 }
 

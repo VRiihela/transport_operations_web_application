@@ -14,8 +14,8 @@ interface WeekJobCardProps {
   onClick?: () => void;
 }
 
-function formatFinnishTime(value: string): string {
-  return new Date(value).toLocaleTimeString('fi-FI', {
+function formatTime(value: string): string {
+  return new Date(value).toLocaleTimeString('en-GB', {
     hour: '2-digit',
     minute: '2-digit',
     timeZone: 'Europe/Helsinki',
@@ -89,10 +89,10 @@ export const WeekJobCard: React.FC<WeekJobCardProps> = ({
       {(job.scheduledStart ?? job.scheduledEnd) && (
         <div className={styles.time}>
           {job.scheduledStart && job.scheduledEnd
-            ? `${formatFinnishTime(job.scheduledStart)} – ${formatFinnishTime(job.scheduledEnd)}`
+            ? `${formatTime(job.scheduledStart)} – ${formatTime(job.scheduledEnd)}`
             : job.scheduledStart
-              ? formatFinnishTime(job.scheduledStart)
-              : formatFinnishTime(job.scheduledEnd as string)}
+              ? formatTime(job.scheduledStart)
+              : formatTime(job.scheduledEnd as string)}
         </div>
       )}
 

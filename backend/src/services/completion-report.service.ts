@@ -11,8 +11,8 @@ const pdfJobInclude = {
 
 export type JobForCompletionReportPdf = Prisma.JobGetPayload<typeof pdfJobInclude>;
 
-function formatFinnishDateTime(date: Date): string {
-  return date.toLocaleString('fi-FI', {
+function formatDateTime(date: Date): string {
+  return date.toLocaleString('en-GB', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -22,8 +22,8 @@ function formatFinnishDateTime(date: Date): string {
   });
 }
 
-function formatFinnishTime(date: Date): string {
-  return date.toLocaleTimeString('fi-FI', {
+function formatTime(date: Date): string {
+  return date.toLocaleTimeString('en-GB', {
     hour: '2-digit',
     minute: '2-digit',
     timeZone: 'Europe/Helsinki',
@@ -32,10 +32,10 @@ function formatFinnishTime(date: Date): string {
 
 function formatTimeRange(start: Date, end: Date): string {
   const sameDay =
-    start.toLocaleDateString('fi-FI', { timeZone: 'Europe/Helsinki' }) ===
-    end.toLocaleDateString('fi-FI', { timeZone: 'Europe/Helsinki' });
-  const endPart = sameDay ? formatFinnishTime(end) : formatFinnishDateTime(end);
-  return `${formatFinnishDateTime(start)} – ${endPart}`;
+    start.toLocaleDateString('en-CA', { timeZone: 'Europe/Helsinki' }) ===
+    end.toLocaleDateString('en-CA', { timeZone: 'Europe/Helsinki' });
+  const endPart = sameDay ? formatTime(end) : formatDateTime(end);
+  return `${formatDateTime(start)} – ${endPart}`;
 }
 
 function formatPickupAddress(job: JobForCompletionReportPdf): string {
@@ -160,7 +160,7 @@ export class CompletionReportService {
     if (job.scheduledStart) {
       const scheduling = job.scheduledEnd
         ? formatTimeRange(job.scheduledStart, job.scheduledEnd)
-        : formatFinnishDateTime(job.scheduledStart);
+        : formatDateTime(job.scheduledStart);
       doc.fontSize(10).text(`Scheduled: ${scheduling}`);
     }
 
@@ -180,7 +180,7 @@ export class CompletionReportService {
     doc.text(`Total hours: ${report.totalHours.toFixed(2)} h`);
     doc.text(`Customer: ${report.customerName}`);
     if (report.approvedAt) {
-      doc.text(`Approved: ${formatFinnishDateTime(report.approvedAt)}`);
+      doc.text(`Approved: ${formatDateTime(report.approvedAt)}`);
     }
 
     doc.moveDown();

@@ -172,20 +172,20 @@ const MyJobsPage: React.FC = () => {
     }
   };
 
-  const formatFinnishDateTime = (value: string | null): string => {
+  const formatDateTime = (value: string | null): string => {
     if (!value) return '';
     const d = new Date(value);
     if (isNaN(d.getTime())) return value;
-    return d.toLocaleString('fi-FI', {
+    return d.toLocaleString('en-GB', {
       day: '2-digit', month: '2-digit', year: 'numeric',
       hour: '2-digit', minute: '2-digit',
       timeZone: 'Europe/Helsinki',
     });
   };
 
-  const formatFinnishTime = (value: string): string => {
+  const formatTime = (value: string): string => {
     const d = new Date(value);
-    return d.toLocaleTimeString('fi-FI', {
+    return d.toLocaleTimeString('en-GB', {
       hour: '2-digit', minute: '2-digit',
       timeZone: 'Europe/Helsinki',
     });
@@ -194,13 +194,13 @@ const MyJobsPage: React.FC = () => {
   const formatSchedulingInfo = (start: string | null, end: string | null, note: string | null): string => {
     if (start || end) {
       if (start && end) {
-        const sDate = new Date(start).toLocaleDateString('fi-FI', { timeZone: 'Europe/Helsinki' });
-        const eDate = new Date(end).toLocaleDateString('fi-FI', { timeZone: 'Europe/Helsinki' });
-        const s = formatFinnishDateTime(start);
-        const endPart = sDate === eDate ? formatFinnishTime(end) : formatFinnishDateTime(end);
+        const sDate = new Date(start).toLocaleDateString('en-CA', { timeZone: 'Europe/Helsinki' });
+        const eDate = new Date(end).toLocaleDateString('en-CA', { timeZone: 'Europe/Helsinki' });
+        const s = formatDateTime(start);
+        const endPart = sDate === eDate ? formatTime(end) : formatDateTime(end);
         return `${s} – ${endPart}`;
       }
-      return formatFinnishDateTime(start) || formatFinnishDateTime(end);
+      return formatDateTime(start) || formatDateTime(end);
     }
     return note ?? '—';
   };
@@ -285,8 +285,8 @@ const MyJobsPage: React.FC = () => {
 
       {visibleJobs.length === 0 ? (
         <div className={styles.emptyState}>
-          <p>Ei töitä valitulle päivälle.</p>
-          <p>Valitse toinen päivämäärä tai ota yhteyttä dispatcheriin.</p>
+          <p>No jobs for the selected date.</p>
+          <p>Select another date or contact the dispatcher.</p>
         </div>
       ) : (
         <div className={styles.jobsGrid}>
