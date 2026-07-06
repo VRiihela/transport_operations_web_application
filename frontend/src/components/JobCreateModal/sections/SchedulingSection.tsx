@@ -1,5 +1,6 @@
 import React from 'react';
 import { SchedulingType, SchedulingData } from '../../../types/job';
+import { useLanguage } from '../../../i18n/LanguageContext';
 import styles from './SchedulingSection.module.css';
 
 interface SchedulingSectionProps {
@@ -8,6 +9,7 @@ interface SchedulingSectionProps {
 }
 
 export const SchedulingSection: React.FC<SchedulingSectionProps> = ({ data, onChange }) => {
+  const { t } = useLanguage();
   const handleTypeChange = (type: SchedulingType) => {
     onChange({
       ...data,
@@ -27,9 +29,9 @@ export const SchedulingSection: React.FC<SchedulingSectionProps> = ({ data, onCh
     };
 
   const segmentOptions = [
-    { value: SchedulingType.EXACT_TIME, label: 'Exact time' },
-    { value: SchedulingType.TIME_WINDOW, label: 'Time window' },
-    { value: SchedulingType.TBC, label: 'TBC' },
+    { value: SchedulingType.EXACT_TIME, label: t.schedExactTime },
+    { value: SchedulingType.TIME_WINDOW, label: t.schedTimeWindow },
+    { value: SchedulingType.TBC, label: t.schedTbc },
   ];
 
   const renderSchedulingInputs = () => {
@@ -39,7 +41,7 @@ export const SchedulingSection: React.FC<SchedulingSectionProps> = ({ data, onCh
           <div className={styles.schedulingInputs}>
             <div className={styles.inputGroup}>
               <label className={styles.inputLabel}>
-                Date <span className={styles.required}>*</span>
+                {t.schedDate} <span className={styles.required}>*</span>
               </label>
               <input
                 type="date"
@@ -51,7 +53,7 @@ export const SchedulingSection: React.FC<SchedulingSectionProps> = ({ data, onCh
             </div>
             <div className={styles.inputGroup}>
               <label className={styles.inputLabel}>
-                Start Time <span className={styles.required}>*</span>
+                {t.schedStartTime} <span className={styles.required}>*</span>
               </label>
               <input
                 type="time"
@@ -69,7 +71,7 @@ export const SchedulingSection: React.FC<SchedulingSectionProps> = ({ data, onCh
           <div className={styles.schedulingInputs}>
             <div className={styles.inputGroup}>
               <label className={styles.inputLabel}>
-                Date <span className={styles.required}>*</span>
+                {t.schedDate} <span className={styles.required}>*</span>
               </label>
               <input
                 type="date"
@@ -82,7 +84,7 @@ export const SchedulingSection: React.FC<SchedulingSectionProps> = ({ data, onCh
             <div className={styles.timeWindow}>
               <div className={styles.inputGroup}>
                 <label className={styles.inputLabel}>
-                  Window Start <span className={styles.required}>*</span>
+                  {t.schedWindowStart} <span className={styles.required}>*</span>
                 </label>
                 <input
                   type="time"
@@ -94,7 +96,7 @@ export const SchedulingSection: React.FC<SchedulingSectionProps> = ({ data, onCh
               </div>
               <div className={styles.inputGroup}>
                 <label className={styles.inputLabel}>
-                  Window End <span className={styles.required}>*</span>
+                  {t.schedWindowEnd} <span className={styles.required}>*</span>
                 </label>
                 <input
                   type="time"
@@ -113,13 +115,13 @@ export const SchedulingSection: React.FC<SchedulingSectionProps> = ({ data, onCh
           <div className={styles.schedulingInputs}>
             <div className={styles.inputGroup}>
               <label className={styles.inputLabel}>
-                Scheduling Note <span className={styles.required}>*</span>
+                {t.schedNote} <span className={styles.required}>*</span>
               </label>
               <textarea
                 value={data.schedulingNote}
                 onChange={handleInputChange('schedulingNote')}
                 className={styles.noteTextarea}
-                placeholder="Please provide details about timing preferences or constraints"
+                placeholder={t.schedNotePlaceholder}
                 rows={3}
                 required
               />
@@ -134,7 +136,7 @@ export const SchedulingSection: React.FC<SchedulingSectionProps> = ({ data, onCh
 
   return (
     <div className={styles.schedulingSection}>
-      <h3 className={styles.sectionTitle}>Scheduling</h3>
+      <h3 className={styles.sectionTitle}>{t.schedTitle}</h3>
 
       <div className={styles.segmentControl}>
         {segmentOptions.map((option) => (

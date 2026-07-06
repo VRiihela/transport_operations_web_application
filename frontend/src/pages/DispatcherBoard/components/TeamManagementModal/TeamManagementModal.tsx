@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Driver, Team } from '../../types';
+import { useLanguage } from '../../../../i18n/LanguageContext';
 import styles from './TeamManagementModal.module.css';
 
 interface TeamManagementModalProps {
@@ -17,6 +18,7 @@ const TeamManagementModal: React.FC<TeamManagementModalProps> = ({
   drivers,
   driversInTeams,
 }) => {
+  const { t } = useLanguage();
   const [name, setName] = useState('');
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [submitting, setSubmitting] = useState(false);
@@ -43,11 +45,11 @@ const TeamManagementModal: React.FC<TeamManagementModalProps> = ({
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     if (!name.trim()) {
-      setFormError('Team name is required');
+      setFormError(t.teamNameRequired);
       return;
     }
     if (name.length > 100) {
-      setFormError('Team name must be 100 characters or less');
+      setFormError(t.teamNameTooLong);
       return;
     }
     setSubmitting(true);
@@ -66,12 +68,12 @@ const TeamManagementModal: React.FC<TeamManagementModalProps> = ({
     <div className={styles.overlay} role="dialog" aria-modal aria-label="Create team">
       <div className={styles.modal}>
         <div className={styles.header}>
-          <h2 className={styles.title}>Create Team</h2>
+          <h2 className={styles.title}>{t.teamCreateTitle}</h2>
           <button
             className={styles.closeBtn}
             onClick={onClose}
             disabled={submitting}
-            aria-label="Close"
+            aria-label={t.close}
           >
             ×
           </button>
@@ -80,7 +82,7 @@ const TeamManagementModal: React.FC<TeamManagementModalProps> = ({
         <form onSubmit={handleSubmit}>
           <div className={styles.field}>
             <label htmlFor="team-name-input" className={styles.label}>
-              Team name
+              {t.teamNameLabel}
             </label>
             <input
               id="team-name-input"
@@ -90,16 +92,16 @@ const TeamManagementModal: React.FC<TeamManagementModalProps> = ({
               maxLength={100}
               disabled={submitting}
               className={styles.input}
-              placeholder="e.g. Morning Route A"
+              placeholder={t.teamNamePlaceholder}
               autoFocus
             />
           </div>
 
           <div className={styles.field}>
-            <label className={styles.label}>Drivers</label>
+            <label className={styles.label}>{t.teamDriversLabel}</label>
             <div className={styles.driverList}>
               {drivers.length === 0 ? (
-                <p className={styles.emptyDrivers}>No drivers available.</p>
+                <p className={styles.emptyDrivers}>{t.teamNoDrivers}</p>
               ) : (
                 drivers.map((driver) => {
                   const alreadyInTeam =
@@ -117,7 +119,7 @@ const TeamManagementModal: React.FC<TeamManagementModalProps> = ({
                       />
                       <span className={styles.driverName}>{driver.name}</span>
                       {alreadyInTeam && (
-                        <span className={styles.unavailableBadge}>in team</span>
+                        <span className={styles.unavailableBadge}>{t.teamInTeam}</span>
                       )}
                     </label>
                   );
@@ -135,10 +137,10 @@ const TeamManagementModal: React.FC<TeamManagementModalProps> = ({
               disabled={submitting}
               className={styles.cancelBtn}
             >
-              Cancel
+              {t.cancel}
             </button>
             <button type="submit" disabled={submitting} className={styles.submitBtn}>
-              {submitting ? 'Creating…' : 'Create Team'}
+              {submitting ? t.teamCreating : t.teamCreate}
             </button>
           </div>
         </form>

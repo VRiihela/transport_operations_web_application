@@ -1,5 +1,6 @@
 import React from 'react';
 import { JobType, ServiceType, ServicesData } from '../../../types/job';
+import { useLanguage } from '../../../i18n/LanguageContext';
 import styles from './ServicesSection.module.css';
 
 interface ServicesSectionProps {
@@ -24,6 +25,7 @@ const getDefaultServices = (jobType: JobType): ServiceType[] => {
 };
 
 export const ServicesSection: React.FC<ServicesSectionProps> = ({ jobType, data, onChange }) => {
+  const { t } = useLanguage();
   const defaultServices = getDefaultServices(jobType);
 
   const handleServiceToggle = (service: ServiceType) => {
@@ -44,17 +46,17 @@ export const ServicesSection: React.FC<ServicesSectionProps> = ({ jobType, data,
   };
 
   const serviceLabels: Record<ServiceType, string> = {
-    [ServiceType.DELIVERY]: 'Delivery',
-    [ServiceType.PICKUP_COLLECTION]: 'Pickup/collection',
-    [ServiceType.INSTALLATION]: 'Installation',
-    [ServiceType.REMOVAL_DISPOSAL]: 'Removal/disposal',
-    [ServiceType.ASSEMBLY]: 'Assembly',
-    [ServiceType.OTHER]: 'Other',
+    [ServiceType.DELIVERY]: t.serviceDelivery,
+    [ServiceType.PICKUP_COLLECTION]: t.servicePickup,
+    [ServiceType.INSTALLATION]: t.serviceInstallation,
+    [ServiceType.REMOVAL_DISPOSAL]: t.serviceRemoval,
+    [ServiceType.ASSEMBLY]: t.serviceAssembly,
+    [ServiceType.OTHER]: t.serviceOther,
   };
 
   return (
     <div className={styles.servicesSection}>
-      <h3 className={styles.sectionTitle}>Services</h3>
+      <h3 className={styles.sectionTitle}>{t.servicesTitle}</h3>
       <div className={styles.servicesGrid}>
         {Object.values(ServiceType).map((service) => {
           const isSelected = data.selectedServices.includes(service);
@@ -78,7 +80,7 @@ export const ServicesSection: React.FC<ServicesSectionProps> = ({ jobType, data,
                   type="text"
                   value={data.otherServiceText}
                   onChange={handleOtherTextChange}
-                  placeholder="Please specify"
+                  placeholder={t.serviceOtherPlaceholder}
                   className={styles.otherInput}
                 />
               )}

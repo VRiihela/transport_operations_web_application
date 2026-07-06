@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { isAxiosError } from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import axiosInstance from '../api/axios';
+import { useLanguage } from '../i18n/LanguageContext';
 import { downloadCompletionReportPdf } from '../utils/downloadPdf';
 import { CompletionModal } from '../components/CompletionModal';
 import styles from './MyJobsPage.module.css';
@@ -97,6 +98,7 @@ function sortByScheduledStart(jobs: Job[]): Job[] {
 
 const MyJobsPage: React.FC = () => {
   const { logout } = useAuth();
+  const { t, fmtDateTime, fmtTime, statusLabel } = useLanguage();
   const [selectedDate, setSelectedDate] = useState<string>(todayISO);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
@@ -172,35 +174,16 @@ const MyJobsPage: React.FC = () => {
     }
   };
 
-  const formatDateTime = (value: string | null): string => {
-    if (!value) return '';
-    const d = new Date(value);
-    if (isNaN(d.getTime())) return value;
-    return d.toLocaleString('en-GB', {
-      day: '2-digit', month: '2-digit', year: 'numeric',
-      hour: '2-digit', minute: '2-digit',
-      timeZone: 'Europe/Helsinki',
-    });
-  };
-
-  const formatTime = (value: string): string => {
-    const d = new Date(value);
-    return d.toLocaleTimeString('en-GB', {
-      hour: '2-digit', minute: '2-digit',
-      timeZone: 'Europe/Helsinki',
-    });
-  };
-
   const formatSchedulingInfo = (start: string | null, end: string | null, note: string | null): string => {
     if (start || end) {
       if (start && end) {
         const sDate = new Date(start).toLocaleDateString('en-CA', { timeZone: 'Europe/Helsinki' });
         const eDate = new Date(end).toLocaleDateString('en-CA', { timeZone: 'Europe/Helsinki' });
-        const s = formatDateTime(start);
-        const endPart = sDate === eDate ? formatTime(end) : formatDateTime(end);
+        const s = fmtDateTime(start);
+        const endPart = sDate === eDate ? fmtTime(end) : fmtDateTime(end);
         return `${s} – ${endPart}`;
       }
-      return formatDateTime(start) || formatDateTime(end);
+      return fmtDateTime(start) || fmtDateTime(end);
     }
     return note ?? '—';
   };
@@ -236,9 +219,9 @@ const MyJobsPage: React.FC = () => {
     return (
       <div className={styles.container}>
         <div className={styles.pageHeader}>
-          <h1>My Jobs</h1>
+          <h1>{t.myJobsHeading}</h1>
         </div>
-        <div className={styles.loading}>Loading your jobs...</div>
+        <div className={styles.loading}>{t.loading}</div>
       </div>
     );
   }
@@ -247,13 +230,13 @@ const MyJobsPage: React.FC = () => {
     return (
       <div className={styles.container}>
         <div className={styles.pageHeader}>
-          <h1>My Jobs</h1>
-          <button className={styles.logoutButton} onClick={() => void logout()}>Logout</button>
+          <h1>{t.myJobsHeading}</h1>
+          <button className={styles.logoutButton} onClick={() => void logout()}>{t.logout}</button>
         </div>
         <div className={styles.error}>
           {error}
           <button onClick={() => void fetchJobs(selectedDate)} className={styles.retryButton}>
-            Try Again
+            {t.tryAgain}
           </button>
         </div>
       </div>
@@ -263,16 +246,16 @@ const MyJobsPage: React.FC = () => {
   return (
     <div className={styles.container}>
       <div className={styles.pageHeader}>
-        <h1>My Jobs</h1>
+        <h1>{t.myJobsHeading}</h1>
         <div className={styles.headerRight}>
           <input
             type="date"
             value={selectedDate}
             onChange={handleDateChange}
             className={styles.datePicker}
-            aria-label="Select date"
+            aria-label={t.schedDate}
           />
-          <button className={styles.logoutButton} onClick={() => void logout()}>Logout</button>
+          <button className={styles.logoutButton} onClick={() => void logout()}>{t.logout}</button>
         </div>
       </div>
 
@@ -285,8 +268,8 @@ const MyJobsPage: React.FC = () => {
 
       {visibleJobs.length === 0 ? (
         <div className={styles.emptyState}>
-          <p>No jobs for the selected date.</p>
-          <p>Select another date or contact the dispatcher.</p>
+          <p>{t.myJobsEmptyDate}</p>
+          <p>{t.myJobsEmptyHint}</p>
         </div>
       ) : (
         <div className={styles.jobsGrid}>
@@ -303,25 +286,25 @@ const MyJobsPage: React.FC = () => {
                     <span className={styles.teamBadge}>{job.team.name}</span>
                   )}
                   <span className={`${styles.statusBadge} ${getStatusBadgeClass(job.status)}`}>
-                    {job.status}
+                    {statusLabel(job.status)}
                   </span>
                 </div>
               </div>
 
               <div className={styles.jobDetails}>
                 <div className={styles.jobDetail}>
-                  <strong>Scheduled:</strong>{' '}
+                  <strong>{t.myJobsScheduled}:</strong>{' '}
                   {(job.scheduledStart || job.scheduledEnd)
                     ? formatSchedulingInfo(job.scheduledStart, job.scheduledEnd, null)
                     : '—'}
                 </div>
                 {job.schedulingNote && (
                   <div className={styles.jobDetail}>
-                    <strong>Note:</strong> {job.schedulingNote}
+                    <strong>{t.myJobsNote}:</strong> {job.schedulingNote}
                   </div>
                 )}
                 <div className={styles.jobDetail}>
-                  <strong>Location:</strong>{' '}
+                  <strong>{t.myJobsLocation}:</strong>{' '}
                   {job.street
                     ? <>
                         {formatAddress(job.street, job.houseNumber, job.stair, job.postalCode, job.city)}
@@ -333,19 +316,19 @@ const MyJobsPage: React.FC = () => {
                 </div>
                 {job.notes && (
                   <div className={styles.jobDetail}>
-                    <strong>Notes:</strong> {job.notes}
+                    <strong>{t.myJobsNotes}:</strong> {job.notes}
                   </div>
                 )}
               </div>
 
               <div className={styles.notesSection}>
-                <label htmlFor={`notes-${job.id}`} className={styles.notesLabel}>Driver notes</label>
+                <label htmlFor={`notes-${job.id}`} className={styles.notesLabel}>{t.myJobsDriverNotes}</label>
                 <textarea
                   id={`notes-${job.id}`}
                   value={draftNotes[job.id] ?? job.driverNotes ?? ''}
                   onChange={(e) => setDraftNotes((prev) => ({ ...prev, [job.id]: e.target.value }))}
                   disabled={job.status === 'COMPLETED' || noteSaveStatus[job.id] === 'saving'}
-                  placeholder={job.status === 'COMPLETED' ? '' : 'Add notes or deviation info…'}
+                  placeholder={job.status === 'COMPLETED' ? '' : t.myJobsNotesPlaceholder}
                   className={`${styles.notesTextarea} ${job.status === 'COMPLETED' ? styles.notesReadOnly : ''}`}
                   maxLength={1000}
                   rows={3}
@@ -363,12 +346,12 @@ const MyJobsPage: React.FC = () => {
                         (draftNotes[job.id] ?? job.driverNotes ?? '') === (job.driverNotes ?? '')
                       }
                     >
-                      {noteSaveStatus[job.id] === 'saving' ? 'Saving…' : 'Save'}
+                      {noteSaveStatus[job.id] === 'saving' ? t.myJobsSaving : t.myJobsSave}
                     </button>
                   )}
                 </div>
                 {noteSaveStatus[job.id] === 'saved' && (
-                  <div className={styles.saveSuccess}>Saved</div>
+                  <div className={styles.saveSuccess}>{t.myJobsSaved}</div>
                 )}
                 {noteSaveStatus[job.id] === 'error' && (
                   <div className={styles.saveError}>{noteSaveError[job.id]}</div>
@@ -383,7 +366,7 @@ const MyJobsPage: React.FC = () => {
                       disabled={updatingJobs.has(job.id)}
                       className={styles.startButton}
                     >
-                      {updatingJobs.has(job.id) ? 'Starting...' : 'Start Job'}
+                      {updatingJobs.has(job.id) ? t.myJobsStarting : t.myJobsStartJob}
                     </button>
                   )}
                   {job.status === 'IN_PROGRESS' && (
@@ -393,14 +376,14 @@ const MyJobsPage: React.FC = () => {
                         disabled={updatingJobs.has(job.id)}
                         className={styles.completeButton}
                       >
-                        {updatingJobs.has(job.id) ? 'Completing...' : 'Mark Completed'}
+                        {updatingJobs.has(job.id) ? t.myJobsCompleting : t.myJobsMarkCompleted}
                       </button>
                     ) : (
                       <button
                         onClick={() => { setCompletionModalJob(job); }}
                         className={styles.reportButton}
                       >
-                        Complete Job
+                        {t.myJobsCompleteJob}
                       </button>
                     )
                   )}
@@ -416,7 +399,7 @@ const MyJobsPage: React.FC = () => {
                     }}
                     className={styles.downloadButton}
                   >
-                    Download PDF
+                    {t.downloadPdf}
                   </button>
                 </div>
               )}

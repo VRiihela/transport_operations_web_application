@@ -13,6 +13,7 @@ import { customerService } from '../../services/customerService';
 import { createJob } from '../../api/jobs';
 import { useDebounce } from '../../hooks/useDebounce';
 import { ServicesSection, AddressSection, SchedulingSection } from './sections';
+import { useLanguage } from '../../i18n/LanguageContext';
 import styles from './JobCreateModal.module.css';
 
 interface CustomerData {
@@ -63,6 +64,7 @@ const initialScheduling = (): SchedulingData => ({
 });
 
 export const JobCreateModal: React.FC<JobCreateModalProps> = ({ isOpen, onClose, onSuccess }) => {
+  const { t } = useLanguage();
   const [jobType, setJobType] = useState<JobType>(JobType.DELIVERY);
   const [title, setTitle] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -170,7 +172,7 @@ export const JobCreateModal: React.FC<JobCreateModalProps> = ({ isOpen, onClose,
   const handleSubmit = async () => {
     setSubmitError('');
     if (!title.trim()) {
-      setSubmitError('Title is required');
+      setSubmitError(t.createTitleRequired);
       return;
     }
 
@@ -260,12 +262,12 @@ export const JobCreateModal: React.FC<JobCreateModalProps> = ({ isOpen, onClose,
     <div className={styles.overlay} onClick={handleClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.header}>
-          <h2>Create New Job</h2>
+          <h2>{t.createTitle}</h2>
           <button
             type="button"
             className={styles.closeButton}
             onClick={handleClose}
-            aria-label="Close modal"
+            aria-label={t.close}
           >
             ×
           </button>
@@ -274,13 +276,13 @@ export const JobCreateModal: React.FC<JobCreateModalProps> = ({ isOpen, onClose,
         <div className={styles.content}>
           <section className={styles.section}>
             <div className={styles.inputGroup}>
-              <label htmlFor="jobTitle">Title <span style={{ color: '#dc2626' }}>*</span></label>
+              <label htmlFor="jobTitle">{t.createJobTitleLabel} <span style={{ color: '#dc2626' }}>*</span></label>
               <input
                 id="jobTitle"
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Job title"
+                placeholder={t.createJobTitlePlaceholder}
                 className={`${styles.input} ${submitError && !title.trim() ? styles.errorInput : ''}`}
                 maxLength={255}
                 disabled={submitting}
@@ -289,7 +291,7 @@ export const JobCreateModal: React.FC<JobCreateModalProps> = ({ isOpen, onClose,
           </section>
 
           <section className={styles.section}>
-            <h3>Job Type</h3>
+            <h3>{t.createJobTypeLabel}</h3>
             <div className={styles.jobTypeGroup}>
               {Object.values(JobType).map((type) => (
                 <button
@@ -305,21 +307,21 @@ export const JobCreateModal: React.FC<JobCreateModalProps> = ({ isOpen, onClose,
           </section>
 
           <section className={styles.section}>
-            <h3>Customer</h3>
+            <h3>{t.createCustomerLabel}</h3>
 
             <div className={styles.customerSearch}>
               <div className={styles.inputGroup}>
-                <label htmlFor="phone">Phone Number</label>
+                <label htmlFor="phone">{t.createPhoneLabel}</label>
                 <input
                   id="phone"
                   type="tel"
                   value={phoneInput}
                   onChange={(e) => handlePhoneChange(e.target.value)}
-                  placeholder="Search by phone number..."
+                  placeholder={t.createPhonePlaceholder}
                   className={styles.input}
                   autoComplete="off"
                 />
-                {isSearching && <div className={styles.searchingIndicator}>Searching...</div>}
+                {isSearching && <div className={styles.searchingIndicator}>{t.createSearching}</div>}
               </div>
 
               {showDropdown && searchResults.length > 0 && (
@@ -349,25 +351,25 @@ export const JobCreateModal: React.FC<JobCreateModalProps> = ({ isOpen, onClose,
 
             <div className={styles.customerForm}>
               <div className={styles.inputGroup}>
-                <label htmlFor="customerName">Name</label>
+                <label htmlFor="customerName">{t.createCustomerName}</label>
                 <input
                   id="customerName"
                   type="text"
                   value={customerData.name}
                   onChange={(e) => setCustomerData((prev) => ({ ...prev, name: e.target.value }))}
-                  placeholder="Customer name"
+                  placeholder={t.createCustomerNamePlaceholder}
                   className={styles.input}
                 />
               </div>
 
               <div className={styles.inputGroup}>
-                <label htmlFor="companyName">Company Name</label>
+                <label htmlFor="companyName">{t.createCompanyName}</label>
                 <input
                   id="companyName"
                   type="text"
                   value={customerData.companyName}
                   onChange={(e) => setCustomerData((prev) => ({ ...prev, companyName: e.target.value }))}
-                  placeholder="Company name (optional)"
+                  placeholder={t.createCompanyNamePlaceholder}
                   className={styles.input}
                 />
               </div>
@@ -378,14 +380,14 @@ export const JobCreateModal: React.FC<JobCreateModalProps> = ({ isOpen, onClose,
                   className={`${styles.toggleButton} ${customerData.type === 'PRIVATE' ? styles.active : ''}`}
                   onClick={() => setCustomerData((prev) => ({ ...prev, type: 'PRIVATE' }))}
                 >
-                  Private
+                  {t.createPrivate}
                 </button>
                 <button
                   type="button"
                   className={`${styles.toggleButton} ${customerData.type === 'BUSINESS' ? styles.active : ''}`}
                   onClick={() => setCustomerData((prev) => ({ ...prev, type: 'BUSINESS' }))}
                 >
-                  Business
+                  {t.createBusiness}
                 </button>
               </div>
             </div>
@@ -416,7 +418,7 @@ export const JobCreateModal: React.FC<JobCreateModalProps> = ({ isOpen, onClose,
               onClick={handleClose}
               disabled={submitting}
             >
-              Cancel
+              {t.cancel}
             </button>
             <button
               type="button"
@@ -424,7 +426,7 @@ export const JobCreateModal: React.FC<JobCreateModalProps> = ({ isOpen, onClose,
               onClick={() => void handleSubmit()}
               disabled={submitting}
             >
-              {submitting ? 'Saving…' : 'Save Job'}
+              {submitting ? t.createSaving : t.createSaveJob}
             </button>
           </div>
         </div>

@@ -34,8 +34,7 @@ import { useTeams } from './hooks/useTeams';
 import styles from './DispatcherBoard.module.css';
 import { Job, Driver } from './types';
 import { PageNav } from '../../components/PageNav';
-
-const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+import { useLanguage } from '../../i18n/LanguageContext';
 
 interface DroppableDayColumnProps {
   day: Date;
@@ -69,11 +68,12 @@ interface DroppableUnscheduledProps {
 }
 
 const DroppableUnscheduled: React.FC<DroppableUnscheduledProps> = ({ jobs, onCardClick }) => {
+  const { t } = useLanguage();
   const { isOver, setNodeRef } = useDroppable({ id: 'unscheduled' });
   return (
     <section ref={setNodeRef} className={`${styles.unscheduledSection} ${isOver ? styles.unscheduledOver : ''}`}>
       <h2 className={styles.sectionHeading}>
-        Aikatauluttamattomat <span className={styles.count}>{jobs.length}</span>
+        {t.boardUnscheduled} <span className={styles.count}>{jobs.length}</span>
       </h2>
       <div className={styles.unscheduledGrid}>
         {jobs.map((job) => (
@@ -125,11 +125,6 @@ function todayISO(): string {
 }
 
 
-function formatAssignDate(dateStr: string): string {
-  const [year, month, day] = dateStr.split('-');
-  return `${day}.${month}.${year}`;
-}
-
 function dateOffset(days: number): string {
   const d = new Date();
   d.setDate(d.getDate() + days);
@@ -143,6 +138,7 @@ function shiftDate(dateStr: string, days: number): string {
 }
 
 const DispatcherBoard: React.FC = () => {
+  const { t } = useLanguage();
   const [view, setView] = useState<'assign' | 'schedule'>('assign');
   const [selectedDate, setSelectedDate] = useState<string>(todayISO);
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -357,12 +353,17 @@ const DispatcherBoard: React.FC = () => {
   };
 
   const weekDays = getWeekDays(weekStart);
-  const weekLabel = `${format(weekDays[0], 'd/M')} – ${format(weekDays[6], 'd/M/yyyy')}`;
+  const weekLabel = `${format(weekDays[0], t.dateDayMonth)} – ${format(weekDays[6], t.dateDayMonthYear)}`;
+  const dateSep = t.dateDayMonth.includes('.') ? '.' : '/';
+  const formatAssignDateLocale = (dateStr: string): string => {
+    const [year, month, day] = dateStr.split('-');
+    return `${day}${dateSep}${month}${dateSep}${year}`;
+  };
 
   if (loading) {
     return (
       <div className={styles.board}>
-        <p className={styles.statusMessage}>Loading board data…</p>
+        <p className={styles.statusMessage}>{t.loading}</p>
       </div>
     );
   }
@@ -384,20 +385,20 @@ const DispatcherBoard: React.FC = () => {
     >
       <div className={styles.board}>
         <header className={styles.header}>
-          <h1 className={styles.title}>Dispatcher Board</h1>
+          <h1 className={styles.title}>{t.navDispatcherBoard}</h1>
           <PageNav />
           <div className={styles.viewToggle}>
             <button
               className={`${styles.viewBtn} ${view === 'assign' ? styles.viewBtnActive : ''}`}
               onClick={() => setView('assign')}
             >
-              Assign
+              {t.boardAssignTab}
             </button>
             <button
               className={`${styles.viewBtn} ${view === 'schedule' ? styles.viewBtnActive : ''}`}
               onClick={() => setView('schedule')}
             >
-              Schedule
+              {t.boardScheduleTab}
             </button>
           </div>
         </header>
@@ -408,7 +409,7 @@ const DispatcherBoard: React.FC = () => {
               <button
                 className={styles.navBtn}
                 onClick={() => setSelectedDate(shiftDate(selectedDate, -1))}
-                aria-label="Previous day"
+                aria-label={t.boardPrevDay}
               >←</button>
               <input
                 type="date"
@@ -417,19 +418,19 @@ const DispatcherBoard: React.FC = () => {
                 max={dateOffset(365)}
                 onChange={(e) => { if (e.target.value) setSelectedDate(e.target.value); }}
                 className={styles.datePicker}
-                aria-label="Filter by date"
+                aria-label={t.schedDate}
               />
               <button
                 className={styles.navBtn}
                 onClick={() => setSelectedDate(shiftDate(selectedDate, 1))}
-                aria-label="Next day"
+                aria-label={t.boardNextDay}
               >→</button>
-              <span className={styles.weekLabel}>{formatAssignDate(selectedDate)}</span>
+              <span className={styles.weekLabel}>{formatAssignDateLocale(selectedDate)}</span>
               <button
                 className={styles.createTeamBtn}
                 onClick={() => setShowTeamModal(true)}
               >
-                + Create Team
+                {t.boardCreateTeam}
               </button>
             </div>
             {teamsError && (
@@ -444,7 +445,7 @@ const DispatcherBoard: React.FC = () => {
               onCardClick={setSelectedJob}
             />
             <section className={styles.driversSection}>
-              <h2 className={styles.driversHeading}>Drivers &amp; Teams</h2>
+              <h2 className={styles.driversHeading}>{t.boardDriversTeams}</h2>
               <div className={styles.driverColumns}>
                 {drivers
                   .filter((driver) => !driversInTeams.has(driver.id))
@@ -490,7 +491,7 @@ const DispatcherBoard: React.FC = () => {
               <button
                 className={styles.navBtn}
                 onClick={() => setWeekStart((w) => subWeeks(w, 1))}
-                aria-label="Edellinen viikko"
+                aria-label={t.boardPrevWeek}
               >
                 ←
               </button>
@@ -498,7 +499,7 @@ const DispatcherBoard: React.FC = () => {
               <button
                 className={styles.navBtn}
                 onClick={() => setWeekStart((w) => addWeeks(w, 1))}
-                aria-label="Seuraava viikko"
+                aria-label={t.boardNextWeek}
               >
                 →
               </button>
@@ -507,7 +508,7 @@ const DispatcherBoard: React.FC = () => {
                 className={styles.datePicker}
                 value={datePickerValue}
                 onChange={handleDatePicker}
-                aria-label="Siirry viikolle"
+                aria-label={t.boardJumpToWeek}
               />
             </div>
 
@@ -528,7 +529,7 @@ const DispatcherBoard: React.FC = () => {
                   <DroppableDayColumn
                     key={day.toISOString()}
                     day={day}
-                    dayLabel={`${WEEKDAYS[i]} ${format(day, 'd/M')}`}
+                    dayLabel={`${t.weekdays[i]} ${format(day, t.dateDayMonth)}`}
                     jobs={dayJobs}
                     onCardClick={setSelectedJob}
                   />

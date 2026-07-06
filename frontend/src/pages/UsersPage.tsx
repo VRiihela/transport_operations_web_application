@@ -3,6 +3,7 @@ import { isAxiosError } from 'axios';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import axiosInstance from '../api/axios';
+import { useLanguage } from '../i18n/LanguageContext';
 import styles from './UsersPage.module.css';
 
 type UserRole = 'Admin' | 'Dispatcher' | 'Driver';
@@ -48,6 +49,7 @@ function getApiError(err: unknown, fallback: string): string {
 
 const UsersPage: React.FC = () => {
   const { user: currentUser, logout } = useAuth();
+  const { t } = useLanguage();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -207,9 +209,9 @@ const UsersPage: React.FC = () => {
     return (
       <div className={styles.container}>
         <div className={styles.pageHeader}>
-          <h1>User Management</h1>
+          <h1>{t.usersHeading}</h1>
         </div>
-        <div className={styles.loading}>Loading users...</div>
+        <div className={styles.loading}>{t.loading}</div>
       </div>
     );
   }
@@ -218,15 +220,15 @@ const UsersPage: React.FC = () => {
     <div className={styles.container}>
       <div className={styles.pageHeader}>
         <div className={styles.headerLeft}>
-          <h1>User Management</h1>
-          <Link to="/jobs" className={styles.navLink}>← Jobs</Link>
+          <h1>{t.usersHeading}</h1>
+          <Link to="/jobs" className={styles.navLink}>← {t.navJobsList}</Link>
         </div>
         <div className={styles.headerRight}>
           <button className={styles.createButton} onClick={() => setShowCreateModal(true)}>
-            Create User
+            {t.usersCreateBtn}
           </button>
           <button className={styles.logoutButton} onClick={() => void logout()}>
-            Logout
+            {t.logout}
           </button>
         </div>
       </div>
@@ -243,11 +245,11 @@ const UsersPage: React.FC = () => {
         <table className={styles.table}>
           <thead>
             <tr>
-              <th>Email</th>
-              <th>Name</th>
-              <th>Role</th>
-              <th>Status</th>
-              <th>Actions</th>
+              <th>{t.usersEmail}</th>
+              <th>{t.usersName}</th>
+              <th>{t.usersRole}</th>
+              <th>{t.usersStatus}</th>
+              <th>{t.usersActions}</th>
             </tr>
           </thead>
           <tbody>
@@ -262,7 +264,7 @@ const UsersPage: React.FC = () => {
                 </td>
                 <td>
                   <span className={u.isActive ? styles.activeStatus : styles.inactiveStatus}>
-                    {u.isActive ? 'Active' : 'Inactive'}
+                    {u.isActive ? t.usersActiveLabel : t.usersInactiveLabel}
                   </span>
                 </td>
                 <td>
@@ -271,7 +273,7 @@ const UsersPage: React.FC = () => {
                       className={styles.editButton}
                       onClick={() => openEditModal(u)}
                     >
-                      Edit
+                      {t.edit}
                     </button>
                     {(u.id !== currentUser?.id || !u.isActive) && (
                       <button
@@ -282,15 +284,15 @@ const UsersPage: React.FC = () => {
                         {togglingIds.has(u.id)
                           ? '...'
                           : u.isActive
-                          ? 'Deactivate'
-                          : 'Activate'}
+                          ? t.usersDeactivate
+                          : t.usersActivate}
                       </button>
                     )}
                     <button
                       className={styles.resetButton}
                       onClick={() => { setResetUser(u); setError(null); }}
                     >
-                      Reset Password
+                      {t.usersResetPassword}
                     </button>
                   </div>
                 </td>
@@ -304,10 +306,10 @@ const UsersPage: React.FC = () => {
       {showCreateModal && (
         <div className={styles.modalOverlay} onClick={() => setShowCreateModal(false)}>
           <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-            <h2>Create New User</h2>
+            <h2>{t.usersCreateTitle}</h2>
             <form onSubmit={(e) => void handleCreateUser(e)} noValidate>
               <div className={styles.formGroup}>
-                <label htmlFor="cu-name">Name *</label>
+                <label htmlFor="cu-name">{t.usersName} *</label>
                 <input
                   id="cu-name"
                   type="text"
@@ -317,7 +319,7 @@ const UsersPage: React.FC = () => {
                 />
               </div>
               <div className={styles.formGroup}>
-                <label htmlFor="cu-email">Email *</label>
+                <label htmlFor="cu-email">{t.usersEmail} *</label>
                 <input
                   id="cu-email"
                   type="email"
@@ -327,7 +329,7 @@ const UsersPage: React.FC = () => {
                 />
               </div>
               <div className={styles.formGroup}>
-                <label htmlFor="cu-password">Password * (min 8 chars)</label>
+                <label htmlFor="cu-password">{t.usersPasswordHint}</label>
                 <input
                   id="cu-password"
                   type="password"
@@ -338,7 +340,7 @@ const UsersPage: React.FC = () => {
                 />
               </div>
               <div className={styles.formGroup}>
-                <label htmlFor="cu-role">Role *</label>
+                <label htmlFor="cu-role">{t.usersRole} *</label>
                 <select
                   id="cu-role"
                   value={createForm.role}
@@ -346,8 +348,8 @@ const UsersPage: React.FC = () => {
                     setCreateForm((p) => ({ ...p, role: e.target.value as 'Driver' | 'Dispatcher' }))
                   }
                 >
-                  <option value="Driver">Driver</option>
-                  <option value="Dispatcher">Dispatcher</option>
+                  <option value="Driver">{t.usersRoleDriver}</option>
+                  <option value="Dispatcher">{t.usersRoleDispatcher}</option>
                 </select>
               </div>
               <div className={styles.modalActions}>
@@ -360,10 +362,10 @@ const UsersPage: React.FC = () => {
                     setError(null);
                   }}
                 >
-                  Cancel
+                  {t.cancel}
                 </button>
                 <button type="submit" className={styles.submitButton} disabled={creating}>
-                  {creating ? 'Creating...' : 'Create User'}
+                  {creating ? t.usersCreating : t.usersCreateBtn}
                 </button>
               </div>
             </form>
@@ -375,10 +377,10 @@ const UsersPage: React.FC = () => {
       {editingUser && (
         <div className={styles.modalOverlay} onClick={() => setEditingUser(null)}>
           <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-            <h2>Edit User</h2>
+            <h2>{t.usersEditTitle}</h2>
             <form onSubmit={(e) => void handleEditUser(e)} noValidate>
               <div className={styles.formGroup}>
-                <label htmlFor="eu-name">Name</label>
+                <label htmlFor="eu-name">{t.usersName}</label>
                 <input
                   id="eu-name"
                   type="text"
@@ -387,7 +389,7 @@ const UsersPage: React.FC = () => {
                 />
               </div>
               <div className={styles.formGroup}>
-                <label htmlFor="eu-email">Email *</label>
+                <label htmlFor="eu-email">{t.usersEmail} *</label>
                 <input
                   id="eu-email"
                   type="email"
@@ -398,7 +400,7 @@ const UsersPage: React.FC = () => {
               </div>
               {editingUser.role !== 'Admin' ? (
                 <div className={styles.formGroup}>
-                  <label htmlFor="eu-role">Role *</label>
+                  <label htmlFor="eu-role">{t.usersRole} *</label>
                   <select
                     id="eu-role"
                     value={editForm.role}
@@ -406,14 +408,14 @@ const UsersPage: React.FC = () => {
                       setEditForm((p) => ({ ...p, role: e.target.value as 'Driver' | 'Dispatcher' }))
                     }
                   >
-                    <option value="Driver">Driver</option>
-                    <option value="Dispatcher">Dispatcher</option>
+                    <option value="Driver">{t.usersRoleDriver}</option>
+                    <option value="Dispatcher">{t.usersRoleDispatcher}</option>
                   </select>
                 </div>
               ) : (
                 <div className={styles.formGroup}>
-                  <label>Role</label>
-                  <input type="text" value="Admin" disabled />
+                  <label>{t.usersRole}</label>
+                  <input type="text" value={t.roleAdmin} disabled />
                 </div>
               )}
               <div className={styles.formGroup}>
@@ -423,7 +425,7 @@ const UsersPage: React.FC = () => {
                     checked={editForm.isActive}
                     onChange={(e) => setEditForm((p) => ({ ...p, isActive: e.target.checked }))}
                   />
-                  Active
+                  {t.usersActiveCheckbox}
                 </label>
               </div>
               <div className={styles.modalActions}>
@@ -432,10 +434,10 @@ const UsersPage: React.FC = () => {
                   className={styles.cancelButton}
                   onClick={() => { setEditingUser(null); setError(null); }}
                 >
-                  Cancel
+                  {t.cancel}
                 </button>
                 <button type="submit" className={styles.submitButton} disabled={saving}>
-                  {saving ? 'Saving...' : 'Save Changes'}
+                  {saving ? t.usersSaving : t.save}
                 </button>
               </div>
             </form>
@@ -447,13 +449,13 @@ const UsersPage: React.FC = () => {
       {resetUser && (
         <div className={styles.modalOverlay} onClick={() => setResetUser(null)}>
           <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-            <h2>Reset Password</h2>
+            <h2>{t.usersResetTitle}</h2>
             <p className={styles.modalSubtitle}>
-              Setting new password for <strong>{resetUser.email}</strong>
+              {t.usersResetFor} <strong>{resetUser.email}</strong>
             </p>
             <form onSubmit={(e) => void handleResetPassword(e)} noValidate>
               <div className={styles.formGroup}>
-                <label htmlFor="rp-password">New Password * (min 8 chars)</label>
+                <label htmlFor="rp-password">{t.usersNewPassword}</label>
                 <input
                   id="rp-password"
                   type="password"
@@ -469,10 +471,10 @@ const UsersPage: React.FC = () => {
                   className={styles.cancelButton}
                   onClick={() => { setResetUser(null); setNewPassword(''); setError(null); }}
                 >
-                  Cancel
+                  {t.cancel}
                 </button>
                 <button type="submit" className={styles.submitButton} disabled={resetting}>
-                  {resetting ? 'Resetting...' : 'Reset Password'}
+                  {resetting ? t.usersResetting : t.usersResetPassword}
                 </button>
               </div>
             </form>

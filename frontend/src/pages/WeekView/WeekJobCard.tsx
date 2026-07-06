@@ -3,6 +3,7 @@ import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import type { Job } from '../../types/jobApi';
 import type { DraggableJobData } from './WeekView.types';
+import { useLanguage } from '../../i18n/LanguageContext';
 import styles from './weekJobCard.module.css';
 
 interface WeekJobCardProps {
@@ -12,14 +13,6 @@ interface WeekJobCardProps {
   onErrorClear?: () => void;
   isOverlay?: boolean;
   onClick?: () => void;
-}
-
-function formatTime(value: string): string {
-  return new Date(value).toLocaleTimeString('en-GB', {
-    hour: '2-digit',
-    minute: '2-digit',
-    timeZone: 'Europe/Helsinki',
-  });
 }
 
 function driverLabel(driver: { name: string | null; email: string }): string {
@@ -34,6 +27,7 @@ export const WeekJobCard: React.FC<WeekJobCardProps> = ({
   isOverlay = false,
   onClick,
 }) => {
+  const { fmtTime, statusLabel } = useLanguage();
   const draggableData: DraggableJobData = { job };
 
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
@@ -81,7 +75,7 @@ export const WeekJobCard: React.FC<WeekJobCardProps> = ({
       aria-roledescription={isDraggable ? 'Draggable job card' : undefined}
     >
       <span className={`${styles.statusBadge} ${styles[statusKey] ?? ''}`}>
-        {job.status.replace('_', ' ')}
+        {statusLabel(job.status)}
       </span>
 
       <div className={styles.title}>{job.title}</div>
@@ -89,10 +83,10 @@ export const WeekJobCard: React.FC<WeekJobCardProps> = ({
       {(job.scheduledStart ?? job.scheduledEnd) && (
         <div className={styles.time}>
           {job.scheduledStart && job.scheduledEnd
-            ? `${formatTime(job.scheduledStart)} – ${formatTime(job.scheduledEnd)}`
+            ? `${fmtTime(job.scheduledStart)} – ${fmtTime(job.scheduledEnd)}`
             : job.scheduledStart
-              ? formatTime(job.scheduledStart)
-              : formatTime(job.scheduledEnd as string)}
+              ? fmtTime(job.scheduledStart)
+              : fmtTime(job.scheduledEnd as string)}
         </div>
       )}
 

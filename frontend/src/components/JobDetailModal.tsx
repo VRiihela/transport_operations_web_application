@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../i18n/LanguageContext';
 import { JOB_TYPE_LABELS, JobType } from '../types/job';
 import { downloadCompletionReportPdf } from '../utils/downloadPdf';
 import styles from './JobDetailModal.module.css';
@@ -57,17 +58,6 @@ interface JobDetailModalProps {
   onEdit?: () => void;
 }
 
-function formatDateTime(value: string | null | undefined): string {
-  if (!value) return '—';
-  const d = new Date(value);
-  if (isNaN(d.getTime())) return value;
-  return d.toLocaleString('en-GB', {
-    day: '2-digit', month: '2-digit', year: 'numeric',
-    hour: '2-digit', minute: '2-digit',
-    timeZone: 'Europe/Helsinki',
-  });
-}
-
 function formatAddress(
   street?: string | null, houseNumber?: string | null, stair?: string | null,
   postalCode?: string | null, city?: string | null,
@@ -77,20 +67,19 @@ function formatAddress(
   return [streetPart, cityPart].filter(Boolean).join(', ') || '—';
 }
 
-function formatScheduling(
-  start?: string | null, end?: string | null, note?: string | null,
-): string {
-  if (start || end) {
-    const s = formatDateTime(start);
-    const e = formatDateTime(end);
-    return start && end ? `${s} – ${e}` : s !== '—' ? s : e;
-  }
-  return note ?? '—';
-}
-
 export const JobDetailModal: React.FC<JobDetailModalProps> = ({ job, isOpen, onClose, onEdit }) => {
   const { user } = useAuth();
+  const { t, fmtDateTime, statusLabel } = useLanguage();
   const canEdit = onEdit && (user?.role === 'Admin' || user?.role === 'Dispatcher');
+
+  const formatScheduling = (start?: string | null, end?: string | null, note?: string | null): string => {
+    if (start || end) {
+      const s = fmtDateTime(start ?? null, '—');
+      const e = fmtDateTime(end ?? null, '—');
+      return start && end ? `${s} – ${e}` : s !== '—' ? s : e;
+    }
+    return note ?? '—';
+  };
 
   if (!isOpen) return null;
 
@@ -105,35 +94,35 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({ job, isOpen, onC
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
-          <h2 className={styles.modalTitle}>Job Details</h2>
+          <h2 className={styles.modalTitle}>{t.detailHeading}</h2>
           <div className={styles.headerActions}>
             {canEdit && (
               <button className={styles.editButton} onClick={onEdit}>
-                Edit
+                {t.edit}
               </button>
             )}
-            <button className={styles.closeButton} onClick={onClose} aria-label="Close">×</button>
+            <button className={styles.closeButton} onClick={onClose} aria-label={t.close}>×</button>
           </div>
         </div>
 
         <dl className={styles.fields}>
           <div className={styles.field}>
-            <dt className={styles.label}>Title</dt>
+            <dt className={styles.label}>{t.colTitle}</dt>
             <dd className={styles.value}>{job.title}</dd>
           </div>
 
           <div className={styles.field}>
-            <dt className={styles.label}>Status</dt>
+            <dt className={styles.label}>{t.colStatus}</dt>
             <dd className={styles.value}>
               <span className={`${styles.badge} ${styles[`status${job.status}`]}`}>
-                {job.status.replace('_', ' ')}
+                {statusLabel(job.status)}
               </span>
             </dd>
           </div>
 
           {job.jobType && (
             <div className={styles.field}>
-              <dt className={styles.label}>Job type</dt>
+              <dt className={styles.label}>{t.detailJobType}</dt>
               <dd className={styles.value}>
                 {JOB_TYPE_LABELS[job.jobType as JobType] ?? job.jobType}
               </dd>
@@ -142,14 +131,14 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({ job, isOpen, onC
 
           {job.services && job.services.length > 0 && (
             <div className={styles.field}>
-              <dt className={styles.label}>Services</dt>
+              <dt className={styles.label}>{t.detailServices}</dt>
               <dd className={styles.value}>{job.services.join(', ')}</dd>
             </div>
           )}
 
           {job.customer && (
             <div className={styles.field}>
-              <dt className={styles.label}>Customer</dt>
+              <dt className={styles.label}>{t.detailCustomer}</dt>
               <dd className={styles.value}>
                 {job.customer.companyName
                   ? `${job.customer.companyName} (${job.customer.name})`
@@ -162,18 +151,18 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({ job, isOpen, onC
 
           {job.description != null && (
             <div className={styles.field}>
-              <dt className={styles.label}>Description</dt>
+              <dt className={styles.label}>{t.detailDescription}</dt>
               <dd className={styles.value}>{job.description || '—'}</dd>
             </div>
           )}
 
           <div className={styles.field}>
-            <dt className={styles.label}>Assigned driver</dt>
+            <dt className={styles.label}>{t.detailAssignedDriver}</dt>
             <dd className={styles.value}>{driverLabel}</dd>
           </div>
 
           <div className={styles.field}>
-            <dt className={styles.label}>Scheduled</dt>
+            <dt className={styles.label}>{t.detailScheduled}</dt>
             <dd className={styles.value}>
               {formatScheduling(job.scheduledStart, job.scheduledEnd, job.schedulingNote)}
             </dd>
@@ -181,7 +170,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({ job, isOpen, onC
 
           {(hasPickupAddress || job.street !== undefined) && (
             <div className={styles.field}>
-              <dt className={styles.label}>Pickup address</dt>
+              <dt className={styles.label}>{t.detailPickupAddress}</dt>
               <dd className={styles.value}>
                 {hasPickupAddress
                   ? formatAddress(job.street, job.houseNumber, job.stair, job.postalCode, job.city)
@@ -192,7 +181,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({ job, isOpen, onC
 
           {(hasDeliveryAddress || job.deliveryStreet !== undefined) && (
             <div className={styles.field}>
-              <dt className={styles.label}>Delivery address</dt>
+              <dt className={styles.label}>{t.detailDeliveryAddress}</dt>
               <dd className={styles.value}>
                 {hasDeliveryAddress
                   ? formatAddress(job.deliveryStreet, job.deliveryHouseNumber, job.deliveryStair, job.deliveryPostalCode, job.deliveryCity)
@@ -203,7 +192,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({ job, isOpen, onC
 
           {job.driverNotes != null && (
             <div className={styles.field}>
-              <dt className={styles.label}>Driver notes</dt>
+              <dt className={styles.label}>{t.detailDriverNotes}</dt>
               <dd className={styles.value}>{job.driverNotes || '—'}</dd>
             </div>
           )}
@@ -212,36 +201,36 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({ job, isOpen, onC
         {job.completionReport && (
           <div className={styles.completionSection}>
             <h3 className={styles.sectionTitle}>
-              Completion report
+              {t.detailCompletionSection}
               {job.completionReport.approvedAt && (
                 <span className={styles.approvedBadge}>
-                  Approved {formatDateTime(job.completionReport.approvedAt)}
+                  {t.detailApproved} {fmtDateTime(job.completionReport.approvedAt)}
                 </span>
               )}
             </h3>
             <dl className={styles.fields}>
               <div className={styles.field}>
-                <dt className={styles.label}>Work done</dt>
+                <dt className={styles.label}>{t.detailWorkDone}</dt>
                 <dd className={styles.value}>{job.completionReport.workDescription}</dd>
               </div>
               <div className={styles.field}>
-                <dt className={styles.label}>Actual time</dt>
+                <dt className={styles.label}>{t.detailActualTime}</dt>
                 <dd className={styles.value}>
-                  {formatDateTime(job.completionReport.actualStart)}
+                  {fmtDateTime(job.completionReport.actualStart)}
                   {' – '}
-                  {formatDateTime(job.completionReport.actualEnd)}
+                  {fmtDateTime(job.completionReport.actualEnd)}
                 </dd>
               </div>
               <div className={styles.field}>
-                <dt className={styles.label}>Hours</dt>
+                <dt className={styles.label}>{t.detailHours}</dt>
                 <dd className={styles.value}>{job.completionReport.totalHours.toFixed(2)} h</dd>
               </div>
               <div className={styles.field}>
-                <dt className={styles.label}>Customer</dt>
+                <dt className={styles.label}>{t.detailCustomer}</dt>
                 <dd className={styles.value}>{job.completionReport.customerName}</dd>
               </div>
               <div className={styles.field}>
-                <dt className={styles.label}>Signature</dt>
+                <dt className={styles.label}>{t.detailSignature}</dt>
                 <dd className={styles.value}>
                   <img
                     src={job.completionReport.customerSignature}
@@ -260,7 +249,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({ job, isOpen, onC
                   });
                 }}
               >
-                Download PDF
+                {t.downloadPdf}
               </button>
             )}
           </div>

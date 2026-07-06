@@ -1,5 +1,6 @@
 import React from 'react';
 import { ServiceType, AddressData } from '../../../types/job';
+import { useLanguage } from '../../../i18n/LanguageContext';
 import styles from './AddressSection.module.css';
 
 interface AddressSectionProps {
@@ -28,6 +29,7 @@ const createEmptyAddress = (): AddressData => ({
 });
 
 const AddressBlock: React.FC<AddressBlockProps> = ({ title, data, onChange }) => {
+  const { t } = useLanguage();
   const handleInputChange =
     (field: keyof AddressData) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -41,7 +43,7 @@ const AddressBlock: React.FC<AddressBlockProps> = ({ title, data, onChange }) =>
         <div className={styles.fieldRow}>
           <div className={styles.field}>
             <label className={styles.fieldLabel}>
-              Street Address <span className={styles.required}>*</span>
+              {t.addrStreet} <span className={styles.required}>*</span>
             </label>
             <input
               type="text"
@@ -55,7 +57,7 @@ const AddressBlock: React.FC<AddressBlockProps> = ({ title, data, onChange }) =>
         <div className={styles.fieldRow}>
           <div className={styles.field}>
             <label className={styles.fieldLabel}>
-              Postal Code <span className={styles.required}>*</span>
+              {t.addrPostal} <span className={styles.required}>*</span>
             </label>
             <input
               type="text"
@@ -67,7 +69,7 @@ const AddressBlock: React.FC<AddressBlockProps> = ({ title, data, onChange }) =>
           </div>
           <div className={styles.field}>
             <label className={styles.fieldLabel}>
-              City <span className={styles.required}>*</span>
+              {t.addrCity} <span className={styles.required}>*</span>
             </label>
             <input
               type="text"
@@ -80,7 +82,7 @@ const AddressBlock: React.FC<AddressBlockProps> = ({ title, data, onChange }) =>
         </div>
         <div className={styles.fieldRow}>
           <div className={styles.field}>
-            <label className={styles.fieldLabel}>Floor/Stair</label>
+            <label className={styles.fieldLabel}>{t.addrFloorStair}</label>
             <input
               type="text"
               value={data.floorStair}
@@ -89,7 +91,7 @@ const AddressBlock: React.FC<AddressBlockProps> = ({ title, data, onChange }) =>
             />
           </div>
           <div className={styles.field}>
-            <label className={styles.fieldLabel}>Door Code</label>
+            <label className={styles.fieldLabel}>{t.addrDoorCode}</label>
             <input
               type="text"
               value={data.doorCode}
@@ -100,7 +102,7 @@ const AddressBlock: React.FC<AddressBlockProps> = ({ title, data, onChange }) =>
         </div>
         <div className={styles.fieldRow}>
           <div className={styles.field}>
-            <label className={styles.fieldLabel}>Access Notes</label>
+            <label className={styles.fieldLabel}>{t.addrAccessNotes}</label>
             <textarea
               value={data.accessNotes}
               onChange={handleInputChange('accessNotes')}
@@ -123,6 +125,7 @@ export const AddressSection: React.FC<AddressSectionProps> = ({
   onDeliveryChange,
   onServiceChange,
 }) => {
+  const { t } = useLanguage();
   const hasPickup = selectedServices.includes(ServiceType.PICKUP_COLLECTION);
   const hasDelivery = selectedServices.includes(ServiceType.DELIVERY);
   const hasNeitherPickupNorDelivery = !hasPickup && !hasDelivery;
@@ -130,25 +133,25 @@ export const AddressSection: React.FC<AddressSectionProps> = ({
 
   return (
     <div className={styles.addressSection}>
-      <h3 className={styles.sectionTitle}>Address Information</h3>
+      <h3 className={styles.sectionTitle}>{t.addrTitle}</h3>
       <div className={styles.addressBlocks}>
         {hasPickup && (
           <AddressBlock
-            title="Pickup Address"
+            title={t.addrPickup}
             data={pickupAddress ?? createEmptyAddress()}
             onChange={onPickupChange!}
           />
         )}
         {hasDelivery && (
           <AddressBlock
-            title="Delivery Address"
+            title={t.addrDelivery}
             data={deliveryAddress ?? createEmptyAddress()}
             onChange={onDeliveryChange!}
           />
         )}
         {hasNeitherPickupNorDelivery && hasAnyService && (
           <AddressBlock
-            title="Service Address"
+            title={t.addrService}
             data={serviceAddress ?? createEmptyAddress()}
             onChange={onServiceChange!}
           />

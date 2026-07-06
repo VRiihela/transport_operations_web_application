@@ -1,6 +1,8 @@
 import React, { useState, FormEvent } from 'react';
 import { useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../i18n/LanguageContext';
+import { LangToggle } from '../components/LangToggle/LangToggle';
 import styles from './LoginPage.module.css';
 
 const LoginPage: React.FC = () => {
@@ -10,6 +12,7 @@ const LoginPage: React.FC = () => {
   const [error, setError] = useState<string>('');
 
   const { user, login } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -21,7 +24,7 @@ const LoginPage: React.FC = () => {
     e.preventDefault();
 
     if (!email || !password) {
-      setError('Please fill in all fields');
+      setError(t.authFillFields);
       return;
     }
 
@@ -32,7 +35,7 @@ const LoginPage: React.FC = () => {
       await login(email, password);
       navigate(from, { replace: true });
     } catch {
-      setError('Invalid login credentials');
+      setError(t.authBadCredentials);
     } finally {
       setLoading(false);
     }
@@ -41,12 +44,15 @@ const LoginPage: React.FC = () => {
   return (
     <div className={styles.container}>
       <div className={styles.loginForm}>
-        <h1 className={styles.title}>Login</h1>
+        <div className={styles.langRow}>
+          <LangToggle />
+        </div>
+        <h1 className={styles.title}>{t.authTitle}</h1>
 
         <form onSubmit={handleSubmit} className={styles.form} noValidate>
           <div className={styles.formGroup}>
             <label htmlFor="email" className={styles.label}>
-              Email
+              {t.authEmail}
             </label>
             <input
               type="email"
@@ -61,7 +67,7 @@ const LoginPage: React.FC = () => {
 
           <div className={styles.formGroup}>
             <label htmlFor="password" className={styles.label}>
-              Password
+              {t.authPassword}
             </label>
             <input
               type="password"
@@ -85,7 +91,7 @@ const LoginPage: React.FC = () => {
             disabled={loading}
             className={`${styles.submitButton} ${loading ? styles.loading : ''}`}
           >
-            {loading ? 'Signing in...' : 'Sign In'}
+            {loading ? t.authSigningIn : t.authSignIn}
           </button>
         </form>
       </div>

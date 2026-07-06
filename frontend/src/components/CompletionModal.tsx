@@ -3,6 +3,7 @@ import { isAxiosError } from 'axios';
 import axiosInstance from '../api/axios';
 import { downloadCompletionReportPdf } from '../utils/downloadPdf';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../i18n/LanguageContext';
 import { SignatureCanvas, SignatureCanvasHandle } from './SignatureCanvas';
 import styles from './CompletionModal.module.css';
 
@@ -28,31 +29,6 @@ interface CompletionModalProps {
 
 type ModalStep = 'report' | 'signature';
 
-function formatDateTime(value: string): string {
-  const d = new Date(value);
-  if (isNaN(d.getTime())) return value;
-  return d.toLocaleString('en-GB', {
-    day: '2-digit', month: '2-digit', year: 'numeric',
-    hour: '2-digit', minute: '2-digit',
-    timeZone: 'Europe/Helsinki',
-  });
-}
-
-function formatTime(value: string): string {
-  const d = new Date(value);
-  return d.toLocaleTimeString('en-GB', {
-    hour: '2-digit', minute: '2-digit',
-    timeZone: 'Europe/Helsinki',
-  });
-}
-
-function formatTimeRange(start: string, end: string): string {
-  const sDate = new Date(start).toLocaleDateString('en-CA', { timeZone: 'Europe/Helsinki' });
-  const eDate = new Date(end).toLocaleDateString('en-CA', { timeZone: 'Europe/Helsinki' });
-  const startFormatted = formatDateTime(start);
-  const endPart = sDate === eDate ? formatTime(end) : formatDateTime(end);
-  return `${startFormatted} – ${endPart}`;
-}
 
 function calculateTotalHours(start: string, end: string): number {
   const diff = new Date(end).getTime() - new Date(start).getTime();
@@ -83,6 +59,14 @@ export const CompletionModal: React.FC<CompletionModalProps> = ({
   onApproved,
 }) => {
   const { user } = useAuth();
+  const { t, fmtDateTime, fmtTime } = useLanguage();
+
+  const formatTimeRange = (start: string, end: string): string => {
+    const sDate = new Date(start).toLocaleDateString('en-CA', { timeZone: 'Europe/Helsinki' });
+    const eDate = new Date(end).toLocaleDateString('en-CA', { timeZone: 'Europe/Helsinki' });
+    const endPart = sDate === eDate ? fmtTime(end) : fmtDateTime(end);
+    return `${fmtDateTime(start)} – ${endPart}`;
+  };
   const [step, setStep] = useState<ModalStep>('report');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -182,16 +166,16 @@ export const CompletionModal: React.FC<CompletionModalProps> = ({
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
           <h2 className={styles.modalTitle}>
-            {step === 'report' ? 'Completion Report' : 'Customer Signature'}
+            {step === 'report' ? t.reportTitle : t.reportSignatureTitle}
           </h2>
-          <button className={styles.closeButton} onClick={handleClose} aria-label="Close">
+          <button className={styles.closeButton} onClick={handleClose} aria-label={t.close}>
             ×
           </button>
         </div>
 
         {isLocked && (
           <div className={styles.lockedBanner}>
-            <span className={styles.lockedMessage}>Approved — locked for editing</span>
+            <span className={styles.lockedMessage}>{t.reportLocked}</span>
             {user?.role === 'Admin' && (
               <div className={styles.unlockSection}>
                 <button
@@ -200,7 +184,7 @@ export const CompletionModal: React.FC<CompletionModalProps> = ({
                   onClick={() => void handleUnlock()}
                   disabled={unlocking}
                 >
-                  {unlocking ? 'Unlocking…' : 'Unlock for editing'}
+                  {unlocking ? t.reportUnlocking : t.reportUnlock}
                 </button>
                 {unlockError && <div className={styles.unlockError}>{unlockError}</div>}
               </div>
@@ -219,7 +203,7 @@ export const CompletionModal: React.FC<CompletionModalProps> = ({
                 });
               }}
             >
-              Download PDF
+              {t.downloadPdf}
             </button>
           </div>
         )}
@@ -230,7 +214,7 @@ export const CompletionModal: React.FC<CompletionModalProps> = ({
           <form onSubmit={handleReportNext}>
             <div className={styles.formGroup}>
               <label htmlFor="cr-workDescription" className={styles.label}>
-                Work Description <span className={styles.required}>*</span>
+                {t.reportWorkDescription} <span className={styles.required}>*</span>
               </label>
               <textarea
                 id="cr-workDescription"
@@ -240,13 +224,13 @@ export const CompletionModal: React.FC<CompletionModalProps> = ({
                 maxLength={2000}
                 rows={4}
                 className={styles.textarea}
-                placeholder="Describe the work performed…"
+                placeholder={t.reportWorkDescPlaceholder}
               />
             </div>
             <div className={styles.timeRow}>
               <div className={styles.formGroup}>
                 <label htmlFor="cr-actualStart" className={styles.label}>
-                  Actual Start <span className={styles.required}>*</span>
+                  {t.reportActualStart} <span className={styles.required}>*</span>
                 </label>
                 <input
                   id="cr-actualStart"
@@ -259,7 +243,7 @@ export const CompletionModal: React.FC<CompletionModalProps> = ({
               </div>
               <div className={styles.formGroup}>
                 <label htmlFor="cr-actualEnd" className={styles.label}>
-                  Actual End <span className={styles.required}>*</span>
+                  {t.reportActualEnd} <span className={styles.required}>*</span>
                 </label>
                 <input
                   id="cr-actualEnd"
@@ -272,7 +256,7 @@ export const CompletionModal: React.FC<CompletionModalProps> = ({
               </div>
             </div>
             <div className={styles.formGroup}>
-              <label className={styles.label}>Total Hours</label>
+              <label className={styles.label}>{t.reportTotalHours}</label>
               <input
                 type="text"
                 value={endIsAfterStart ? totalHours.toFixed(2) : '—'}
@@ -282,14 +266,14 @@ export const CompletionModal: React.FC<CompletionModalProps> = ({
             </div>
             <div className={styles.actions}>
               <button type="button" className={styles.cancelButton} onClick={handleClose}>
-                Cancel
+                {t.cancel}
               </button>
               <button
                 type="submit"
                 className={styles.primaryButton}
                 disabled={isLocked || !workDescription.trim() || !actualStart || !actualEnd || !endIsAfterStart}
               >
-                Next: Signature
+                {t.reportNextSignature}
               </button>
             </div>
           </form>
@@ -298,30 +282,30 @@ export const CompletionModal: React.FC<CompletionModalProps> = ({
         {step === 'signature' && (
           <div>
             <div className={styles.summary}>
-              <h3 className={styles.summaryTitle}>Job Summary</h3>
+              <h3 className={styles.summaryTitle}>{t.reportSummaryTitle}</h3>
               <div className={styles.summaryRow}>
-                <strong>Job:</strong> {job.title}
+                <strong>{t.reportSummaryJob}:</strong> {job.title}
               </div>
               {(job.street || job.location) && (
                 <div className={styles.summaryRow}>
-                  <strong>Address:</strong> {formatAddress(job)}
+                  <strong>{t.reportSummaryAddress}:</strong> {formatAddress(job)}
                 </div>
               )}
               <div className={styles.summaryRow}>
-                <strong>Work:</strong> {workDescription}
+                <strong>{t.reportSummaryWork}:</strong> {workDescription}
               </div>
               <div className={styles.summaryRow}>
-                <strong>Time:</strong> {formatTimeRange(actualStart, actualEnd)}
+                <strong>{t.reportSummaryTime}:</strong> {formatTimeRange(actualStart, actualEnd)}
               </div>
               <div className={styles.summaryRow}>
-                <strong>Total:</strong> {totalHours.toFixed(2)} h
+                <strong>{t.reportSummaryTotal}:</strong> {totalHours.toFixed(2)} h
               </div>
             </div>
 
             <form onSubmit={(e) => void handleApproveSubmit(e)}>
               <div className={styles.formGroup}>
                 <label className={styles.label}>
-                  Customer Signature <span className={styles.required}>*</span>
+                  {t.reportSignatureTitle} <span className={styles.required}>*</span>
                 </label>
                 <SignatureCanvas
                   ref={signatureRef}
@@ -332,7 +316,7 @@ export const CompletionModal: React.FC<CompletionModalProps> = ({
               </div>
               <div className={styles.formGroup}>
                 <label htmlFor="cr-customerName" className={styles.label}>
-                  Customer Name <span className={styles.required}>*</span>
+                  {t.reportCustomerName} <span className={styles.required}>*</span>
                 </label>
                 <input
                   id="cr-customerName"
@@ -342,7 +326,7 @@ export const CompletionModal: React.FC<CompletionModalProps> = ({
                   required
                   maxLength={100}
                   className={styles.input}
-                  placeholder="Enter customer name"
+                  placeholder={t.reportCustomerNamePlaceholder}
                 />
               </div>
               <div className={styles.actions}>
@@ -351,14 +335,14 @@ export const CompletionModal: React.FC<CompletionModalProps> = ({
                   className={styles.cancelButton}
                   onClick={() => { setStep('report'); setError(null); }}
                 >
-                  Back
+                  {t.back}
                 </button>
                 <button
                   type="submit"
                   className={styles.approveButton}
                   disabled={isLocked || loading || !customerName.trim() || !hasSignature}
                 >
-                  {loading ? 'Approving…' : 'Approve & Sign'}
+                  {loading ? t.reportApproving : t.reportApproveSign}
                 </button>
               </div>
             </form>

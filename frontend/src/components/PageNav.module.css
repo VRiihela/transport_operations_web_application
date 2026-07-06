@@ -1,6 +1,7 @@
 .pageNav {
   display: flex;
-  gap: 3px;
+  gap: 6px;
+  align-items: center;
   background: #f3f4f6;
   border-radius: 8px;
   padding: 3px;

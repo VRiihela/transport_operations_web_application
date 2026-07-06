@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { startOfWeek, addWeeks, subWeeks, addDays, format } from 'date-fns';
 import { useAuth } from '../contexts/AuthContext';
 import axiosInstance from '../api/axios';
+import { useLanguage } from '../i18n/LanguageContext';
 import { PageNav } from '../components/PageNav';
 import { JobDetailModal } from '../components/JobDetailModal';
 import { JobCreateModal } from '../components/JobCreateModal/JobCreateModal';
@@ -73,6 +74,7 @@ const STATUS_TRANSITIONS: Record<JobStatus, JobStatus[]> = {
 
 const JobsPage: React.FC = () => {
   const { user, logout } = useAuth();
+  const { t, fmtDateTime, fmtTime, statusLabel } = useLanguage();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -229,35 +231,16 @@ const JobsPage: React.FC = () => {
     setEditingJob(null);
   };
 
-  const formatDateTime = (value: string | null): string => {
-    if (!value) return '';
-    const d = new Date(value);
-    if (isNaN(d.getTime())) return value;
-    return d.toLocaleString('en-GB', {
-      day: '2-digit', month: '2-digit', year: 'numeric',
-      hour: '2-digit', minute: '2-digit',
-      timeZone: 'Europe/Helsinki',
-    });
-  };
-
-  const formatTime = (value: string): string => {
-    const d = new Date(value);
-    return d.toLocaleTimeString('en-GB', {
-      hour: '2-digit', minute: '2-digit',
-      timeZone: 'Europe/Helsinki',
-    });
-  };
-
   const formatSchedulingInfo = (start: string | null, end: string | null, note: string | null): string => {
     if (start || end) {
       if (start && end) {
         const sDate = new Date(start).toLocaleDateString('en-CA', { timeZone: 'Europe/Helsinki' });
         const eDate = new Date(end).toLocaleDateString('en-CA', { timeZone: 'Europe/Helsinki' });
-        const s = formatDateTime(start);
-        const endPart = sDate === eDate ? formatTime(end) : formatDateTime(end);
+        const s = fmtDateTime(start);
+        const endPart = sDate === eDate ? fmtTime(end) : fmtDateTime(end);
         return `${s} – ${endPart}`;
       }
-      return formatDateTime(start) || formatDateTime(end);
+      return fmtDateTime(start) || fmtDateTime(end);
     }
     return note ?? '—';
   };
@@ -274,7 +257,7 @@ const JobsPage: React.FC = () => {
     return [streetPart, cityPart].filter(Boolean).join(', ');
   };
 
-  const weekLabel = `${format(weekStart, 'd/M')} – ${format(addDays(weekStart, 6), 'd/M/yyyy')}`;
+  const weekLabel = `${format(weekStart, t.dateDayMonth)} – ${format(addDays(weekStart, 6), t.dateDayMonthYear)}`;
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
   const displayJobs = viewMode === 'week'
@@ -288,7 +271,7 @@ const JobsPage: React.FC = () => {
   if (loading) {
     return (
       <div className={styles.container}>
-        <div className={styles.loadingState}>Loading jobs…</div>
+        <div className={styles.loadingState}>{t.jobsLoading}</div>
       </div>
     );
   }
@@ -296,11 +279,11 @@ const JobsPage: React.FC = () => {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h1 className={styles.heading}>Jobs Management</h1>
+        <h1 className={styles.heading}>{t.jobsHeading}</h1>
         <PageNav />
         <div className={styles.headerActions}>
           {user?.role === 'Admin' && (
-            <Link to="/users" className={styles.usersLink}>Users</Link>
+            <Link to="/users" className={styles.usersLink}>{t.usersLink}</Link>
           )}
           {(user?.role === 'Admin' || user?.role === 'Dispatcher') && (
             <button
@@ -308,11 +291,11 @@ const JobsPage: React.FC = () => {
               className={styles.newJobButton}
               onClick={() => setIsCreateModalOpen(true)}
             >
-              New Job
+              {t.jobsNewJob}
             </button>
           )}
           <button className={styles.logoutButton} onClick={() => void logout()}>
-            Logout
+            {t.logout}
           </button>
         </div>
       </div>
@@ -335,7 +318,7 @@ const JobsPage: React.FC = () => {
               className={`${styles.filterButton} ${statusFilter === f ? styles.filterButtonActive : ''}`}
               onClick={() => handleFilterChange(f)}
             >
-              {f === 'active' ? 'Active' : f === 'COMPLETED' ? 'Completed' : 'All'}
+              {f === 'active' ? t.jobsFilterActive : f === 'COMPLETED' ? t.jobsFilterCompleted : t.jobsFilterAll}
             </button>
           ))}
         </div>
@@ -347,7 +330,7 @@ const JobsPage: React.FC = () => {
               className={`${styles.viewBtn} ${viewMode === m ? styles.viewBtnActive : ''}`}
               onClick={() => handleViewModeChange(m)}
             >
-              {m === 'list' ? 'List' : 'Week'}
+              {m === 'list' ? t.jobsViewList : t.jobsViewWeek}
             </button>
           ))}
         </div>
@@ -355,15 +338,15 @@ const JobsPage: React.FC = () => {
 
       {viewMode === 'week' && (
         <div className={styles.weekNav}>
-          <button className={styles.navBtn} onClick={handlePrevWeek} aria-label="Previous week">←</button>
+          <button className={styles.navBtn} onClick={handlePrevWeek} aria-label={t.prevWeek}>←</button>
           <span className={styles.weekLabel}>{weekLabel}</span>
-          <button className={styles.navBtn} onClick={handleNextWeek} aria-label="Next week">→</button>
+          <button className={styles.navBtn} onClick={handleNextWeek} aria-label={t.nextWeek}>→</button>
           <input
             type="date"
             className={styles.datePicker}
             value={datePickerValue}
             onChange={handleDatePicker}
-            aria-label="Jump to week"
+            aria-label={t.jumpToWeek}
           />
         </div>
       )}
@@ -390,10 +373,10 @@ const JobsPage: React.FC = () => {
         <div className={styles.emptyState}>
           <p>
             {statusFilter === 'active'
-              ? 'No active jobs. Create a new job to get started.'
+              ? t.jobsEmptyActive
               : statusFilter === 'COMPLETED'
-                ? 'No completed jobs.'
-                : 'No jobs found.'}
+                ? t.jobsEmptyCompleted
+                : t.jobsEmptyAll}
           </p>
         </div>
       ) : (
@@ -403,7 +386,7 @@ const JobsPage: React.FC = () => {
             <thead>
               <tr>
                 {(['title', 'status', 'driver', 'schedule'] as const).map((field) => {
-                  const labels: Record<typeof field, string> = { title: 'Title', status: 'Status', driver: 'Driver', schedule: 'Scheduled' };
+                  const labels: Record<typeof field, string> = { title: t.colTitle, status: t.colStatus, driver: t.colDriver, schedule: t.colScheduled };
                   const active = sortBy === field;
                   return (
                     <th
@@ -418,7 +401,7 @@ const JobsPage: React.FC = () => {
                     </th>
                   );
                 })}
-                <th className={styles.th}>Actions</th>
+                <th className={styles.th}>{t.colActions}</th>
               </tr>
             </thead>
             <tbody>
@@ -441,48 +424,48 @@ const JobsPage: React.FC = () => {
                     )}
                     {job.driverNotes && job.driverNotes.trim() && (
                       <div className={styles.driverNotesDisplay}>
-                        <span className={styles.driverNotesLabel}>Driver notes:</span> {job.driverNotes}
+                        <span className={styles.driverNotesLabel}>{t.detailDriverNotes}:</span> {job.driverNotes}
                       </div>
                     )}
                     {job.completionReport && (
                       <div className={styles.completionReport}>
                         <div className={styles.completionReportHeader}>
-                          <span className={styles.completionReportTitle}>Completion Report</span>
+                          <span className={styles.completionReportTitle}>{t.detailCompletionSection}</span>
                           {job.completionReport.approvedAt ? (
                             <span className={styles.approvedBadge}>
-                              Approved {formatDateTime(job.completionReport.approvedAt)}
+                              {t.crApprovedAt} {fmtDateTime(job.completionReport.approvedAt)}
                             </span>
                           ) : (
-                            <span className={styles.pendingBadge}>Pending approval</span>
+                            <span className={styles.pendingBadge}>{t.crPending}</span>
                           )}
                         </div>
                         <div className={styles.completionReportRow}>
-                          <strong>Work:</strong> {job.completionReport.workDescription}
+                          <strong>{t.crWork}:</strong> {job.completionReport.workDescription}
                         </div>
                         <div className={styles.completionReportRow}>
-                          <strong>Time:</strong>{' '}
+                          <strong>{t.crTime}:</strong>{' '}
                           {(() => {
                             const s = job.completionReport.actualStart;
                             const e = job.completionReport.actualEnd;
                             const sDate = new Date(s).toLocaleDateString('en-CA', { timeZone: 'Europe/Helsinki' });
                             const eDate = new Date(e).toLocaleDateString('en-CA', { timeZone: 'Europe/Helsinki' });
                             return sDate === eDate
-                              ? `${formatDateTime(s)} – ${formatTime(e)}`
-                              : `${formatDateTime(s)} – ${formatDateTime(e)}`;
+                              ? `${fmtDateTime(s)} – ${fmtTime(e)}`
+                              : `${fmtDateTime(s)} – ${fmtDateTime(e)}`;
                           })()}
                         </div>
                         <div className={styles.completionReportRow}>
-                          <strong>Hours:</strong> {job.completionReport.totalHours.toFixed(2)} h
+                          <strong>{t.crHours}:</strong> {job.completionReport.totalHours.toFixed(2)} h
                         </div>
                         <div className={styles.completionReportRow}>
-                          <strong>Customer:</strong> {job.completionReport.customerName}
+                          <strong>{t.crCustomer}:</strong> {job.completionReport.customerName}
                         </div>
                       </div>
                     )}
                   </td>
                   <td className={styles.td}>
                     <span className={`${styles.statusBadge} ${styles[`status${job.status.replace('_', '')}`]}`}>
-                      {job.status.replace('_', ' ')}
+                      {statusLabel(job.status)}
                     </span>
                   </td>
                   <td className={styles.td}>
@@ -490,7 +473,7 @@ const JobsPage: React.FC = () => {
                       ? driverLabel(job.assignedDriver)
                       : job.team
                         ? job.team.name
-                        : <span className={styles.unassigned}>Unassigned</span>}
+                        : <span className={styles.unassigned}>{t.unassigned}</span>}
                   </td>
                   <td className={styles.td}>{formatSchedulingInfo(job.scheduledStart, job.scheduledEnd, job.schedulingNote)}</td>
                   <td className={styles.td} onClick={(e) => e.stopPropagation()}>
@@ -502,7 +485,7 @@ const JobsPage: React.FC = () => {
                             onClick={() => handleOpenAssign(job.id)}
                             disabled={assigningJobs.has(job.id)}
                           >
-                            {assigningJobs.has(job.id) ? 'Assigning…' : 'Assign Driver'}
+                            {assigningJobs.has(job.id) ? t.jobsAssigning : t.jobsAssignDriver}
                           </button>
                           {openDriverDropdown === job.id && (
                             <select
@@ -516,7 +499,7 @@ const JobsPage: React.FC = () => {
                               disabled={loadingDrivers}
                             >
                               <option value="">
-                                {loadingDrivers ? 'Loading…' : 'Select driver…'}
+                                {loadingDrivers ? t.loading : t.jobsAssignDriver}
                               </option>
                               {drivers.map((d) => (
                                 <option key={d.id} value={d.id}>
@@ -536,15 +519,15 @@ const JobsPage: React.FC = () => {
                           disabled={updatingStatus.has(job.id)}
                         >
                           {updatingStatus.has(job.id)
-                            ? 'Updating…'
-                            : `→ ${next.replace('_', ' ')}`}
+                            ? t.jobsUpdating
+                            : `→ ${statusLabel(next)}`}
                         </button>
                       ))}
                       <button
                         className={styles.editButton}
                         onClick={() => handleEditOpen(job)}
                       >
-                        Edit
+                        {t.edit}
                       </button>
                     </div>
                   </td>
@@ -561,10 +544,10 @@ const JobsPage: React.FC = () => {
               onClick={() => setPage((p) => p - 1)}
               disabled={page <= 1}
             >
-              ← Prev
+              {t.paginationPrev}
             </button>
             <span className={styles.pageInfo}>
-              Page {page} of {pagination.totalPages}
+              {t.paginationPage} {page} {t.paginationOf} {pagination.totalPages}
             </span>
             <button
               type="button"
@@ -572,7 +555,7 @@ const JobsPage: React.FC = () => {
               onClick={() => setPage((p) => p + 1)}
               disabled={page >= pagination.totalPages}
             >
-              Next →
+              {t.paginationNext}
             </button>
           </div>
         )}

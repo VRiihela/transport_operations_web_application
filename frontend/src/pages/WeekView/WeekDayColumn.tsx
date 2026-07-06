@@ -5,10 +5,9 @@ import type { Job } from '../../types/jobApi';
 import type { WeekDragError } from './WeekView.types';
 import { canDrag } from './WeekView.types';
 import { WeekJobCard } from './WeekJobCard';
+import { useLanguage } from '../../i18n/LanguageContext';
 import type { UserRole } from '../../types/auth.types';
 import styles from './weekGrid.module.css';
-
-const DAY_ABBR = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 interface WeekDayColumnProps {
   day: Date;
@@ -29,6 +28,7 @@ export const WeekDayColumn: React.FC<WeekDayColumnProps> = ({
   dragError,
   clearError,
 }) => {
+  const { t } = useLanguage();
   const columnDateISO = format(day, 'yyyy-MM-dd');
   const { isOver, setNodeRef } = useDroppable({ id: columnDateISO });
 
@@ -38,8 +38,8 @@ export const WeekDayColumn: React.FC<WeekDayColumnProps> = ({
       className={`${styles.weekDayCol} ${isOver ? styles.dragOver : ''}`}
     >
       <div className={styles.weekDayHeader}>
-        <span className={styles.weekDayName}>{DAY_ABBR[dayIndex]}</span>
-        <span className={styles.weekDayDate}>{format(day, 'd/M')}</span>
+        <span className={styles.weekDayName}>{t.weekdays[dayIndex]}</span>
+        <span className={styles.weekDayDate}>{format(day, t.dateDayMonth)}</span>
       </div>
       <div className={styles.weekDayBody}>
         {dayJobs.map((job) => (
