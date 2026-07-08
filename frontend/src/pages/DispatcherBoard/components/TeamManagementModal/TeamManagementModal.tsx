@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Driver, Team } from '../../types';
 import { useLanguage } from '../../../../i18n/LanguageContext';
 import styles from './TeamManagementModal.module.css';
+import buttons from '../../../../styles/buttons.module.css';
+import forms from '../../../../styles/forms.module.css';
+import states from '../../../../styles/states.module.css';
 
 interface TeamManagementModalProps {
   isOpen: boolean;
@@ -91,7 +94,7 @@ const TeamManagementModal: React.FC<TeamManagementModalProps> = ({
               onChange={(e) => setName(e.target.value)}
               maxLength={100}
               disabled={submitting}
-              className={styles.input}
+              className={forms.input}
               placeholder={t.teamNamePlaceholder}
               autoFocus
             />
@@ -128,18 +131,18 @@ const TeamManagementModal: React.FC<TeamManagementModalProps> = ({
             </div>
           </div>
 
-          {formError && <p className={styles.formError}>{formError}</p>}
+          {formError && <div className={states.errorBanner}>{formError}</div>}
 
           <div className={styles.actions}>
             <button
               type="button"
               onClick={onClose}
               disabled={submitting}
-              className={styles.cancelBtn}
+              className={`${buttons.btn} ${buttons.btnSecondary}`}
             >
               {t.cancel}
             </button>
-            <button type="submit" disabled={submitting} className={styles.submitBtn}>
+            <button type="submit" disabled={submitting} className={`${buttons.btn} ${buttons.btnPrimary}`}>
               {submitting ? t.teamCreating : t.teamCreate}
             </button>
           </div>

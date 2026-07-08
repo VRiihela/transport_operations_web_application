@@ -13,6 +13,9 @@ import { customerService } from '../services/customerService';
 import { useDebounce } from '../hooks/useDebounce';
 import { ServicesSection, AddressSection, SchedulingSection } from './JobCreateModal/sections';
 import styles from './JobCreateModal/JobCreateModal.module.css';
+import buttons from '../styles/buttons.module.css';
+import forms from '../styles/forms.module.css';
+import states from '../styles/states.module.css';
 
 interface Job {
   id: string;
@@ -315,7 +318,7 @@ export const JobEditModal: React.FC<JobEditModalProps> = ({ job, isOpen, onClose
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Job title"
-                className={`${styles.input} ${submitError && !title.trim() ? styles.errorInput : ''}`}
+                className={`${forms.input} ${submitError && !title.trim() ? styles.errorInput : ''}`}
                 maxLength={255}
                 disabled={submitting}
               />
@@ -332,7 +335,7 @@ export const JobEditModal: React.FC<JobEditModalProps> = ({ job, isOpen, onClose
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
                 placeholder="Customer name"
-                className={styles.input}
+                className={forms.input}
                 maxLength={255}
                 disabled={submitting}
               />
@@ -345,7 +348,7 @@ export const JobEditModal: React.FC<JobEditModalProps> = ({ job, isOpen, onClose
                 value={customerPhone}
                 onChange={(e) => setCustomerPhone(e.target.value)}
                 placeholder="Customer phone"
-                className={styles.input}
+                className={forms.input}
                 maxLength={50}
                 disabled={submitting}
               />
@@ -379,7 +382,7 @@ export const JobEditModal: React.FC<JobEditModalProps> = ({ job, isOpen, onClose
                   value={phoneInput}
                   onChange={(e) => handlePhoneChange(e.target.value)}
                   placeholder="Search by phone number..."
-                  className={styles.input}
+                  className={forms.input}
                   autoComplete="off"
                 />
                 {isSearching && <div className={styles.searchingIndicator}>Searching...</div>}
@@ -416,7 +419,7 @@ export const JobEditModal: React.FC<JobEditModalProps> = ({ job, isOpen, onClose
                   value={customerData.name}
                   onChange={(e) => setCustomerData((prev) => ({ ...prev, name: e.target.value }))}
                   placeholder="Customer name"
-                  className={styles.input}
+                  className={forms.input}
                 />
               </div>
               <div className={styles.inputGroup}>
@@ -427,7 +430,7 @@ export const JobEditModal: React.FC<JobEditModalProps> = ({ job, isOpen, onClose
                   value={customerData.companyName}
                   onChange={(e) => setCustomerData((prev) => ({ ...prev, companyName: e.target.value }))}
                   placeholder="Company name (optional)"
-                  className={styles.input}
+                  className={forms.input}
                 />
               </div>
               <div className={styles.customerTypeToggle}>
@@ -463,13 +466,13 @@ export const JobEditModal: React.FC<JobEditModalProps> = ({ job, isOpen, onClose
 
           <SchedulingSection data={scheduling} onChange={setScheduling} />
 
-          {submitError && <div className={styles.apiError}>{submitError}</div>}
+          {submitError && <div className={states.errorBanner}>{submitError}</div>}
 
           <div className={styles.modalFooter}>
-            <button type="button" className={styles.cancelButton} onClick={handleClose} disabled={submitting}>
+            <button type="button" className={`${buttons.btn} ${buttons.btnSecondary}`} onClick={handleClose} disabled={submitting}>
               Cancel
             </button>
-            <button type="button" className={styles.submitButton} onClick={() => void handleSubmit()} disabled={submitting}>
+            <button type="button" className={`${buttons.btn} ${buttons.btnPrimary}`} onClick={() => void handleSubmit()} disabled={submitting}>
               {submitting ? 'Saving…' : 'Save Changes'}
             </button>
           </div>

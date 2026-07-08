@@ -6,6 +6,9 @@ import { useLanguage } from '../i18n/LanguageContext';
 import { downloadCompletionReportPdf } from '../utils/downloadPdf';
 import { CompletionModal } from '../components/CompletionModal';
 import styles from './MyJobsPage.module.css';
+import buttons from '../styles/buttons.module.css';
+import forms from '../styles/forms.module.css';
+import states from '../styles/states.module.css';
 
 type JobStatus = 'ASSIGNED' | 'IN_PROGRESS' | 'COMPLETED';
 
@@ -221,7 +224,7 @@ const MyJobsPage: React.FC = () => {
         <div className={styles.pageHeader}>
           <h1>{t.myJobsHeading}</h1>
         </div>
-        <div className={styles.loading}>{t.loading}</div>
+        <div className={states.loadingState}>{t.loading}</div>
       </div>
     );
   }
@@ -231,11 +234,14 @@ const MyJobsPage: React.FC = () => {
       <div className={styles.container}>
         <div className={styles.pageHeader}>
           <h1>{t.myJobsHeading}</h1>
-          <button className={styles.logoutButton} onClick={() => void logout()}>{t.logout}</button>
+          <button className={`${buttons.btn} ${buttons.btnSecondary}`} onClick={() => void logout()}>{t.logout}</button>
         </div>
-        <div className={styles.error}>
+        <div className={states.errorBanner}>
           {error}
-          <button onClick={() => void fetchJobs(selectedDate)} className={styles.retryButton}>
+          <button
+            onClick={() => void fetchJobs(selectedDate)}
+            className={`${buttons.btn} ${buttons.btnNeutral} ${buttons.btnSmall}`}
+          >
             {t.tryAgain}
           </button>
         </div>
@@ -255,19 +261,19 @@ const MyJobsPage: React.FC = () => {
             className={styles.datePicker}
             aria-label={t.schedDate}
           />
-          <button className={styles.logoutButton} onClick={() => void logout()}>{t.logout}</button>
+          <button className={`${buttons.btn} ${buttons.btnSecondary}`} onClick={() => void logout()}>{t.logout}</button>
         </div>
       </div>
 
       {error && (
-        <div className={styles.errorBanner} role="alert">
+        <div className={states.errorBanner} role="alert">
           {error}
-          <button className={styles.errorDismiss} onClick={() => setError(null)}>×</button>
+          <button className={states.errorDismiss} onClick={() => setError(null)}>×</button>
         </div>
       )}
 
       {visibleJobs.length === 0 ? (
-        <div className={styles.emptyState}>
+        <div className={states.emptyState}>
           <p>{t.myJobsEmptyDate}</p>
           <p>{t.myJobsEmptyHint}</p>
         </div>
@@ -329,7 +335,7 @@ const MyJobsPage: React.FC = () => {
                   onChange={(e) => setDraftNotes((prev) => ({ ...prev, [job.id]: e.target.value }))}
                   disabled={job.status === 'COMPLETED' || noteSaveStatus[job.id] === 'saving'}
                   placeholder={job.status === 'COMPLETED' ? '' : t.myJobsNotesPlaceholder}
-                  className={`${styles.notesTextarea} ${job.status === 'COMPLETED' ? styles.notesReadOnly : ''}`}
+                  className={forms.textarea}
                   maxLength={1000}
                   rows={3}
                 />
@@ -339,7 +345,7 @@ const MyJobsPage: React.FC = () => {
                   </span>
                   {job.status !== 'COMPLETED' && (
                     <button
-                      className={styles.saveNotesButton}
+                      className={`${buttons.btn} ${buttons.btnPrimary} ${buttons.btnSmall}`}
                       onClick={() => void saveDriverNotes(job.id, job.driverNotes)}
                       disabled={
                         noteSaveStatus[job.id] === 'saving' ||
@@ -364,7 +370,7 @@ const MyJobsPage: React.FC = () => {
                     <button
                       onClick={() => void updateJobStatus(job.id, 'IN_PROGRESS')}
                       disabled={updatingJobs.has(job.id)}
-                      className={styles.startButton}
+                      className={`${buttons.btn} ${buttons.btnSuccess}`}
                     >
                       {updatingJobs.has(job.id) ? t.myJobsStarting : t.myJobsStartJob}
                     </button>
@@ -374,14 +380,14 @@ const MyJobsPage: React.FC = () => {
                       <button
                         onClick={() => void updateJobStatus(job.id, 'COMPLETED')}
                         disabled={updatingJobs.has(job.id)}
-                        className={styles.completeButton}
+                        className={`${buttons.btn} ${buttons.btnSuccess}`}
                       >
                         {updatingJobs.has(job.id) ? t.myJobsCompleting : t.myJobsMarkCompleted}
                       </button>
                     ) : (
                       <button
                         onClick={() => { setCompletionModalJob(job); }}
-                        className={styles.reportButton}
+                        className={`${buttons.btn} ${buttons.btnPrimary}`}
                       >
                         {t.myJobsCompleteJob}
                       </button>
@@ -397,7 +403,7 @@ const MyJobsPage: React.FC = () => {
                         alert('Could not download report. It may have been unlocked or removed.');
                       });
                     }}
-                    className={styles.downloadButton}
+                    className={`${buttons.btn} ${buttons.btnNeutral}`}
                   >
                     {t.downloadPdf}
                   </button>

@@ -1,0 +1,21 @@
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-lg);
+}
+
+.heading {
+  margin: 0;
+  font-size: var(--font-3xl);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.headerActions {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: center;
+}

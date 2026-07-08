@@ -3,6 +3,7 @@ import { useDroppable } from '@dnd-kit/core';
 import { Team, Job } from '../../types';
 import JobCard from '../JobCard/JobCard';
 import styles from './TeamColumn.module.css';
+import buttons from '../../../../styles/buttons.module.css';
 
 interface TeamColumnProps {
   team: Team;
@@ -71,14 +72,14 @@ const TeamColumn: React.FC<TeamColumnProps> = ({ team, jobs, onDelete, onCardCli
               <button
                 onClick={() => { setConfirmDelete(false); setDeleteError(null); }}
                 disabled={deleting}
-                className={styles.cancelBtn}
+                className={`${buttons.btn} ${buttons.btnSecondary} ${buttons.btnSmall}`}
               >
                 Cancel
               </button>
               <button
                 onClick={handleDelete}
                 disabled={deleting}
-                className={styles.confirmDeleteBtn}
+                className={`${buttons.btn} ${buttons.btnDanger} ${buttons.btnSmall}`}
               >
                 {deleting ? 'Deleting…' : 'Delete'}
               </button>

@@ -1,0 +1,69 @@
+:root {
+  /* ── Color: primary (blue) ───────────────────────────────── */
+  --color-primary: #2563eb;
+  --color-primary-hover: #1d4ed8;
+  --color-primary-disabled: #93c5fd;
+  --color-primary-light-bg: #eff6ff;
+  --color-primary-light-border: #bfdbfe;
+  --color-primary-tint-hover: #dbeafe;
+  --color-primary-focus-ring: rgba(37, 99, 235, 0.12);
+
+  /* ── Color: text ─────────────────────────────────────────── */
+  --color-text-primary: #111827;
+  --color-text-secondary: #374151;
+  --color-text-muted: #6b7280;
+  --color-text-faint: #9ca3af;
+  --color-text-on-solid: #ffffff;
+
+  /* ── Color: surfaces / borders ───────────────────────────── */
+  --color-surface: #ffffff;
+  --color-bg-page: #f5f5f5;
+  --color-bg-subtle: #f3f4f6;
+  --color-bg-alt: #f9fafb;
+  --color-border: #d1d5db;
+  --color-border-light: #e5e7eb;
+
+  /* ── Color: danger (red) ─────────────────────────────────── */
+  --color-danger: #b91c1c;
+  --color-danger-strong: #dc2626;
+  --color-danger-bg: #fef2f2;
+  --color-danger-border: #fecaca;
+  --color-danger-disabled: #fca5a5;
+
+  /* ── Color: success (green) ──────────────────────────────── */
+  --color-success: #166534;
+  --color-success-strong: #16a34a;
+  --color-success-strong-hover: #15803d;
+  --color-success-bg: #f0fdf4;
+  --color-success-bg-strong: #dcfce7;
+  --color-success-disabled: #86efac;
+
+  /* ── Color: warning (amber/yellow) ───────────────────────── */
+  --color-warning: #92400e;
+  --color-warning-bg: #fefce8;
+  --color-warning-bg-strong: #fef9c3;
+
+  /* ── Font scale ──────────────────────────────────────────── */
+  --font-xs: 0.75rem;
+  --font-sm: 0.8125rem;
+  --font-base: 0.875rem;
+  --font-md: 0.9375rem;
+  --font-lg: 1rem;
+  --font-xl: 1.125rem;
+  --font-2xl: 1.5rem;
+  --font-3xl: 1.75rem;
+
+  /* ── Spacing scale ───────────────────────────────────────── */
+  --space-xs: 0.375rem;
+  --space-sm: 0.625rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+
+  /* ── Radii ───────────────────────────────────────────────── */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
+  --radius-pill: 999px;
+}

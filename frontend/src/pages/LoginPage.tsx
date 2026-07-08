@@ -4,6 +4,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../i18n/LanguageContext';
 import { LangToggle } from '../components/LangToggle/LangToggle';
 import styles from './LoginPage.module.css';
+import buttons from '../styles/buttons.module.css';
+import forms from '../styles/forms.module.css';
+import states from '../styles/states.module.css';
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState<string>('');
@@ -50,8 +53,8 @@ const LoginPage: React.FC = () => {
         <h1 className={styles.title}>{t.authTitle}</h1>
 
         <form onSubmit={handleSubmit} className={styles.form} noValidate>
-          <div className={styles.formGroup}>
-            <label htmlFor="email" className={styles.label}>
+          <div className={forms.formGroup}>
+            <label htmlFor="email" className={forms.label}>
               {t.authEmail}
             </label>
             <input
@@ -59,14 +62,14 @@ const LoginPage: React.FC = () => {
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className={styles.input}
+              className={forms.input}
               required
               autoComplete="email"
             />
           </div>
 
-          <div className={styles.formGroup}>
-            <label htmlFor="password" className={styles.label}>
+          <div className={forms.formGroup}>
+            <label htmlFor="password" className={forms.label}>
               {t.authPassword}
             </label>
             <input
@@ -74,14 +77,14 @@ const LoginPage: React.FC = () => {
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className={styles.input}
+              className={forms.input}
               required
               autoComplete="current-password"
             />
           </div>
 
           {error && (
-            <div className={styles.error} role="alert">
+            <div className={states.errorBanner} role="alert">
               {error}
             </div>
           )}
@@ -89,7 +92,7 @@ const LoginPage: React.FC = () => {
           <button
             type="submit"
             disabled={loading}
-            className={`${styles.submitButton} ${loading ? styles.loading : ''}`}
+            className={`${buttons.btn} ${buttons.btnPrimary}`}
           >
             {loading ? t.authSigningIn : t.authSignIn}
           </button>

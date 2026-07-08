@@ -1,0 +1,110 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  font-family: inherit;
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s, border-color 0.15s, opacity 0.15s;
+  padding: 0.625rem 1.25rem;
+  font-size: var(--font-base);
+  border: 1px solid transparent;
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+}
+
+/* ── Size modifier ───────────────────────────────────────── */
+.btnSmall {
+  padding: 0.35rem 0.75rem;
+  font-size: var(--font-sm);
+  border-radius: var(--radius-sm);
+}
+
+/* ── Primary (solid blue) ────────────────────────────────── */
+.btnPrimary {
+  background: var(--color-primary);
+  color: var(--color-text-on-solid);
+  border-color: var(--color-primary);
+}
+.btnPrimary:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+}
+.btnPrimary:disabled {
+  background: var(--color-primary-disabled);
+  border-color: var(--color-primary-disabled);
+}
+
+/* ── Primary tint (soft blue ghost — status/next-step actions) ── */
+.btnPrimaryTint {
+  background: var(--color-primary-light-bg);
+  color: var(--color-primary-hover);
+  border-color: var(--color-primary-light-border);
+}
+.btnPrimaryTint:hover:not(:disabled) {
+  background: var(--color-primary-tint-hover);
+}
+.btnPrimaryTint:disabled {
+  opacity: 0.6;
+}
+
+/* ── Secondary (ghost neutral) ───────────────────────────── */
+.btnSecondary {
+  background: transparent;
+  color: var(--color-text-secondary);
+  border-color: var(--color-border);
+}
+.btnSecondary:hover:not(:disabled) {
+  background: var(--color-bg-subtle);
+}
+.btnSecondary:disabled {
+  opacity: 0.6;
+}
+
+/* ── Neutral (solid light-gray — compact table/card actions) ── */
+.btnNeutral {
+  background: var(--color-bg-subtle);
+  color: var(--color-text-secondary);
+  border-color: var(--color-border);
+}
+.btnNeutral:hover:not(:disabled) {
+  background: var(--color-border-light);
+}
+.btnNeutral:disabled {
+  opacity: 0.6;
+}
+
+/* ── Danger (solid red) ──────────────────────────────────── */
+.btnDanger {
+  background: var(--color-danger-strong);
+  color: var(--color-text-on-solid);
+  border-color: var(--color-danger-strong);
+}
+.btnDanger:hover:not(:disabled) {
+  background: var(--color-danger);
+  border-color: var(--color-danger);
+}
+.btnDanger:disabled {
+  background: var(--color-danger-disabled);
+  border-color: var(--color-danger-disabled);
+}
+
+/* ── Success (solid green) ───────────────────────────────── */
+.btnSuccess {
+  background: var(--color-success-strong);
+  color: var(--color-text-on-solid);
+  border-color: var(--color-success-strong);
+}
+.btnSuccess:hover:not(:disabled) {
+  background: var(--color-success-strong-hover);
+  border-color: var(--color-success-strong-hover);
+}
+.btnSuccess:disabled {
+  background: var(--color-success-disabled);
+  border-color: var(--color-success-disabled);
+}

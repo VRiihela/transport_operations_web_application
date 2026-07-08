@@ -15,6 +15,9 @@ import { useDebounce } from '../../hooks/useDebounce';
 import { ServicesSection, AddressSection, SchedulingSection } from './sections';
 import { useLanguage } from '../../i18n/LanguageContext';
 import styles from './JobCreateModal.module.css';
+import buttons from '../../styles/buttons.module.css';
+import forms from '../../styles/forms.module.css';
+import states from '../../styles/states.module.css';
 
 interface CustomerData {
   id?: string;
@@ -283,7 +286,7 @@ export const JobCreateModal: React.FC<JobCreateModalProps> = ({ isOpen, onClose,
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder={t.createJobTitlePlaceholder}
-                className={`${styles.input} ${submitError && !title.trim() ? styles.errorInput : ''}`}
+                className={`${forms.input} ${submitError && !title.trim() ? styles.errorInput : ''}`}
                 maxLength={255}
                 disabled={submitting}
               />
@@ -318,7 +321,7 @@ export const JobCreateModal: React.FC<JobCreateModalProps> = ({ isOpen, onClose,
                   value={phoneInput}
                   onChange={(e) => handlePhoneChange(e.target.value)}
                   placeholder={t.createPhonePlaceholder}
-                  className={styles.input}
+                  className={forms.input}
                   autoComplete="off"
                 />
                 {isSearching && <div className={styles.searchingIndicator}>{t.createSearching}</div>}
@@ -358,7 +361,7 @@ export const JobCreateModal: React.FC<JobCreateModalProps> = ({ isOpen, onClose,
                   value={customerData.name}
                   onChange={(e) => setCustomerData((prev) => ({ ...prev, name: e.target.value }))}
                   placeholder={t.createCustomerNamePlaceholder}
-                  className={styles.input}
+                  className={forms.input}
                 />
               </div>
 
@@ -370,7 +373,7 @@ export const JobCreateModal: React.FC<JobCreateModalProps> = ({ isOpen, onClose,
                   value={customerData.companyName}
                   onChange={(e) => setCustomerData((prev) => ({ ...prev, companyName: e.target.value }))}
                   placeholder={t.createCompanyNamePlaceholder}
-                  className={styles.input}
+                  className={forms.input}
                 />
               </div>
 
@@ -408,13 +411,13 @@ export const JobCreateModal: React.FC<JobCreateModalProps> = ({ isOpen, onClose,
           <SchedulingSection data={scheduling} onChange={setScheduling} />
 
           {submitError && (
-            <div className={styles.apiError}>{submitError}</div>
+            <div className={states.errorBanner}>{submitError}</div>
           )}
 
           <div className={styles.modalFooter}>
             <button
               type="button"
-              className={styles.cancelButton}
+              className={`${buttons.btn} ${buttons.btnSecondary}`}
               onClick={handleClose}
               disabled={submitting}
             >
@@ -422,7 +425,7 @@ export const JobCreateModal: React.FC<JobCreateModalProps> = ({ isOpen, onClose,
             </button>
             <button
               type="button"
-              className={styles.submitButton}
+              className={`${buttons.btn} ${buttons.btnPrimary}`}
               onClick={() => void handleSubmit()}
               disabled={submitting}
             >

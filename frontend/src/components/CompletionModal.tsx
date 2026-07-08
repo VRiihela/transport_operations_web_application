@@ -6,6 +6,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../i18n/LanguageContext';
 import { SignatureCanvas, SignatureCanvasHandle } from './SignatureCanvas';
 import styles from './CompletionModal.module.css';
+import buttons from '../styles/buttons.module.css';
+import forms from '../styles/forms.module.css';
+import states from '../styles/states.module.css';
 
 interface CompletionModalJob {
   id: string;
@@ -196,7 +199,7 @@ export const CompletionModal: React.FC<CompletionModalProps> = ({
           <div className={styles.actions}>
             <button
               type="button"
-              className={styles.downloadButton}
+              className={`${buttons.btn} ${buttons.btnNeutral}`}
               onClick={() => {
                 void downloadCompletionReportPdf(job.id).catch(() => {
                   alert('Could not download report. It may have been unlocked or removed.');
@@ -208,13 +211,13 @@ export const CompletionModal: React.FC<CompletionModalProps> = ({
           </div>
         )}
 
-        {error && <div className={styles.errorBox}>{error}</div>}
+        {error && <div className={states.errorBanner}>{error}</div>}
 
         {step === 'report' && (
           <form onSubmit={handleReportNext}>
-            <div className={styles.formGroup}>
-              <label htmlFor="cr-workDescription" className={styles.label}>
-                {t.reportWorkDescription} <span className={styles.required}>*</span>
+            <div className={forms.formGroup}>
+              <label htmlFor="cr-workDescription" className={forms.label}>
+                {t.reportWorkDescription} <span className={forms.required}>*</span>
               </label>
               <textarea
                 id="cr-workDescription"
@@ -223,14 +226,14 @@ export const CompletionModal: React.FC<CompletionModalProps> = ({
                 required
                 maxLength={2000}
                 rows={4}
-                className={styles.textarea}
+                className={forms.textarea}
                 placeholder={t.reportWorkDescPlaceholder}
               />
             </div>
             <div className={styles.timeRow}>
-              <div className={styles.formGroup}>
-                <label htmlFor="cr-actualStart" className={styles.label}>
-                  {t.reportActualStart} <span className={styles.required}>*</span>
+              <div className={forms.formGroup}>
+                <label htmlFor="cr-actualStart" className={forms.label}>
+                  {t.reportActualStart} <span className={forms.required}>*</span>
                 </label>
                 <input
                   id="cr-actualStart"
@@ -238,12 +241,12 @@ export const CompletionModal: React.FC<CompletionModalProps> = ({
                   value={actualStart}
                   onChange={(e) => setActualStart(e.target.value)}
                   required
-                  className={styles.input}
+                  className={forms.input}
                 />
               </div>
-              <div className={styles.formGroup}>
-                <label htmlFor="cr-actualEnd" className={styles.label}>
-                  {t.reportActualEnd} <span className={styles.required}>*</span>
+              <div className={forms.formGroup}>
+                <label htmlFor="cr-actualEnd" className={forms.label}>
+                  {t.reportActualEnd} <span className={forms.required}>*</span>
                 </label>
                 <input
                   id="cr-actualEnd"
@@ -251,26 +254,26 @@ export const CompletionModal: React.FC<CompletionModalProps> = ({
                   value={actualEnd}
                   onChange={(e) => setActualEnd(e.target.value)}
                   required
-                  className={styles.input}
+                  className={forms.input}
                 />
               </div>
             </div>
-            <div className={styles.formGroup}>
-              <label className={styles.label}>{t.reportTotalHours}</label>
+            <div className={forms.formGroup}>
+              <label className={forms.label}>{t.reportTotalHours}</label>
               <input
                 type="text"
                 value={endIsAfterStart ? totalHours.toFixed(2) : '—'}
                 readOnly
-                className={`${styles.input} ${styles.readOnly}`}
+                className={forms.input}
               />
             </div>
             <div className={styles.actions}>
-              <button type="button" className={styles.cancelButton} onClick={handleClose}>
+              <button type="button" className={`${buttons.btn} ${buttons.btnSecondary}`} onClick={handleClose}>
                 {t.cancel}
               </button>
               <button
                 type="submit"
-                className={styles.primaryButton}
+                className={`${buttons.btn} ${buttons.btnPrimary}`}
                 disabled={isLocked || !workDescription.trim() || !actualStart || !actualEnd || !endIsAfterStart}
               >
                 {t.reportNextSignature}
@@ -303,9 +306,9 @@ export const CompletionModal: React.FC<CompletionModalProps> = ({
             </div>
 
             <form onSubmit={(e) => void handleApproveSubmit(e)}>
-              <div className={styles.formGroup}>
-                <label className={styles.label}>
-                  {t.reportSignatureTitle} <span className={styles.required}>*</span>
+              <div className={forms.formGroup}>
+                <label className={forms.label}>
+                  {t.reportSignatureTitle} <span className={forms.required}>*</span>
                 </label>
                 <SignatureCanvas
                   ref={signatureRef}
@@ -314,9 +317,9 @@ export const CompletionModal: React.FC<CompletionModalProps> = ({
                   height={150}
                 />
               </div>
-              <div className={styles.formGroup}>
-                <label htmlFor="cr-customerName" className={styles.label}>
-                  {t.reportCustomerName} <span className={styles.required}>*</span>
+              <div className={forms.formGroup}>
+                <label htmlFor="cr-customerName" className={forms.label}>
+                  {t.reportCustomerName} <span className={forms.required}>*</span>
                 </label>
                 <input
                   id="cr-customerName"
@@ -325,21 +328,21 @@ export const CompletionModal: React.FC<CompletionModalProps> = ({
                   onChange={(e) => setCustomerName(e.target.value)}
                   required
                   maxLength={100}
-                  className={styles.input}
+                  className={forms.input}
                   placeholder={t.reportCustomerNamePlaceholder}
                 />
               </div>
               <div className={styles.actions}>
                 <button
                   type="button"
-                  className={styles.cancelButton}
+                  className={`${buttons.btn} ${buttons.btnSecondary}`}
                   onClick={() => { setStep('report'); setError(null); }}
                 >
                   {t.back}
                 </button>
                 <button
                   type="submit"
-                  className={styles.approveButton}
+                  className={`${buttons.btn} ${buttons.btnSuccess}`}
                   disabled={isLocked || loading || !customerName.trim() || !hasSignature}
                 >
                   {loading ? t.reportApproving : t.reportApproveSign}

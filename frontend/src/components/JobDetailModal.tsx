@@ -4,6 +4,7 @@ import { useLanguage } from '../i18n/LanguageContext';
 import { JOB_TYPE_LABELS, JobType } from '../types/job';
 import { downloadCompletionReportPdf } from '../utils/downloadPdf';
 import styles from './JobDetailModal.module.css';
+import buttons from '../styles/buttons.module.css';
 
 interface CompletionReport {
   id: string;
@@ -97,7 +98,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({ job, isOpen, onC
           <h2 className={styles.modalTitle}>{t.detailHeading}</h2>
           <div className={styles.headerActions}>
             {canEdit && (
-              <button className={styles.editButton} onClick={onEdit}>
+              <button className={`${buttons.btn} ${buttons.btnPrimary} ${buttons.btnSmall}`} onClick={onEdit}>
                 {t.edit}
               </button>
             )}
@@ -242,7 +243,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({ job, isOpen, onC
             </dl>
             {job.completionReport?.approvedAt && (
               <button
-                className={styles.downloadButton}
+                className={`${buttons.btn} ${buttons.btnNeutral} ${styles.downloadButton}`}
                 onClick={() => {
                   void downloadCompletionReportPdf(job.id).catch(() => {
                     alert('Could not download report. It may have been unlocked or removed.');

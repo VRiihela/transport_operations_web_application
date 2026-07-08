@@ -47,39 +47,11 @@
 }
 
 /* Alerts */
-.loading {
-  color: #6c757d;
-  padding: 2rem 0;
-  text-align: center;
-}
-
-.errorBanner {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: #f8d7da;
-  color: #721c24;
-  border: 1px solid #f5c6cb;
-  border-radius: 6px;
-  padding: 0.75rem 1rem;
-  margin-bottom: 1rem;
-}
-
-.errorDismiss {
-  background: none;
-  border: none;
-  color: #721c24;
-  font-size: 1.25rem;
-  cursor: pointer;
-  line-height: 1;
-  padding: 0 0.25rem;
-}
-
 .successBanner {
-  background-color: #d4edda;
-  color: #155724;
-  border: 1px solid #c3e6cb;
-  border-radius: 6px;
+  background-color: var(--color-success-bg-strong);
+  color: var(--color-success);
+  border: 1px solid var(--color-success-strong);
+  border-radius: var(--radius-md);
   padding: 0.75rem 1rem;
   margin-bottom: 1rem;
 }
@@ -172,108 +144,11 @@
   flex-wrap: wrap;
 }
 
-.activateButton,
-.deactivateButton,
-.resetButton {
-  padding: 0.35rem 0.75rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  white-space: nowrap;
-  transition: background-color 0.15s;
-}
-
-.activateButton {
-  background-color: #198754;
-  color: #fff;
-}
-
-.activateButton:hover:not(:disabled) {
-  background-color: #146c43;
-}
-
-.deactivateButton {
-  background-color: #dc3545;
-  color: #fff;
-}
-
-.deactivateButton:hover:not(:disabled) {
-  background-color: #b02a37;
-}
-
-.resetButton {
-  background-color: #6c757d;
-  color: #fff;
-}
-
-.resetButton:hover:not(:disabled) {
-  background-color: #565e64;
-}
-
-.activateButton:disabled,
-.deactivateButton:disabled,
-.resetButton:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.editButton {
-  padding: 0.35rem 0.75rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  white-space: nowrap;
-  transition: background-color 0.15s;
-  background-color: #0d6efd;
-  color: #fff;
-}
-
-.editButton:hover {
-  background-color: #0b5ed7;
-}
-
 .checkboxLabel {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   cursor: pointer;
-}
-
-/* Header buttons */
-.createButton {
-  padding: 0.5rem 1.125rem;
-  background-color: #0d6efd;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.9375rem;
-  font-weight: 500;
-  transition: background-color 0.15s;
-}
-
-.createButton:hover {
-  background-color: #0b5ed7;
-}
-
-.logoutButton {
-  padding: 0.5rem 1.125rem;
-  background-color: transparent;
-  color: #6c757d;
-  border: 1px solid #dee2e6;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.9375rem;
-  transition: background-color 0.15s, color 0.15s;
-}
-
-.logoutButton:hover {
-  background-color: #f8f9fa;
-  color: #343a40;
 }
 
 /* Modals */
@@ -318,27 +193,28 @@
 }
 
 .formGroup label {
-  font-size: 0.875rem;
+  font-size: var(--font-base);
   font-weight: 500;
-  color: #495057;
+  color: var(--color-text-secondary);
 }
 
 .formGroup input,
 .formGroup select {
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #ced4da;
-  border-radius: 6px;
-  font-size: 0.9375rem;
-  color: #212529;
-  background-color: #fff;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: var(--font-base);
+  font-family: inherit;
+  color: var(--color-text-primary);
+  background-color: var(--color-surface);
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
 .formGroup input:focus,
 .formGroup select:focus {
   outline: none;
-  border-color: #86b7fe;
-  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-focus-ring);
 }
 
 .modalActions {
@@ -346,40 +222,4 @@
   justify-content: flex-end;
   gap: 0.75rem;
   margin-top: 1.5rem;
-}
-
-.cancelButton {
-  padding: 0.5rem 1.125rem;
-  background-color: transparent;
-  color: #6c757d;
-  border: 1px solid #dee2e6;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.9375rem;
-  transition: background-color 0.15s;
-}
-
-.cancelButton:hover {
-  background-color: #f8f9fa;
-}
-
-.submitButton {
-  padding: 0.5rem 1.125rem;
-  background-color: #0d6efd;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.9375rem;
-  font-weight: 500;
-  transition: background-color 0.15s;
-}
-
-.submitButton:hover:not(:disabled) {
-  background-color: #0b5ed7;
-}
-
-.submitButton:disabled {
-  opacity: 0.65;
-  cursor: not-allowed;
 }

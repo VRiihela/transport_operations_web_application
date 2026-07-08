@@ -39,80 +39,6 @@
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
 
-.logoutButton {
-  background: transparent;
-  color: #555;
-  border: 1px solid #d1d5db;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-.logoutButton:hover { background: #f3f4f6; }
-
-.loading {
-  text-align: center;
-  padding: 3rem;
-  font-size: 1.1rem;
-  color: #666;
-}
-
-.error {
-  background-color: #fee;
-  border: 1px solid #fcc;
-  color: #c33;
-  padding: 1rem;
-  border-radius: 4px;
-  text-align: center;
-}
-
-.errorBanner {
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  color: #b91c1c;
-  padding: 0.875rem 1rem;
-  border-radius: 6px;
-  margin-bottom: 1.25rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.errorDismiss {
-  background: none;
-  border: none;
-  color: #b91c1c;
-  font-size: 1.25rem;
-  cursor: pointer;
-  padding: 0 0.25rem;
-}
-
-.retryButton {
-  display: block;
-  margin: 1rem auto 0;
-  padding: 0.5rem 1rem;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.9rem;
-}
-.retryButton:hover { background-color: #0056b3; }
-
-.emptyState {
-  text-align: center;
-  padding: 3rem;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  color: #666;
-}
-.emptyState p {
-  margin-bottom: 0.5rem;
-  font-size: 1.1rem;
-}
-
 .jobsGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
@@ -202,39 +128,6 @@
   gap: 0.5rem;
 }
 
-.startButton,
-.completeButton,
-.reportButton {
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 4px;
-  font-size: 0.9rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-.startButton          { background-color: #28a745; color: white; }
-.startButton:hover:not(:disabled) { background-color: #218838; }
-.completeButton       { background-color: #16a34a; color: white; }
-.completeButton:hover:not(:disabled) { background-color: #15803d; }
-.reportButton         { background-color: #2563eb; color: white; }
-.reportButton:hover   { background-color: #1d4ed8; }
-.startButton:disabled,
-.completeButton:disabled { background-color: #6c757d; cursor: not-allowed; opacity: 0.7; }
-
-.downloadButton {
-  padding: 0.75rem 1.5rem;
-  border: 1px solid #d1d5db;
-  border-radius: 4px;
-  font-size: 0.9rem;
-  font-weight: 500;
-  cursor: pointer;
-  background: #f3f4f6;
-  color: #374151;
-  transition: background-color 0.2s ease;
-}
-.downloadButton:hover { background-color: #e5e7eb; }
-
 /* ── Driver notes ───────────────────────────────────────── */
 .notesSection {
   margin-top: 1rem;
@@ -250,30 +143,6 @@
   margin-bottom: 0.4rem;
 }
 
-.notesTextarea {
-  width: 100%;
-  padding: 0.6rem 0.75rem;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  font-family: inherit;
-  font-size: 0.875rem;
-  resize: vertical;
-  min-height: 80px;
-  outline: none;
-  transition: border-color 0.15s, box-shadow 0.15s;
-  box-sizing: border-box;
-}
-.notesTextarea:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
-}
-
-.notesReadOnly {
-  background-color: #f8f9fa;
-  color: #6b7280;
-  cursor: default;
-}
-
 .notesFooter {
   display: flex;
   justify-content: space-between;
@@ -285,20 +154,6 @@
   font-size: 0.75rem;
   color: #9ca3af;
 }
-
-.saveNotesButton {
-  background: #2563eb;
-  color: #fff;
-  border: none;
-  padding: 0.35rem 0.875rem;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-.saveNotesButton:hover:not(:disabled) { background: #1d4ed8; }
-.saveNotesButton:disabled { background: #93c5fd; cursor: not-allowed; }
 
 .saveSuccess {
   margin-top: 0.35rem;
@@ -318,5 +173,5 @@
   .jobsGrid { grid-template-columns: 1fr; }
   .jobHeader { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
   .jobActions { flex-direction: column; }
-  .startButton, .completeButton { width: 100%; }
+  .jobActions button { width: 100%; }
 }

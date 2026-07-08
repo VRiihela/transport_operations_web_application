@@ -5,6 +5,8 @@ import { useAuth } from '../contexts/AuthContext';
 import axiosInstance from '../api/axios';
 import { useLanguage } from '../i18n/LanguageContext';
 import styles from './UsersPage.module.css';
+import buttons from '../styles/buttons.module.css';
+import states from '../styles/states.module.css';
 
 type UserRole = 'Admin' | 'Dispatcher' | 'Driver';
 
@@ -211,7 +213,7 @@ const UsersPage: React.FC = () => {
         <div className={styles.pageHeader}>
           <h1>{t.usersHeading}</h1>
         </div>
-        <div className={styles.loading}>{t.loading}</div>
+        <div className={states.loadingState}>{t.loading}</div>
       </div>
     );
   }
@@ -224,19 +226,19 @@ const UsersPage: React.FC = () => {
           <Link to="/jobs" className={styles.navLink}>← {t.navJobsList}</Link>
         </div>
         <div className={styles.headerRight}>
-          <button className={styles.createButton} onClick={() => setShowCreateModal(true)}>
+          <button className={`${buttons.btn} ${buttons.btnPrimary}`} onClick={() => setShowCreateModal(true)}>
             {t.usersCreateBtn}
           </button>
-          <button className={styles.logoutButton} onClick={() => void logout()}>
+          <button className={`${buttons.btn} ${buttons.btnSecondary}`} onClick={() => void logout()}>
             {t.logout}
           </button>
         </div>
       </div>
 
       {error && (
-        <div className={styles.errorBanner} role="alert">
+        <div className={states.errorBanner} role="alert">
           {error}
-          <button className={styles.errorDismiss} onClick={() => setError(null)}>×</button>
+          <button className={states.errorDismiss} onClick={() => setError(null)}>×</button>
         </div>
       )}
       {success && <div className={styles.successBanner}>{success}</div>}
@@ -270,14 +272,14 @@ const UsersPage: React.FC = () => {
                 <td>
                   <div className={styles.actions}>
                     <button
-                      className={styles.editButton}
+                      className={`${buttons.btn} ${buttons.btnNeutral} ${buttons.btnSmall}`}
                       onClick={() => openEditModal(u)}
                     >
                       {t.edit}
                     </button>
                     {(u.id !== currentUser?.id || !u.isActive) && (
                       <button
-                        className={u.isActive ? styles.deactivateButton : styles.activateButton}
+                        className={`${buttons.btn} ${u.isActive ? buttons.btnDanger : buttons.btnSuccess} ${buttons.btnSmall}`}
                         onClick={() => void handleToggleActive(u)}
                         disabled={togglingIds.has(u.id)}
                       >
@@ -289,7 +291,7 @@ const UsersPage: React.FC = () => {
                       </button>
                     )}
                     <button
-                      className={styles.resetButton}
+                      className={`${buttons.btn} ${buttons.btnNeutral} ${buttons.btnSmall}`}
                       onClick={() => { setResetUser(u); setError(null); }}
                     >
                       {t.usersResetPassword}
@@ -355,7 +357,7 @@ const UsersPage: React.FC = () => {
               <div className={styles.modalActions}>
                 <button
                   type="button"
-                  className={styles.cancelButton}
+                  className={`${buttons.btn} ${buttons.btnSecondary}`}
                   onClick={() => {
                     setShowCreateModal(false);
                     setCreateForm({ name: '', email: '', password: '', role: 'Driver' });
@@ -364,7 +366,7 @@ const UsersPage: React.FC = () => {
                 >
                   {t.cancel}
                 </button>
-                <button type="submit" className={styles.submitButton} disabled={creating}>
+                <button type="submit" className={`${buttons.btn} ${buttons.btnPrimary}`} disabled={creating}>
                   {creating ? t.usersCreating : t.usersCreateBtn}
                 </button>
               </div>
@@ -431,12 +433,12 @@ const UsersPage: React.FC = () => {
               <div className={styles.modalActions}>
                 <button
                   type="button"
-                  className={styles.cancelButton}
+                  className={`${buttons.btn} ${buttons.btnSecondary}`}
                   onClick={() => { setEditingUser(null); setError(null); }}
                 >
                   {t.cancel}
                 </button>
-                <button type="submit" className={styles.submitButton} disabled={saving}>
+                <button type="submit" className={`${buttons.btn} ${buttons.btnPrimary}`} disabled={saving}>
                   {saving ? t.usersSaving : t.save}
                 </button>
               </div>
@@ -468,12 +470,12 @@ const UsersPage: React.FC = () => {
               <div className={styles.modalActions}>
                 <button
                   type="button"
-                  className={styles.cancelButton}
+                  className={`${buttons.btn} ${buttons.btnSecondary}`}
                   onClick={() => { setResetUser(null); setNewPassword(''); setError(null); }}
                 >
                   {t.cancel}
                 </button>
-                <button type="submit" className={styles.submitButton} disabled={resetting}>
+                <button type="submit" className={`${buttons.btn} ${buttons.btnPrimary}`} disabled={resetting}>
                   {resetting ? t.usersResetting : t.usersResetPassword}
                 </button>
               </div>

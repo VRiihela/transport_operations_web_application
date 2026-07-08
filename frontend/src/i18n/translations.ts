@@ -489,8 +489,8 @@ export const fi: AppTranslations = {
   dateDayMonthYear: 'd.M.yyyy',
   weekdays: ['Ma', 'Ti', 'Ke', 'To', 'Pe', 'La', 'Su'],
 
-  navJobsList: 'Töiden lista',
-  navDispatcherBoard: 'Lähettäjän taulu',
+  navJobsList: 'Työ lista',
+  navDispatcherBoard: 'Ajojärjestelynäkymä',
 
   authTitle: 'Kirjaudu sisään',
   authEmail: 'Sähköposti',
@@ -518,7 +518,7 @@ export const fi: AppTranslations = {
   statusCompleted: 'Valmis',
 
   roleAdmin: 'Ylläpitäjä',
-  roleDispatcher: 'Lähettäjä',
+  roleDispatcher: 'Ajojärjestelijä',
   roleDriver: 'Kuljettaja',
 
   jobsHeading: 'Töiden hallinta',

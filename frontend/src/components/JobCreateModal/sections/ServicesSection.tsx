@@ -2,6 +2,7 @@ import React from 'react';
 import { JobType, ServiceType, ServicesData } from '../../../types/job';
 import { useLanguage } from '../../../i18n/LanguageContext';
 import styles from './ServicesSection.module.css';
+import forms from '../../../styles/forms.module.css';
 
 interface ServicesSectionProps {
   jobType: JobType;
@@ -81,7 +82,7 @@ export const ServicesSection: React.FC<ServicesSectionProps> = ({ jobType, data,
                   value={data.otherServiceText}
                   onChange={handleOtherTextChange}
                   placeholder={t.serviceOtherPlaceholder}
-                  className={styles.otherInput}
+                  className={`${forms.input} ${styles.otherInput}`}
                 />
               )}
             </div>

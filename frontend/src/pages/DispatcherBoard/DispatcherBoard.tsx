@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import {
   DndContext,
   DragEndEvent,
@@ -33,8 +34,10 @@ import { JobEditModal, JobUpdatePayload } from '../../components/JobEditModal';
 import { useTeams } from './hooks/useTeams';
 import styles from './DispatcherBoard.module.css';
 import { Job, Driver } from './types';
-import { PageNav } from '../../components/PageNav';
+import { PageHeader } from '../../components/PageHeader/PageHeader';
 import { useLanguage } from '../../i18n/LanguageContext';
+import { useAuth } from '../../contexts/AuthContext';
+import buttons from '../../styles/buttons.module.css';
 
 interface DroppableDayColumnProps {
   day: Date;
@@ -139,6 +142,7 @@ function shiftDate(dateStr: string, days: number): string {
 
 const DispatcherBoard: React.FC = () => {
   const { t } = useLanguage();
+  const { user, logout } = useAuth();
   const [view, setView] = useState<'assign' | 'schedule'>('assign');
   const [selectedDate, setSelectedDate] = useState<string>(todayISO);
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -384,24 +388,29 @@ const DispatcherBoard: React.FC = () => {
       onDragEnd={handleDragEnd}
     >
       <div className={styles.board}>
-        <header className={styles.header}>
-          <h1 className={styles.title}>{t.navDispatcherBoard}</h1>
-          <PageNav />
-          <div className={styles.viewToggle}>
-            <button
-              className={`${styles.viewBtn} ${view === 'assign' ? styles.viewBtnActive : ''}`}
-              onClick={() => setView('assign')}
-            >
-              {t.boardAssignTab}
-            </button>
-            <button
-              className={`${styles.viewBtn} ${view === 'schedule' ? styles.viewBtnActive : ''}`}
-              onClick={() => setView('schedule')}
-            >
-              {t.boardScheduleTab}
-            </button>
-          </div>
-        </header>
+        <PageHeader title={t.navDispatcherBoard}>
+          {user?.role === 'Admin' && (
+            <Link to="/users" className={`${buttons.btn} ${buttons.btnSecondary}`}>{t.usersLink}</Link>
+          )}
+          <button className={`${buttons.btn} ${buttons.btnSecondary}`} onClick={() => void logout()}>
+            {t.logout}
+          </button>
+        </PageHeader>
+
+        <div className={styles.viewToggle}>
+          <button
+            className={`${styles.viewBtn} ${view === 'assign' ? styles.viewBtnActive : ''}`}
+            onClick={() => setView('assign')}
+          >
+            {t.boardAssignTab}
+          </button>
+          <button
+            className={`${styles.viewBtn} ${view === 'schedule' ? styles.viewBtnActive : ''}`}
+            onClick={() => setView('schedule')}
+          >
+            {t.boardScheduleTab}
+          </button>
+        </div>
 
         {view === 'assign' && (
           <>
@@ -427,7 +436,7 @@ const DispatcherBoard: React.FC = () => {
               >→</button>
               <span className={styles.weekLabel}>{formatAssignDateLocale(selectedDate)}</span>
               <button
-                className={styles.createTeamBtn}
+                className={`${buttons.btn} ${buttons.btnPrimary} ${buttons.btnSmall} ${styles.createTeamBtn}`}
                 onClick={() => setShowTeamModal(true)}
               >
                 {t.boardCreateTeam}

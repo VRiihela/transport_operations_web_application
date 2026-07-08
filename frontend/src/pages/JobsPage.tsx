@@ -5,13 +5,15 @@ import { startOfWeek, addWeeks, subWeeks, addDays, format } from 'date-fns';
 import { useAuth } from '../contexts/AuthContext';
 import axiosInstance from '../api/axios';
 import { useLanguage } from '../i18n/LanguageContext';
-import { PageNav } from '../components/PageNav';
+import { PageHeader } from '../components/PageHeader/PageHeader';
 import { JobDetailModal } from '../components/JobDetailModal';
 import { JobCreateModal } from '../components/JobCreateModal/JobCreateModal';
 import { JobEditModal, JobUpdatePayload } from '../components/JobEditModal';
 import { WeekGrid } from './WeekView/WeekGrid';
 import type { Job, JobStatus, AssignedDriver } from '../types/jobApi';
 import styles from './JobsPage.module.css';
+import buttons from '../styles/buttons.module.css';
+import states from '../styles/states.module.css';
 
 interface Driver {
   id: string;
@@ -271,39 +273,26 @@ const JobsPage: React.FC = () => {
   if (loading) {
     return (
       <div className={styles.container}>
-        <div className={styles.loadingState}>{t.jobsLoading}</div>
+        <div className={states.loadingState}>{t.jobsLoading}</div>
       </div>
     );
   }
 
   return (
     <div className={styles.container}>
-      <div className={styles.header}>
-        <h1 className={styles.heading}>{t.jobsHeading}</h1>
-        <PageNav />
-        <div className={styles.headerActions}>
-          {user?.role === 'Admin' && (
-            <Link to="/users" className={styles.usersLink}>{t.usersLink}</Link>
-          )}
-          {(user?.role === 'Admin' || user?.role === 'Dispatcher') && (
-            <button
-              type="button"
-              className={styles.newJobButton}
-              onClick={() => setIsCreateModalOpen(true)}
-            >
-              {t.jobsNewJob}
-            </button>
-          )}
-          <button className={styles.logoutButton} onClick={() => void logout()}>
-            {t.logout}
-          </button>
-        </div>
-      </div>
+      <PageHeader title={t.jobsHeading}>
+        {user?.role === 'Admin' && (
+          <Link to="/users" className={`${buttons.btn} ${buttons.btnSecondary}`}>{t.usersLink}</Link>
+        )}
+        <button className={`${buttons.btn} ${buttons.btnSecondary}`} onClick={() => void logout()}>
+          {t.logout}
+        </button>
+      </PageHeader>
 
       {error && (
-        <div className={styles.errorBanner} role="alert">
+        <div className={states.errorBanner} role="alert">
           {error}
-          <button className={styles.errorDismiss} onClick={() => setError('')} aria-label="Dismiss">
+          <button className={states.errorDismiss} onClick={() => setError('')} aria-label="Dismiss">
             ×
           </button>
         </div>
@@ -322,17 +311,28 @@ const JobsPage: React.FC = () => {
             </button>
           ))}
         </div>
-        <div className={styles.viewToggle}>
-          {(['list', 'week'] as const).map((m) => (
+        <div className={styles.filterRight}>
+          <div className={styles.viewToggle}>
+            {(['list', 'week'] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                className={`${styles.viewBtn} ${viewMode === m ? styles.viewBtnActive : ''}`}
+                onClick={() => handleViewModeChange(m)}
+              >
+                {m === 'list' ? t.jobsViewList : t.jobsViewWeek}
+              </button>
+            ))}
+          </div>
+          {(user?.role === 'Admin' || user?.role === 'Dispatcher') && (
             <button
-              key={m}
               type="button"
-              className={`${styles.viewBtn} ${viewMode === m ? styles.viewBtnActive : ''}`}
-              onClick={() => handleViewModeChange(m)}
+              className={`${buttons.btn} ${buttons.btnPrimary}`}
+              onClick={() => setIsCreateModalOpen(true)}
             >
-              {m === 'list' ? t.jobsViewList : t.jobsViewWeek}
+              {t.jobsNewJob}
             </button>
-          ))}
+          )}
         </div>
       </div>
 
@@ -370,7 +370,7 @@ const JobsPage: React.FC = () => {
           />
         </div>
       ) : displayJobs.length === 0 ? (
-        <div className={styles.emptyState}>
+        <div className={states.emptyState}>
           <p>
             {statusFilter === 'active'
               ? t.jobsEmptyActive
@@ -481,7 +481,7 @@ const JobsPage: React.FC = () => {
                       {(job.status === 'DRAFT' || job.status === 'ASSIGNED') && (
                         <div className={styles.assignContainer}>
                           <button
-                            className={styles.assignButton}
+                            className={`${buttons.btn} ${buttons.btnNeutral} ${buttons.btnSmall}`}
                             onClick={() => handleOpenAssign(job.id)}
                             disabled={assigningJobs.has(job.id)}
                           >
@@ -514,7 +514,7 @@ const JobsPage: React.FC = () => {
                       {STATUS_TRANSITIONS[job.status].map((next) => (
                         <button
                           key={next}
-                          className={styles.statusButton}
+                          className={`${buttons.btn} ${buttons.btnPrimaryTint} ${buttons.btnSmall}`}
                           onClick={() => void handleStatusUpdate(job.id, next)}
                           disabled={updatingStatus.has(job.id)}
                         >
@@ -524,7 +524,7 @@ const JobsPage: React.FC = () => {
                         </button>
                       ))}
                       <button
-                        className={styles.editButton}
+                        className={`${buttons.btn} ${buttons.btnNeutral} ${buttons.btnSmall}`}
                         onClick={() => handleEditOpen(job)}
                       >
                         {t.edit}

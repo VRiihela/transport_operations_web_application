@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState, useCallback, forwardRef, useImperativeHandle } from 'react';
 import styles from './SignatureCanvas.module.css';
+import buttons from '../styles/buttons.module.css';
 
 interface SignatureCanvasProps {
   width?: number;
@@ -145,7 +146,7 @@ export const SignatureCanvas = forwardRef<SignatureCanvasHandle, SignatureCanvas
           style={{ touchAction: 'none' }}
         />
         <div className={styles.controls}>
-          <button type="button" onClick={clearCanvas} className={styles.clearButton}>
+          <button type="button" onClick={clearCanvas} className={`${buttons.btn} ${buttons.btnNeutral} ${buttons.btnSmall}`}>
             Clear
           </button>
         </div>

@@ -2,27 +2,12 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
-  padding: 20px 24px;
+  padding: 2rem;
   min-height: 100vh;
   background: #f9fafb;
 }
 
-/* ── Header / nav ──────────────────────────────────────── */
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.title {
-  margin: 0;
-  font-size: 20px;
-  font-weight: 700;
-  color: #111827;
-}
-
+/* ── Date nav ─────────────────────────────────────────── */
 .nav {
   display: flex;
   align-items: center;
@@ -65,6 +50,7 @@
 /* ── View toggle ───────────────────────────────────────── */
 .viewToggle {
   display: flex;
+  align-self: flex-start;
   gap: 3px;
   background: #f3f4f6;
   border-radius: 8px;
@@ -100,17 +86,7 @@
 
 .createTeamBtn {
   margin-left: auto;
-  padding: 5px 14px;
-  border: none;
-  border-radius: 6px;
-  background: #3b82f6;
-  color: #fff;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.12s;
 }
-.createTeamBtn:hover { background: #2563eb; }
 
 .driversSection {
   display: flex;

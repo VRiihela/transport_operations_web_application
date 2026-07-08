@@ -2,6 +2,7 @@ import React from 'react';
 import { SchedulingType, SchedulingData } from '../../../types/job';
 import { useLanguage } from '../../../i18n/LanguageContext';
 import styles from './SchedulingSection.module.css';
+import forms from '../../../styles/forms.module.css';
 
 interface SchedulingSectionProps {
   data: SchedulingData;
@@ -40,26 +41,26 @@ export const SchedulingSection: React.FC<SchedulingSectionProps> = ({ data, onCh
         return (
           <div className={styles.schedulingInputs}>
             <div className={styles.inputGroup}>
-              <label className={styles.inputLabel}>
-                {t.schedDate} <span className={styles.required}>*</span>
+              <label className={forms.label}>
+                {t.schedDate} <span className={forms.required}>*</span>
               </label>
               <input
                 type="date"
                 value={data.date}
                 onChange={handleInputChange('date')}
-                className={styles.dateInput}
+                className={forms.input}
                 required
               />
             </div>
             <div className={styles.inputGroup}>
-              <label className={styles.inputLabel}>
-                {t.schedStartTime} <span className={styles.required}>*</span>
+              <label className={forms.label}>
+                {t.schedStartTime} <span className={forms.required}>*</span>
               </label>
               <input
                 type="time"
                 value={data.exactTime}
                 onChange={handleInputChange('exactTime')}
-                className={styles.timeInput}
+                className={forms.input}
                 required
               />
             </div>
@@ -70,39 +71,39 @@ export const SchedulingSection: React.FC<SchedulingSectionProps> = ({ data, onCh
         return (
           <div className={styles.schedulingInputs}>
             <div className={styles.inputGroup}>
-              <label className={styles.inputLabel}>
-                {t.schedDate} <span className={styles.required}>*</span>
+              <label className={forms.label}>
+                {t.schedDate} <span className={forms.required}>*</span>
               </label>
               <input
                 type="date"
                 value={data.date}
                 onChange={handleInputChange('date')}
-                className={styles.dateInput}
+                className={forms.input}
                 required
               />
             </div>
             <div className={styles.timeWindow}>
               <div className={styles.inputGroup}>
-                <label className={styles.inputLabel}>
-                  {t.schedWindowStart} <span className={styles.required}>*</span>
+                <label className={forms.label}>
+                  {t.schedWindowStart} <span className={forms.required}>*</span>
                 </label>
                 <input
                   type="time"
                   value={data.windowStart}
                   onChange={handleInputChange('windowStart')}
-                  className={styles.timeInput}
+                  className={forms.input}
                   required
                 />
               </div>
               <div className={styles.inputGroup}>
-                <label className={styles.inputLabel}>
-                  {t.schedWindowEnd} <span className={styles.required}>*</span>
+                <label className={forms.label}>
+                  {t.schedWindowEnd} <span className={forms.required}>*</span>
                 </label>
                 <input
                   type="time"
                   value={data.windowEnd}
                   onChange={handleInputChange('windowEnd')}
-                  className={styles.timeInput}
+                  className={forms.input}
                   required
                 />
               </div>
@@ -114,13 +115,13 @@ export const SchedulingSection: React.FC<SchedulingSectionProps> = ({ data, onCh
         return (
           <div className={styles.schedulingInputs}>
             <div className={styles.inputGroup}>
-              <label className={styles.inputLabel}>
-                {t.schedNote} <span className={styles.required}>*</span>
+              <label className={forms.label}>
+                {t.schedNote} <span className={forms.required}>*</span>
               </label>
               <textarea
                 value={data.schedulingNote}
                 onChange={handleInputChange('schedulingNote')}
-                className={styles.noteTextarea}
+                className={forms.textarea}
                 placeholder={t.schedNotePlaceholder}
                 rows={3}
                 required

@@ -2,6 +2,7 @@ import React from 'react';
 import { ServiceType, AddressData } from '../../../types/job';
 import { useLanguage } from '../../../i18n/LanguageContext';
 import styles from './AddressSection.module.css';
+import forms from '../../../styles/forms.module.css';
 
 interface AddressSectionProps {
   selectedServices: ServiceType[];
@@ -42,71 +43,71 @@ const AddressBlock: React.FC<AddressBlockProps> = ({ title, data, onChange }) =>
       <div className={styles.addressFields}>
         <div className={styles.fieldRow}>
           <div className={styles.field}>
-            <label className={styles.fieldLabel}>
-              {t.addrStreet} <span className={styles.required}>*</span>
+            <label className={forms.label}>
+              {t.addrStreet} <span className={forms.required}>*</span>
             </label>
             <input
               type="text"
               value={data.street}
               onChange={handleInputChange('street')}
-              className={styles.fieldInput}
+              className={forms.input}
               required
             />
           </div>
         </div>
         <div className={styles.fieldRow}>
           <div className={styles.field}>
-            <label className={styles.fieldLabel}>
-              {t.addrPostal} <span className={styles.required}>*</span>
+            <label className={forms.label}>
+              {t.addrPostal} <span className={forms.required}>*</span>
             </label>
             <input
               type="text"
               value={data.postalCode}
               onChange={handleInputChange('postalCode')}
-              className={styles.fieldInput}
+              className={forms.input}
               required
             />
           </div>
           <div className={styles.field}>
-            <label className={styles.fieldLabel}>
-              {t.addrCity} <span className={styles.required}>*</span>
+            <label className={forms.label}>
+              {t.addrCity} <span className={forms.required}>*</span>
             </label>
             <input
               type="text"
               value={data.city}
               onChange={handleInputChange('city')}
-              className={styles.fieldInput}
+              className={forms.input}
               required
             />
           </div>
         </div>
         <div className={styles.fieldRow}>
           <div className={styles.field}>
-            <label className={styles.fieldLabel}>{t.addrFloorStair}</label>
+            <label className={forms.label}>{t.addrFloorStair}</label>
             <input
               type="text"
               value={data.floorStair}
               onChange={handleInputChange('floorStair')}
-              className={styles.fieldInput}
+              className={forms.input}
             />
           </div>
           <div className={styles.field}>
-            <label className={styles.fieldLabel}>{t.addrDoorCode}</label>
+            <label className={forms.label}>{t.addrDoorCode}</label>
             <input
               type="text"
               value={data.doorCode}
               onChange={handleInputChange('doorCode')}
-              className={styles.fieldInput}
+              className={forms.input}
             />
           </div>
         </div>
         <div className={styles.fieldRow}>
           <div className={styles.field}>
-            <label className={styles.fieldLabel}>{t.addrAccessNotes}</label>
+            <label className={forms.label}>{t.addrAccessNotes}</label>
             <textarea
               value={data.accessNotes}
               onChange={handleInputChange('accessNotes')}
-              className={styles.fieldTextarea}
+              className={forms.textarea}
               rows={2}
             />
           </div>
