@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { isAxiosError } from 'axios';
-import { Link } from 'react-router-dom';
 import { startOfWeek, addWeeks, subWeeks, addDays, format } from 'date-fns';
 import { useAuth } from '../contexts/AuthContext';
 import axiosInstance from '../api/axios';
 import { useLanguage } from '../i18n/LanguageContext';
-import { PageHeader } from '../components/PageHeader/PageHeader';
+import { TopBar } from '../components/TopBar/TopBar';
 import { JobDetailModal } from '../components/JobDetailModal';
 import { JobCreateModal } from '../components/JobCreateModal/JobCreateModal';
 import { JobEditModal, JobUpdatePayload } from '../components/JobEditModal';
@@ -75,7 +74,7 @@ const STATUS_TRANSITIONS: Record<JobStatus, JobStatus[]> = {
 };
 
 const JobsPage: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const { t, fmtDateTime, fmtTime, statusLabel } = useLanguage();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [drivers, setDrivers] = useState<Driver[]>([]);
@@ -280,14 +279,7 @@ const JobsPage: React.FC = () => {
 
   return (
     <div className={styles.container}>
-      <PageHeader title={t.jobsHeading}>
-        {user?.role === 'Admin' && (
-          <Link to="/users" className={`${buttons.btn} ${buttons.btnSecondary}`}>{t.usersLink}</Link>
-        )}
-        <button className={`${buttons.btn} ${buttons.btnSecondary}`} onClick={() => void logout()}>
-          {t.logout}
-        </button>
-      </PageHeader>
+      <TopBar title={t.jobsHeading} />
 
       {error && (
         <div className={states.errorBanner} role="alert">

@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { isAxiosError } from 'axios';
-import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import axiosInstance from '../api/axios';
 import { useLanguage } from '../i18n/LanguageContext';
+import { TopBar } from '../components/TopBar/TopBar';
 import styles from './UsersPage.module.css';
 import buttons from '../styles/buttons.module.css';
 import states from '../styles/states.module.css';
@@ -50,7 +50,7 @@ function getApiError(err: unknown, fallback: string): string {
 }
 
 const UsersPage: React.FC = () => {
-  const { user: currentUser, logout } = useAuth();
+  const { user: currentUser } = useAuth();
   const { t } = useLanguage();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -210,9 +210,7 @@ const UsersPage: React.FC = () => {
   if (loading) {
     return (
       <div className={styles.container}>
-        <div className={styles.pageHeader}>
-          <h1>{t.usersHeading}</h1>
-        </div>
+        <TopBar title={t.usersHeading} />
         <div className={states.loadingState}>{t.loading}</div>
       </div>
     );
@@ -220,19 +218,11 @@ const UsersPage: React.FC = () => {
 
   return (
     <div className={styles.container}>
-      <div className={styles.pageHeader}>
-        <div className={styles.headerLeft}>
-          <h1>{t.usersHeading}</h1>
-          <Link to="/jobs" className={styles.navLink}>← {t.navJobsList}</Link>
-        </div>
-        <div className={styles.headerRight}>
-          <button className={`${buttons.btn} ${buttons.btnPrimary}`} onClick={() => setShowCreateModal(true)}>
-            {t.usersCreateBtn}
-          </button>
-          <button className={`${buttons.btn} ${buttons.btnSecondary}`} onClick={() => void logout()}>
-            {t.logout}
-          </button>
-        </div>
+      <TopBar title={t.usersHeading} />
+      <div className={styles.headerRight}>
+        <button className={`${buttons.btn} ${buttons.btnPrimary}`} onClick={() => setShowCreateModal(true)}>
+          {t.usersCreateBtn}
+        </button>
       </div>
 
       {error && (

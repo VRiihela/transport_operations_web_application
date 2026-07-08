@@ -5,45 +5,12 @@
 }
 
 /* Header */
-.pageHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-  flex-wrap: wrap;
-  gap: 1rem;
-}
-
-.headerLeft {
-  display: flex;
-  align-items: center;
-  gap: 1.25rem;
-}
-
-.headerLeft h1 {
-  margin: 0;
-  font-size: 1.75rem;
-  color: #212529;
-}
-
 .headerRight {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 0.75rem;
-}
-
-.navLink {
-  font-size: 0.9rem;
-  color: #6c757d;
-  text-decoration: none;
-  padding: 0.25rem 0;
-  border-bottom: 1px solid transparent;
-  transition: color 0.15s, border-color 0.15s;
-}
-
-.navLink:hover {
-  color: #343a40;
-  border-bottom-color: #343a40;
+  margin-bottom: 1.5rem;
 }
 
 /* Alerts */

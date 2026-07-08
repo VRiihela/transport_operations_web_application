@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { isAxiosError } from 'axios';
-import { useAuth } from '../contexts/AuthContext';
 import axiosInstance from '../api/axios';
 import { useLanguage } from '../i18n/LanguageContext';
 import { downloadCompletionReportPdf } from '../utils/downloadPdf';
 import { CompletionModal } from '../components/CompletionModal';
+import { TopBar } from '../components/TopBar/TopBar';
 import styles from './MyJobsPage.module.css';
 import buttons from '../styles/buttons.module.css';
 import forms from '../styles/forms.module.css';
@@ -100,7 +100,6 @@ function sortByScheduledStart(jobs: Job[]): Job[] {
 }
 
 const MyJobsPage: React.FC = () => {
-  const { logout } = useAuth();
   const { t, fmtDateTime, fmtTime, statusLabel } = useLanguage();
   const [selectedDate, setSelectedDate] = useState<string>(todayISO);
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -221,9 +220,7 @@ const MyJobsPage: React.FC = () => {
   if (loading) {
     return (
       <div className={styles.container}>
-        <div className={styles.pageHeader}>
-          <h1>{t.myJobsHeading}</h1>
-        </div>
+        <TopBar title={t.myJobsHeading} />
         <div className={states.loadingState}>{t.loading}</div>
       </div>
     );
@@ -232,10 +229,7 @@ const MyJobsPage: React.FC = () => {
   if (error && jobs.length === 0) {
     return (
       <div className={styles.container}>
-        <div className={styles.pageHeader}>
-          <h1>{t.myJobsHeading}</h1>
-          <button className={`${buttons.btn} ${buttons.btnSecondary}`} onClick={() => void logout()}>{t.logout}</button>
-        </div>
+        <TopBar title={t.myJobsHeading} />
         <div className={states.errorBanner}>
           {error}
           <button
@@ -251,18 +245,15 @@ const MyJobsPage: React.FC = () => {
 
   return (
     <div className={styles.container}>
-      <div className={styles.pageHeader}>
-        <h1>{t.myJobsHeading}</h1>
-        <div className={styles.headerRight}>
-          <input
-            type="date"
-            value={selectedDate}
-            onChange={handleDateChange}
-            className={styles.datePicker}
-            aria-label={t.schedDate}
-          />
-          <button className={`${buttons.btn} ${buttons.btnSecondary}`} onClick={() => void logout()}>{t.logout}</button>
-        </div>
+      <TopBar title={t.myJobsHeading} />
+      <div className={styles.headerRight}>
+        <input
+          type="date"
+          value={selectedDate}
+          onChange={handleDateChange}
+          className={styles.datePicker}
+          aria-label={t.schedDate}
+        />
       </div>
 
       {error && (

@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
 import {
   DndContext,
   DragEndEvent,
@@ -34,9 +33,8 @@ import { JobEditModal, JobUpdatePayload } from '../../components/JobEditModal';
 import { useTeams } from './hooks/useTeams';
 import styles from './DispatcherBoard.module.css';
 import { Job, Driver } from './types';
-import { PageHeader } from '../../components/PageHeader/PageHeader';
+import { TopBar } from '../../components/TopBar/TopBar';
 import { useLanguage } from '../../i18n/LanguageContext';
-import { useAuth } from '../../contexts/AuthContext';
 import buttons from '../../styles/buttons.module.css';
 
 interface DroppableDayColumnProps {
@@ -142,7 +140,6 @@ function shiftDate(dateStr: string, days: number): string {
 
 const DispatcherBoard: React.FC = () => {
   const { t } = useLanguage();
-  const { user, logout } = useAuth();
   const [view, setView] = useState<'assign' | 'schedule'>('assign');
   const [selectedDate, setSelectedDate] = useState<string>(todayISO);
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -388,14 +385,7 @@ const DispatcherBoard: React.FC = () => {
       onDragEnd={handleDragEnd}
     >
       <div className={styles.board}>
-        <PageHeader title={t.navDispatcherBoard}>
-          {user?.role === 'Admin' && (
-            <Link to="/users" className={`${buttons.btn} ${buttons.btnSecondary}`}>{t.usersLink}</Link>
-          )}
-          <button className={`${buttons.btn} ${buttons.btnSecondary}`} onClick={() => void logout()}>
-            {t.logout}
-          </button>
-        </PageHeader>
+        <TopBar title={t.navDispatcherBoard} />
 
         <div className={styles.viewToggle}>
           <button
