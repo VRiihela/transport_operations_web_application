@@ -232,7 +232,7 @@ export class AgenticOrchestrator {
   private runLogPath: string;
   private agentsDir: string;
   private dodPath: string;
-  private model = "claude-sonnet-4-20250514";
+  private model = "claude-sonnet-4-6";
 
   constructor(
     runLogPath = "./run_log.json",

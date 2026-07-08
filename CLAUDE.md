@@ -183,3 +183,19 @@ Append a one-line entry to `claude_run_log_notes.md` in the project root:
 
 | Date | Task ID / Description | Files Touched | Gotchas |
 |---|---|---|---|
+
+---
+
+## Task spec drafting
+
+When asked to draft a task spec (not implement a feature), Claude Code must:
+- Only write JSON files to `agents/tasks/` — never implement the feature itself
+- Follow `TASK_SPEC_GUIDE.md` as the schema reference
+- Split backend and frontend into separate files
+- camelCase fields only; max 6 acceptanceCriteria; last criterion always
+  `npx tsc --noEmit passes with no errors`
+- Delete `_comment` if copying from the template
+- Stop after writing the file(s) — wait for the developer to review and run
+  them through the pipeline manually
+
+  ---
