@@ -42,14 +42,23 @@ interface DroppableDayColumnProps {
   dayLabel: string;
   jobs: Job[];
   onCardClick: (job: Job) => void;
+  onHeaderClick: (day: Date) => void;
 }
 
-const DroppableDayColumn: React.FC<DroppableDayColumnProps> = ({ day, dayLabel, jobs, onCardClick }) => {
+const DroppableDayColumn: React.FC<DroppableDayColumnProps> = ({ day, dayLabel, jobs, onCardClick, onHeaderClick }) => {
+  const { t } = useLanguage();
   const id = format(day, 'yyyy-MM-dd');
   const { isOver, setNodeRef } = useDroppable({ id });
   return (
     <div ref={setNodeRef} className={`${styles.dayColumn} ${isOver ? styles.dayColumnOver : ''}`}>
-      <div className={styles.dayHeader}>{dayLabel}</div>
+      <button
+        type="button"
+        className={styles.dayHeader}
+        onClick={() => onHeaderClick(day)}
+        aria-label={`${t.boardOpenAssignView} ${dayLabel}`}
+      >
+        {dayLabel}
+      </button>
       <div className={styles.dayJobs}>
         {jobs.length === 0 ? (
           <p className={styles.emptyDay}>—</p>
@@ -358,6 +367,11 @@ const DispatcherBoard: React.FC = () => {
     setSelectedJob((prev) => (prev && prev.id === jobId ? { ...prev, ...res.data.data } : prev));
   };
 
+  const handleDayHeaderClick = (day: Date): void => {
+    setSelectedDate(format(day, 'yyyy-MM-dd'));
+    setView('assign');
+  };
+
   const handleDatePicker = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const val = e.target.value;
     setDatePickerValue(val);
@@ -548,6 +562,7 @@ const DispatcherBoard: React.FC = () => {
                     dayLabel={`${t.weekdays[i]} ${format(day, t.dateDayMonth)}`}
                     jobs={dayJobs}
                     onCardClick={setSelectedJob}
+                    onHeaderClick={handleDayHeaderClick}
                   />
                 );
               })}

@@ -1,0 +1,39 @@
+{
+  "taskId": "schedule-day-click-to-assign-view",
+  "title": "Dispatcher Board: clicking a day header in Schedule view opens Assign view for that date",
+  "profile": "React/TypeScript Frontend",
+  "repo": "work_management_system",
+  "tech": "Node.js, TypeScript, Express, PostgreSQL, Prisma 6, Zod, Vitest, React 18, Vite, CSS Modules, Axios",
+  "keyConstraints": "TypeScript strict mode, Zod validation server-side, .nullish() not .optional().nullable(), Prisma selects must include all returned fields (jobInclude is source of truth), no UI component libraries, CSS Modules only",
+
+  "description": "In the Dispatcher Board Schedule view, clicking a day column header (e.g. 'FRI 10/7') switches the board to the Assign view with that date selected in the Assign view's existing date selection. This gives dispatchers a one-click path from spotting a day in the weekly schedule to assigning its jobs. The Assign view already has date selection — reuse it, do not build new filtering.",
+
+  "acceptanceCriteria": [
+    "Clicking a day column header in Schedule view switches the Dispatcher Board to Assign view with that day set as the selected date, using the Assign view's existing date selection mechanism.",
+    "Only the day header is clickable for this action — clicks on job cards or the empty column body do not switch views.",
+    "Day headers show pointer cursor and a hover state; the header has an aria-label like 'Open assign view for {date}' translated via the existing i18n mechanism (EN/FI).",
+    "The Assign/Schedule toggle continues to work exactly as before, and switching back to Schedule view preserves the currently viewed week.",
+    "Works for all seven day columns including days with no jobs.",
+    "npx tsc --noEmit passes with no errors."
+  ],
+
+  "affectedFiles": [
+    "frontend/src/pages/DispatcherBoard.tsx",
+    "frontend/src/pages/DispatcherBoard.module.css",
+    "frontend/src/components/ScheduleView.tsx",
+    "frontend/src/components/ScheduleView.module.css",
+    "frontend/src/components/AssignView.tsx"
+  ],
+
+  "implementationNotes": [
+    "VERIFY affectedFiles against the repo before implementing — check the actual component names for the Schedule and Assign views inside the Dispatcher Board and correct paths accordingly.",
+    "Inspect how the Assign view's existing date selection is stored (parent state in DispatcherBoard, URL param, or internal state) and pass the clicked date through that same mechanism — do not create a parallel date state.",
+    "Inspect how the Assign/Schedule toggle is stored and set it through the same mechanism when a day header is clicked.",
+    "Do not rewrite working code — add the header click handler and wiring only.",
+    "CSS Modules only — no inline styles.",
+    "Make the day header a real interactive element (button or role=button with tabIndex and Enter/Space key handling), and keep it structurally separate from any other click targets in the column to avoid stopPropagation workarounds.",
+    "Date passing must respect local timezone — the clicked day must equal the date selected in Assign view (no UTC off-by-one)."
+  ],
+
+  "securityConsiderations": "UI navigation only. No new endpoints, no new data exposure; Assign view keeps its existing role checks and data loading."
+}

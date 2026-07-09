@@ -179,6 +179,7 @@ export interface AppTranslations {
   boardCreateTeam: string;
   boardDriversTeams: string;
   boardUnscheduled: string;
+  boardOpenAssignView: string;
 
   // Team management modal
   teamCreateTitle: string;
@@ -418,6 +419,7 @@ export const en: AppTranslations = {
   boardCreateTeam: '+ Create Team',
   boardDriversTeams: 'Drivers & Teams',
   boardUnscheduled: 'Unscheduled',
+  boardOpenAssignView: 'Open assign view for',
 
   teamCreateTitle: 'Create Team',
   teamNameLabel: 'Team name',
@@ -651,6 +653,7 @@ export const fi: AppTranslations = {
   boardCreateTeam: '+ Luo tiimi',
   boardDriversTeams: 'Kuljettajat & tiimit',
   boardUnscheduled: 'Aikatauluttamattomat',
+  boardOpenAssignView: 'Avaa määritysnäkymä päivälle',
 
   teamCreateTitle: 'Luo tiimi',
   teamNameLabel: 'Tiimin nimi',
