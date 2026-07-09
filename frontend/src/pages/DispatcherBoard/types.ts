@@ -40,6 +40,8 @@ export interface Job {
   driverNotes?: string | null;
   jobType?: string | null;
   services?: string[] | null;
+  customerName?: string | null;
+  customerPhone?: string | null;
   customer?: { id: string; name: string; phone: string; email: string | null; companyName: string | null } | null;
   completionReport?: {
     id: string;

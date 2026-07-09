@@ -3,6 +3,7 @@ import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { parseISO, isValid, format } from 'date-fns';
 import { Job } from '../../types';
+import { useLanguage } from '../../../../i18n/LanguageContext';
 import styles from './JobCard.module.css';
 
 interface JobCardProps {
@@ -19,12 +20,17 @@ function formatTime(scheduledStart: string | null | undefined): string | null {
 }
 
 const JobCard: React.FC<JobCardProps> = ({ job, draggable = false, overlay = false, onCardClick }) => {
+  const { statusLabel } = useLanguage();
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: job.id,
     disabled: !draggable,
   });
 
   const time = formatTime(job.scheduledStart);
+  const address = [job.street, job.houseNumber].filter(Boolean).join(' ');
+  const addressCity = [job.postalCode, job.city].filter(Boolean).join(' ');
+  const metaLine = [address, addressCity].filter(Boolean).join(', ')
+    || (job.assignedDriver ? (job.assignedDriver.name ?? job.assignedDriver.email) : null);
 
   const style: React.CSSProperties = draggable
     ? {
@@ -39,48 +45,31 @@ const JobCard: React.FC<JobCardProps> = ({ job, draggable = false, overlay = fal
       ref={draggable && !overlay ? setNodeRef : undefined}
       style={style}
       {...(draggable && !overlay ? { ...listeners, ...attributes } : {})}
-      onClick={onCardClick && !draggable ? () => onCardClick(job) : undefined}
+      onClick={onCardClick ? () => onCardClick(job) : undefined}
       className={[
         styles.card,
         isDragging && draggable ? styles.dragging : '',
         overlay ? styles.overlay : '',
-        onCardClick && !draggable ? styles.clickable : '',
+        onCardClick ? styles.clickable : '',
       ]
         .filter(Boolean)
         .join(' ')}
-      role={onCardClick && !draggable ? 'button' : undefined}
-      tabIndex={onCardClick && !draggable ? 0 : undefined}
+      role={onCardClick ? 'button' : undefined}
+      tabIndex={onCardClick ? 0 : undefined}
       onKeyDown={
-        onCardClick && !draggable
+        onCardClick
           ? (e) => { if (e.key === 'Enter' || e.key === ' ') onCardClick(job); }
           : undefined
       }
     >
-      <div className={styles.row}>
-        {time && <span className={styles.time}>{time}</span>}
-        <span className={styles.title}>{job.title}</span>
+      <div className={styles.headerRow}>
+        {time ? <span className={styles.time}>{time}</span> : <span />}
         <span className={`${styles.badge} ${styles[`status${job.status}`]}`}>
-          {job.status}
+          {statusLabel(job.status)}
         </span>
       </div>
-      {job.street && (
-        <span className={styles.address}>
-          {job.street}{job.houseNumber ? ` ${job.houseNumber}` : ''}
-        </span>
-      )}
-      {(job.postalCode || job.city) && (
-        <span className={styles.address}>
-          {[job.postalCode, job.city].filter(Boolean).join(' ')}
-        </span>
-      )}
-      {job.customer && (
-        <span className={styles.customer}>
-          {job.customer.companyName
-            ? `${job.customer.companyName} (${job.customer.name})`
-            : job.customer.name}
-          {job.customer.phone && ` · ${job.customer.phone}`}
-        </span>
-      )}
+      <div className={styles.title}>{job.title}</div>
+      {metaLine && <div className={styles.meta}>{metaLine}</div>}
     </div>
   );
 };

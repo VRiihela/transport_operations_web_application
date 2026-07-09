@@ -11,7 +11,7 @@ interface DriverColumnProps {
   onCardClick?: (job: Job) => void;
 }
 
-const DriverColumn: React.FC<DriverColumnProps> = ({ driver, jobs }) => {
+const DriverColumn: React.FC<DriverColumnProps> = ({ driver, jobs, onCardClick }) => {
   const { isOver, setNodeRef } = useDroppable({ id: driver.id });
 
   return (
@@ -23,7 +23,7 @@ const DriverColumn: React.FC<DriverColumnProps> = ({ driver, jobs }) => {
           {jobs.length === 0 ? (
             <p className={styles.empty}>No assigned jobs.</p>
           ) : (
-            jobs.map((job) => <SortableJobCard key={job.id} job={job} />)
+            jobs.map((job) => <SortableJobCard key={job.id} job={job} onCardClick={onCardClick} />)
           )}
         </div>
       </SortableContext>

@@ -28,7 +28,7 @@ import DriverColumn from './components/DriverColumn/DriverColumn';
 import TeamColumn from './components/TeamColumn/TeamColumn';
 import TeamManagementModal from './components/TeamManagementModal/TeamManagementModal';
 import JobCard from './components/JobCard/JobCard';
-import { JobDetailModal } from '../../components/JobDetailModal';
+import { JobQuickLook } from './components/JobQuickLook/JobQuickLook';
 import { JobEditModal, JobUpdatePayload } from '../../components/JobEditModal';
 import { useTeams } from './hooks/useTeams';
 import styles from './DispatcherBoard.module.css';
@@ -169,12 +169,13 @@ const DispatcherBoard: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      const [draftRes, assignedRes, driversRes] = await Promise.all([
+      const [draftRes, assignedRes, inProgressRes, driversRes] = await Promise.all([
         apiService.axios.get<{ data: { jobs: Job[] } }>('/api/jobs?status=DRAFT&pageSize=100'),
         apiService.axios.get<{ data: { jobs: Job[] } }>('/api/jobs?status=ASSIGNED&pageSize=200'),
+        apiService.axios.get<{ data: { jobs: Job[] } }>('/api/jobs?status=IN_PROGRESS&pageSize=200'),
         apiService.axios.get<{ data: Driver[] }>('/api/users?role=Driver'),
       ]);
-      setJobs([...draftRes.data.data.jobs, ...assignedRes.data.data.jobs]);
+      setJobs([...draftRes.data.data.jobs, ...assignedRes.data.data.jobs, ...inProgressRes.data.data.jobs]);
       setDrivers(driversRes.data.data);
     } catch (err) {
       console.error('Failed to load board data:', err);
@@ -339,6 +340,22 @@ const DispatcherBoard: React.FC = () => {
     if (!editingJob) return;
     const res = await apiService.axios.patch<{ data: Job }>(`/api/jobs/${editingJob.id}`, updates);
     setJobs((prev) => prev.map((j) => (j.id === editingJob.id ? { ...j, ...res.data.data } : j)));
+  };
+
+  const handleAssignDriver = async (jobId: string, driverId: string): Promise<void> => {
+    const res = await apiService.axios.patch<{ data: Job }>(`/api/jobs/${jobId}`, {
+      assignedDriverId: driverId,
+    });
+    setJobs((prev) => prev.map((j) => (j.id === jobId ? { ...j, ...res.data.data } : j)));
+    setSelectedJob((prev) => (prev && prev.id === jobId ? { ...prev, ...res.data.data } : prev));
+  };
+
+  const handleStatusChange = async (jobId: string, newStatus: Job['status']): Promise<void> => {
+    const res = await apiService.axios.patch<{ data: Job }>(`/api/jobs/${jobId}`, {
+      status: newStatus,
+    });
+    setJobs((prev) => prev.map((j) => (j.id === jobId ? { ...j, ...res.data.data } : j)));
+    setSelectedJob((prev) => (prev && prev.id === jobId ? { ...prev, ...res.data.data } : prev));
   };
 
   const handleDatePicker = (e: React.ChangeEvent<HTMLInputElement>): void => {
@@ -544,11 +561,14 @@ const DispatcherBoard: React.FC = () => {
       </DragOverlay>
 
       {selectedJob && (
-        <JobDetailModal
+        <JobQuickLook
           job={selectedJob}
+          drivers={drivers}
           isOpen={true}
           onClose={() => setSelectedJob(null)}
           onEdit={() => { setEditingJob(selectedJob); setSelectedJob(null); }}
+          onAssignDriver={handleAssignDriver}
+          onStatusChange={handleStatusChange}
         />
       )}
 

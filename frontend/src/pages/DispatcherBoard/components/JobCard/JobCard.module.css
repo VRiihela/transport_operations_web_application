@@ -2,7 +2,7 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
   padding: 7px 9px;
   background: #fff;
   border: 1px solid #e5e7eb;
@@ -11,21 +11,18 @@
   transition: box-shadow 0.12s, border-color 0.12s;
 }
 
-.row {
+.clickable {
+  cursor: pointer;
+}
+
+.headerRow {
   display: flex;
-  align-items: baseline;
+  align-items: center;
+  justify-content: space-between;
   gap: 6px;
 }
 
-.customer {
-  font-size: 11px;
-  color: #6b7280;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.address {
+.meta {
   font-size: 11px;
   color: #6b7280;
   white-space: nowrap;
@@ -61,8 +58,7 @@
   font-size: 12px;
   font-weight: 500;
   color: #111827;
-  flex: 1;
-  min-width: 0;
+  width: 100%;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

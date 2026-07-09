@@ -3,10 +3,12 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { parseISO, isValid, format } from 'date-fns';
 import { Job } from '../../types';
+import { useLanguage } from '../../../../i18n/LanguageContext';
 import styles from './JobCard.module.css';
 
 interface SortableJobCardProps {
   job: Job;
+  onCardClick?: (job: Job) => void;
 }
 
 function formatTime(scheduledStart: string | null | undefined): string | null {
@@ -15,7 +17,8 @@ function formatTime(scheduledStart: string | null | undefined): string | null {
   return isValid(d) ? format(d, 'HH:mm') : null;
 }
 
-const SortableJobCard: React.FC<SortableJobCardProps> = ({ job }) => {
+const SortableJobCard: React.FC<SortableJobCardProps> = ({ job, onCardClick }) => {
+  const { statusLabel } = useLanguage();
   const {
     attributes,
     listeners,
@@ -34,6 +37,10 @@ const SortableJobCard: React.FC<SortableJobCardProps> = ({ job }) => {
   };
 
   const time = formatTime(job.scheduledStart);
+  const address = [job.street, job.houseNumber].filter(Boolean).join(' ');
+  const addressCity = [job.postalCode, job.city].filter(Boolean).join(' ');
+  const metaLine = [address, addressCity].filter(Boolean).join(', ')
+    || (job.assignedDriver ? (job.assignedDriver.name ?? job.assignedDriver.email) : null);
 
   return (
     <div
@@ -41,39 +48,31 @@ const SortableJobCard: React.FC<SortableJobCardProps> = ({ job }) => {
       style={style}
       {...listeners}
       {...attributes}
+      onClick={onCardClick ? () => onCardClick(job) : undefined}
       className={[
         styles.card,
         isDragging ? styles.dragging : '',
         isOver && !isDragging ? styles.dropTarget : '',
+        onCardClick ? styles.clickable : '',
       ]
         .filter(Boolean)
         .join(' ')}
+      role={onCardClick ? 'button' : undefined}
+      tabIndex={onCardClick ? 0 : undefined}
+      onKeyDown={
+        onCardClick
+          ? (e) => { if (e.key === 'Enter' || e.key === ' ') onCardClick(job); }
+          : undefined
+      }
     >
-      <div className={styles.row}>
-        {time && <span className={styles.time}>{time}</span>}
-        <span className={styles.title}>{job.title}</span>
+      <div className={styles.headerRow}>
+        {time ? <span className={styles.time}>{time}</span> : <span />}
         <span className={`${styles.badge} ${styles[`status${job.status}`]}`}>
-          {job.status}
+          {statusLabel(job.status)}
         </span>
       </div>
-      {job.street && (
-        <span className={styles.address}>
-          {job.street}{job.houseNumber ? ` ${job.houseNumber}` : ''}
-        </span>
-      )}
-      {(job.postalCode || job.city) && (
-        <span className={styles.address}>
-          {[job.postalCode, job.city].filter(Boolean).join(' ')}
-        </span>
-      )}
-      {job.customer && (
-        <span className={styles.customer}>
-          {job.customer.companyName
-            ? `${job.customer.companyName} (${job.customer.name})`
-            : job.customer.name}
-          {job.customer.phone && ` · ${job.customer.phone}`}
-        </span>
-      )}
+      <div className={styles.title}>{job.title}</div>
+      {metaLine && <div className={styles.meta}>{metaLine}</div>}
     </div>
   );
 };
