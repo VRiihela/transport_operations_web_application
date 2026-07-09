@@ -9,6 +9,7 @@ import {
 } from '@dnd-kit/core';
 import { format } from 'date-fns';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../i18n/LanguageContext';
 import axiosInstance from '../../api/axios';
 import type { Job } from '../../types/jobApi';
 import { WeekDayColumn } from './WeekDayColumn';
@@ -35,10 +36,12 @@ interface WeekGridProps {
   jobs: Job[];
   setJobs: React.Dispatch<React.SetStateAction<Job[]>>;
   onJobClick: (job: Job) => void;
+  onDayClick: (day: Date) => void;
 }
 
-export const WeekGrid: React.FC<WeekGridProps> = ({ weekDays, jobs, setJobs, onJobClick }) => {
+export const WeekGrid: React.FC<WeekGridProps> = ({ weekDays, jobs, setJobs, onJobClick, onDayClick }) => {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const userRole = user?.role ?? 'Driver';
 
   const sensors = useSensors(
@@ -56,7 +59,7 @@ export const WeekGrid: React.FC<WeekGridProps> = ({ weekDays, jobs, setJobs, onJ
       onDragOver={handleDragOver}
       onDragEnd={(e) => { void handleDragEnd(e); }}
     >
-      <div className={styles.weekGrid}>
+      <div className={styles.weekGrid} role="group" aria-label={t.weekViewGridAriaLabel}>
         {weekDays.map((day, idx) => {
           const dayISO = format(day, 'yyyy-MM-dd');
           const dayJobs = jobs
@@ -77,6 +80,7 @@ export const WeekGrid: React.FC<WeekGridProps> = ({ weekDays, jobs, setJobs, onJ
               dayIndex={idx}
               dayJobs={dayJobs}
               onJobClick={onJobClick}
+              onDayClick={onDayClick}
               userRole={userRole}
               dragError={dragError}
               clearError={clearError}

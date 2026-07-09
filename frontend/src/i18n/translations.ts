@@ -71,6 +71,8 @@ export interface AppTranslations {
   prevWeek: string;
   nextWeek: string;
   jumpToWeek: string;
+  weekViewClickToCreateJob: string;
+  weekViewGridAriaLabel: string;
 
   // Pagination
   paginationPrev: string;
@@ -314,6 +316,8 @@ export const en: AppTranslations = {
   prevWeek: '←',
   nextWeek: '→',
   jumpToWeek: 'Jump to week',
+  weekViewClickToCreateJob: 'Create a new job for',
+  weekViewGridAriaLabel: 'Week view',
 
   paginationPrev: '← Prev',
   paginationNext: 'Next →',
@@ -545,6 +549,8 @@ export const fi: AppTranslations = {
   prevWeek: '←',
   nextWeek: '→',
   jumpToWeek: 'Siirry viikolle',
+  weekViewClickToCreateJob: 'Luo uusi työ päivälle',
+  weekViewGridAriaLabel: 'Viikkonäkymä',
 
   paginationPrev: '← Edell.',
   paginationNext: 'Seur. →',

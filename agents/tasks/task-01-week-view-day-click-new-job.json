@@ -1,0 +1,38 @@
+{
+  "taskId": "week-view-day-click-new-job",
+  "title": "Jobs Week view: create new job for a specific date by clicking a day column",
+  "profile": "React/TypeScript Frontend",
+  "repo": "work_management_system",
+  "tech": "Node.js, TypeScript, Express, PostgreSQL, Prisma 6, Zod, Vitest, React 18, Vite, CSS Modules, Axios",
+  "keyConstraints": "TypeScript strict mode, Zod validation server-side, .nullish() not .optional().nullable(), Prisma selects must include all returned fields (jobInclude is source of truth), no UI component libraries, CSS Modules only",
+
+  "description": "In the Jobs page Week view, clicking the empty area of a day column opens the existing New Job form with the scheduled start date pre-filled to the clicked day. This lets a dispatcher create a job for a specific date directly from the calendar instead of opening New Job and picking the date manually. Reuse the existing New Job form/modal — only add the entry point and date pre-fill.",
+
+  "acceptanceCriteria": [
+    "Clicking the empty area of a day column in Week view opens the existing New Job form.",
+    "The scheduled start date field is pre-filled with the clicked day's date; time portion defaults to 08:00 and remains editable.",
+    "Clicking an existing job card inside a day column does NOT open the New Job form (stopPropagation) — existing card click behavior is unchanged.",
+    "After successful creation, the new job appears in the correct day column of Week view without a manual page reload.",
+    "Day columns show a pointer cursor and a hover state to signal clickability; labels support EN/FI via the existing i18n mechanism.",
+    "npx tsc --noEmit passes with no errors."
+  ],
+
+  "affectedFiles": [
+    "frontend/src/pages/JobsPage.tsx",
+    "frontend/src/pages/JobsPage.module.css",
+    "frontend/src/components/JobWeekView.tsx",
+    "frontend/src/components/JobWeekView.module.css",
+    "frontend/src/components/JobForm.tsx"
+  ],
+
+  "implementationNotes": [
+    "Do not rewrite working code — only add the day-click entry point and an optional initialDate prop to the existing New Job form.",
+    "Reuse the existing New Job form/modal component; do not create a duplicate form.",
+    "CSS Modules only — no inline styles, no UI component libraries.",
+    "Datetime inputs: convert to .toISOString() before sending to API.",
+    "Pre-fill must respect local timezone — the clicked day in the UI must equal the date shown in the form (avoid UTC off-by-one).",
+    "The New Job header button must keep working exactly as before (opens form with no pre-filled date or today's date, whichever is current behavior)."
+  ],
+
+  "securityConsiderations": "No new endpoints. Creation goes through the existing job creation flow with existing server-side Zod validation and role checks."
+}

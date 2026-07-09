@@ -14,6 +14,7 @@ interface WeekDayColumnProps {
   dayIndex: number;
   dayJobs: Job[];
   onJobClick: (job: Job) => void;
+  onDayClick: (day: Date) => void;
   userRole: UserRole;
   dragError: WeekDragError | null;
   clearError: (jobId: string) => void;
@@ -24,6 +25,7 @@ export const WeekDayColumn: React.FC<WeekDayColumnProps> = ({
   dayIndex,
   dayJobs,
   onJobClick,
+  onDayClick,
   userRole,
   dragError,
   clearError,
@@ -31,6 +33,7 @@ export const WeekDayColumn: React.FC<WeekDayColumnProps> = ({
   const { t } = useLanguage();
   const columnDateISO = format(day, 'yyyy-MM-dd');
   const { isOver, setNodeRef } = useDroppable({ id: columnDateISO });
+  const dayClickLabel = `${t.weekViewClickToCreateJob} ${format(day, t.dateDayMonth)}`;
 
   return (
     <div
@@ -41,7 +44,19 @@ export const WeekDayColumn: React.FC<WeekDayColumnProps> = ({
         <span className={styles.weekDayName}>{t.weekdays[dayIndex]}</span>
         <span className={styles.weekDayDate}>{format(day, t.dateDayMonth)}</span>
       </div>
-      <div className={styles.weekDayBody}>
+      <div
+        className={styles.weekDayBody}
+        role="button"
+        tabIndex={0}
+        aria-label={dayClickLabel}
+        onClick={() => onDayClick(day)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onDayClick(day);
+          }
+        }}
+      >
         {dayJobs.map((job) => (
           <WeekJobCard
             key={job.id}

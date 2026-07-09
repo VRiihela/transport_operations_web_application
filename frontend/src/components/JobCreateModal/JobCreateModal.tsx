@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { format } from 'date-fns';
 import {
   JobType,
   JOB_TYPE_LABELS,
@@ -31,6 +32,8 @@ interface JobCreateModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  /** When provided (e.g. from a Week view day-column click), pre-fills scheduling to this date at 08:00. */
+  initialDate?: Date;
 }
 
 const getDefaultServices = (jobType: JobType): ServiceType[] => {
@@ -57,16 +60,28 @@ const createEmptyAddress = (): AddressData => ({
   accessNotes: '',
 });
 
-const initialScheduling = (): SchedulingData => ({
-  type: SchedulingType.TBC,
-  date: '',
-  exactTime: '',
-  windowStart: '',
-  windowEnd: '',
-  schedulingNote: '',
-});
+const initialScheduling = (initialDate?: Date): SchedulingData => {
+  if (initialDate) {
+    return {
+      type: SchedulingType.EXACT_TIME,
+      date: format(initialDate, 'yyyy-MM-dd'),
+      exactTime: '08:00',
+      windowStart: '',
+      windowEnd: '',
+      schedulingNote: '',
+    };
+  }
+  return {
+    type: SchedulingType.TBC,
+    date: '',
+    exactTime: '',
+    windowStart: '',
+    windowEnd: '',
+    schedulingNote: '',
+  };
+};
 
-export const JobCreateModal: React.FC<JobCreateModalProps> = ({ isOpen, onClose, onSuccess }) => {
+export const JobCreateModal: React.FC<JobCreateModalProps> = ({ isOpen, onClose, onSuccess, initialDate }) => {
   const { t } = useLanguage();
   const [jobType, setJobType] = useState<JobType>(JobType.DELIVERY);
   const [title, setTitle] = useState('');
@@ -93,7 +108,7 @@ export const JobCreateModal: React.FC<JobCreateModalProps> = ({ isOpen, onClose,
   const [pickupAddress, setPickupAddress] = useState<AddressData>(createEmptyAddress());
   const [deliveryAddress, setDeliveryAddress] = useState<AddressData>(createEmptyAddress());
   const [serviceAddress, setServiceAddress] = useState<AddressData>(createEmptyAddress());
-  const [scheduling, setScheduling] = useState<SchedulingData>(initialScheduling());
+  const [scheduling, setScheduling] = useState<SchedulingData>(() => initialScheduling(initialDate));
 
   const debouncedPhone = useDebounce(phoneInput, 400);
 
@@ -240,6 +255,12 @@ export const JobCreateModal: React.FC<JobCreateModalProps> = ({ isOpen, onClose,
       setSubmitting(false);
     }
   };
+
+  useEffect(() => {
+    if (isOpen) {
+      setScheduling(initialScheduling(initialDate));
+    }
+  }, [isOpen, initialDate]);
 
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {

@@ -87,6 +87,7 @@ const JobsPage: React.FC = () => {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [editingJob, setEditingJob] = useState<Job | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [createModalInitialDate, setCreateModalInitialDate] = useState<Date | null>(null);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('active');
   const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState<SortField | null>(null);
@@ -225,6 +226,11 @@ const JobsPage: React.FC = () => {
     setEditingJob(job);
   };
 
+  const handleDayColumnClick = (day: Date): void => {
+    setCreateModalInitialDate(day);
+    setIsCreateModalOpen(true);
+  };
+
   const handleEditSave = async (updates: JobUpdatePayload): Promise<void> => {
     if (!editingJob) return;
     const response = await axiosInstance.patch<SingleJobApiResponse>(`/api/jobs/${editingJob.id}`, updates);
@@ -320,7 +326,7 @@ const JobsPage: React.FC = () => {
             <button
               type="button"
               className={`${buttons.btn} ${buttons.btnPrimary}`}
-              onClick={() => setIsCreateModalOpen(true)}
+              onClick={() => { setCreateModalInitialDate(null); setIsCreateModalOpen(true); }}
             >
               {t.jobsNewJob}
             </button>
@@ -359,6 +365,7 @@ const JobsPage: React.FC = () => {
             jobs={jobs}
             setJobs={setJobs}
             onJobClick={(job) => setSelectedJob(job)}
+            onDayClick={handleDayColumnClick}
           />
         </div>
       ) : displayJobs.length === 0 ? (
@@ -565,7 +572,8 @@ const JobsPage: React.FC = () => {
 
       <JobCreateModal
         isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
+        initialDate={createModalInitialDate ?? undefined}
+        onClose={() => { setIsCreateModalOpen(false); setCreateModalInitialDate(null); }}
         onSuccess={() => void fetchJobs(statusFilter, 1, viewMode, weekStart, sortBy, sortDir)}
       />
     </div>

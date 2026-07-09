@@ -69,7 +69,10 @@ export const WeekJobCard: React.FC<WeekJobCardProps> = ({
       ref={isDraggable ? setNodeRef : undefined}
       style={style}
       className={cardClass}
-      onClick={onClick}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick?.();
+      }}
       {...(isDraggable ? listeners : {})}
       {...(isDraggable ? attributes : {})}
       aria-roledescription={isDraggable ? 'Draggable job card' : undefined}
