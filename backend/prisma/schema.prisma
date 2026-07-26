@@ -20,6 +20,7 @@ enum AuditEvent {
   TOKEN_REFRESH
   TOKEN_REUSE_DETECTED
   COMPLETION_REPORT_UNLOCKED
+  COMPLETION_REPORT_APPROVED_WITHOUT_SIGNATURE
 }
 
 enum JobStatus {
@@ -147,7 +148,8 @@ model CompletionReport {
   actualEnd         DateTime
   totalHours        Float
   customerName      String
-  customerSignature String
+  customerSignature String?
+  noSignatureReason String?
   approvedAt        DateTime?
   createdById       String
   createdAt         DateTime  @default(now())

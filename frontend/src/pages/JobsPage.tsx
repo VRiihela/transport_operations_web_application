@@ -83,6 +83,7 @@ const JobsPage: React.FC = () => {
   const [loadingDrivers, setLoadingDrivers] = useState<boolean>(false);
   const [assigningJobs, setAssigningJobs] = useState<Set<string>>(new Set());
   const [updatingStatus, setUpdatingStatus] = useState<Set<string>>(new Set());
+  const [approvingReports, setApprovingReports] = useState<Set<string>>(new Set());
   const [openDriverDropdown, setOpenDriverDropdown] = useState<string | null>(null);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [editingJob, setEditingJob] = useState<Job | null>(null);
@@ -192,6 +193,30 @@ const JobsPage: React.FC = () => {
       setError(getApiError(err, 'Failed to assign driver. Please try again.'));
     } finally {
       setAssigningJobs((prev) => {
+        const next = new Set(prev);
+        next.delete(jobId);
+        return next;
+      });
+    }
+  };
+
+  const handleApproveReport = async (jobId: string) => {
+    try {
+      setApprovingReports((prev) => new Set([...prev, jobId]));
+      const response = await axiosInstance.post<{ data: { approvedAt: string | null } }>(
+        `/api/jobs/${jobId}/completion-report/approve`
+      );
+      setJobs((prev) =>
+        prev.map((job) =>
+          job.id === jobId && job.completionReport
+            ? { ...job, completionReport: { ...job.completionReport, approvedAt: response.data.data.approvedAt } }
+            : job
+        )
+      );
+    } catch (err) {
+      setError(getApiError(err, 'Failed to approve completion report. Please try again.'));
+    } finally {
+      setApprovingReports((prev) => {
         const next = new Set(prev);
         next.delete(jobId);
         return next;
@@ -459,6 +484,25 @@ const JobsPage: React.FC = () => {
                         <div className={styles.completionReportRow}>
                           <strong>{t.crCustomer}:</strong> {job.completionReport.customerName}
                         </div>
+                        {!job.completionReport.customerSignature && (
+                          <div className={styles.completionReportRow}>
+                            <strong>{t.crNoSignature}:</strong>{' '}
+                            {job.completionReport.noSignatureReason ?? '—'}
+                          </div>
+                        )}
+                        {!job.completionReport.approvedAt &&
+                          (user?.role === 'Admin' || user?.role === 'Dispatcher') && (
+                            <button
+                              className={`${buttons.btn} ${buttons.btnSuccess} ${buttons.btnSmall}`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                void handleApproveReport(job.id);
+                              }}
+                              disabled={approvingReports.has(job.id)}
+                            >
+                              {approvingReports.has(job.id) ? t.crApproving : t.crApproveButton}
+                            </button>
+                          )}
                       </div>
                     )}
                   </td>
@@ -567,6 +611,7 @@ const JobsPage: React.FC = () => {
           isOpen={true}
           onClose={() => setSelectedJob(null)}
           onEdit={() => { handleEditOpen(selectedJob); setSelectedJob(null); }}
+          onApproved={() => void fetchJobs(statusFilter, page, viewMode, weekStart, sortBy, sortDir)}
         />
       )}
 

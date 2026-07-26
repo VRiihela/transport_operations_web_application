@@ -90,7 +90,8 @@ export class CompletionReportService {
         actualEnd,
         totalHours,
         customerName: data.customerName,
-        customerSignature: data.customerSignature,
+        customerSignature: data.customerSignature ?? null,
+        noSignatureReason: data.customerSignature ? null : (data.noSignatureReason ?? null),
         createdById: userId,
       },
       update: {
@@ -99,17 +100,20 @@ export class CompletionReportService {
         actualEnd,
         totalHours,
         customerName: data.customerName,
-        customerSignature: data.customerSignature,
+        customerSignature: data.customerSignature ?? null,
+        noSignatureReason: data.customerSignature ? null : (data.noSignatureReason ?? null),
         approvedAt: null, // reset approval on update
       },
     });
   }
 
-  async approve(jobId: string) {
+  async approve(jobId: string, approverRole: UserRole) {
     const report = await this.prisma.completionReport.findUnique({ where: { jobId } });
     if (!report) throw new Error('REPORT_NOT_FOUND');
     if (report.approvedAt) throw new Error('ALREADY_APPROVED');
-    if (!report.customerSignature) throw new Error('SIGNATURE_REQUIRED');
+    if (!report.customerSignature && approverRole === UserRole.Driver) {
+      throw new Error('SIGNATURE_REQUIRED');
+    }
 
     return this.prisma.completionReport.update({
       where: { jobId },
@@ -186,11 +190,18 @@ export class CompletionReportService {
     doc.moveDown();
     doc.fontSize(12).text('Customer signature', { underline: true });
     doc.moveDown(0.5);
-    const signature = decodeSignature(report.customerSignature);
+    const signature = report.customerSignature ? decodeSignature(report.customerSignature) : null;
     if (signature) {
       doc.image(signature, { fit: [220, 110] });
-    } else {
+    } else if (report.customerSignature) {
       doc.fontSize(10).fillColor('#6b7280').text('(signature unavailable)').fillColor('#000');
+    } else {
+      const reasonSuffix = report.noSignatureReason ? `: ${report.noSignatureReason}` : '';
+      doc
+        .fontSize(10)
+        .fillColor('#6b7280')
+        .text(`(no customer signature — approved by dispatcher/admin override${reasonSuffix})`)
+        .fillColor('#000');
     }
 
     return doc;

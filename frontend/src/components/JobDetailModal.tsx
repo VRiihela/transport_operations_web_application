@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { isAxiosError } from 'axios';
+import axiosInstance from '../api/axios';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../i18n/LanguageContext';
 import { JOB_TYPE_LABELS, JobType } from '../types/job';
@@ -13,8 +15,17 @@ interface CompletionReport {
   actualEnd: string;
   totalHours: number;
   customerName: string;
-  customerSignature: string;
+  customerSignature: string | null;
+  noSignatureReason: string | null;
   approvedAt: string | null;
+}
+
+function getApiError(err: unknown, fallback: string): string {
+  if (isAxiosError(err)) {
+    const msg = (err.response?.data as { error?: string } | undefined)?.error;
+    if (msg) return msg;
+  }
+  return fallback;
 }
 
 interface Customer {
@@ -57,6 +68,7 @@ interface JobDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   onEdit?: () => void;
+  onApproved?: () => void;
 }
 
 function formatAddress(
@@ -68,10 +80,31 @@ function formatAddress(
   return [streetPart, cityPart].filter(Boolean).join(', ') || '—';
 }
 
-export const JobDetailModal: React.FC<JobDetailModalProps> = ({ job, isOpen, onClose, onEdit }) => {
+export const JobDetailModal: React.FC<JobDetailModalProps> = ({ job, isOpen, onClose, onEdit, onApproved }) => {
   const { user } = useAuth();
   const { t, fmtDateTime, statusLabel } = useLanguage();
   const canEdit = onEdit && (user?.role === 'Admin' || user?.role === 'Dispatcher');
+  const canApprove = user?.role === 'Admin' || user?.role === 'Dispatcher';
+
+  const [approvedAt, setApprovedAt] = useState(job.completionReport?.approvedAt ?? null);
+  const [approving, setApproving] = useState(false);
+  const [approveError, setApproveError] = useState<string | null>(null);
+
+  const handleApprove = async () => {
+    setApproving(true);
+    setApproveError(null);
+    try {
+      const res = await axiosInstance.post<{ data: { approvedAt: string | null } }>(
+        `/api/jobs/${job.id}/completion-report/approve`
+      );
+      setApprovedAt(res.data.data.approvedAt);
+      onApproved?.();
+    } catch (err) {
+      setApproveError(getApiError(err, 'Failed to approve completion report'));
+    } finally {
+      setApproving(false);
+    }
+  };
 
   const formatScheduling = (start?: string | null, end?: string | null, note?: string | null): string => {
     if (start || end) {
@@ -203,10 +236,12 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({ job, isOpen, onC
           <div className={styles.completionSection}>
             <h3 className={styles.sectionTitle}>
               {t.detailCompletionSection}
-              {job.completionReport.approvedAt && (
+              {approvedAt ? (
                 <span className={styles.approvedBadge}>
-                  {t.detailApproved} {fmtDateTime(job.completionReport.approvedAt)}
+                  {t.detailApproved} {fmtDateTime(approvedAt)}
                 </span>
+              ) : (
+                <span className={styles.pendingBadge}>{t.detailPendingApproval}</span>
               )}
             </h3>
             <dl className={styles.fields}>
@@ -233,26 +268,45 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({ job, isOpen, onC
               <div className={styles.field}>
                 <dt className={styles.label}>{t.detailSignature}</dt>
                 <dd className={styles.value}>
-                  <img
-                    src={job.completionReport.customerSignature}
-                    alt="Customer signature"
-                    className={styles.signatureImage}
-                  />
+                  {job.completionReport.customerSignature ? (
+                    <img
+                      src={job.completionReport.customerSignature}
+                      alt="Customer signature"
+                      className={styles.signatureImage}
+                    />
+                  ) : (
+                    <span className={styles.noSignature}>
+                      {t.crNoSignature}
+                      {job.completionReport.noSignatureReason && ` — ${job.completionReport.noSignatureReason}`}
+                    </span>
+                  )}
                 </dd>
               </div>
             </dl>
-            {job.completionReport?.approvedAt && (
-              <button
-                className={`${buttons.btn} ${buttons.btnNeutral} ${styles.downloadButton}`}
-                onClick={() => {
-                  void downloadCompletionReportPdf(job.id).catch(() => {
-                    alert('Could not download report. It may have been unlocked or removed.');
-                  });
-                }}
-              >
-                {t.downloadPdf}
-              </button>
-            )}
+            {approveError && <div className={styles.approveError}>{approveError}</div>}
+            <div className={styles.completionActions}>
+              {approvedAt && (
+                <button
+                  className={`${buttons.btn} ${buttons.btnNeutral} ${styles.downloadButton}`}
+                  onClick={() => {
+                    void downloadCompletionReportPdf(job.id).catch(() => {
+                      alert('Could not download report. It may have been unlocked or removed.');
+                    });
+                  }}
+                >
+                  {t.downloadPdf}
+                </button>
+              )}
+              {!approvedAt && canApprove && (
+                <button
+                  className={`${buttons.btn} ${buttons.btnSuccess}`}
+                  onClick={() => void handleApprove()}
+                  disabled={approving}
+                >
+                  {approving ? t.crApproving : t.crApproveButton}
+                </button>
+              )}
+            </div>
           </div>
         )}
       </div>

@@ -100,6 +100,8 @@ export const CompletionModal: React.FC<CompletionModalProps> = ({
 
   const [customerName, setCustomerName] = useState('');
   const [hasSignature, setHasSignature] = useState(false);
+  const [noSignature, setNoSignature] = useState(false);
+  const [noSignatureReason, setNoSignatureReason] = useState('');
   const signatureRef = useRef<SignatureCanvasHandle>(null);
 
   const endIsAfterStart =
@@ -114,6 +116,8 @@ export const CompletionModal: React.FC<CompletionModalProps> = ({
     setActualEnd('');
     setCustomerName('');
     setHasSignature(false);
+    setNoSignature(false);
+    setNoSignatureReason('');
   };
 
   const handleClose = () => {
@@ -134,10 +138,15 @@ export const CompletionModal: React.FC<CompletionModalProps> = ({
 
   const handleApproveSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!customerName.trim() || !hasSignature) return;
+    if (!customerName.trim()) return;
+    if (noSignature) {
+      if (!noSignatureReason.trim()) return;
+    } else if (!hasSignature) {
+      return;
+    }
 
-    const signatureData = signatureRef.current?.getSignatureData();
-    if (!signatureData) {
+    const signatureData = noSignature ? null : signatureRef.current?.getSignatureData();
+    if (!noSignature && !signatureData) {
       setError('Please provide a signature');
       return;
     }
@@ -151,8 +160,11 @@ export const CompletionModal: React.FC<CompletionModalProps> = ({
         actualEnd: new Date(actualEnd).toISOString(),
         customerName: customerName.trim(),
         customerSignature: signatureData,
+        noSignatureReason: noSignature ? noSignatureReason.trim() : null,
       });
-      await axiosInstance.post(`/api/jobs/${job.id}/completion-report/approve`);
+      if (!noSignature) {
+        await axiosInstance.post(`/api/jobs/${job.id}/completion-report/approve`);
+      }
       resetForm();
       onApproved();
     } catch (err) {
@@ -307,16 +319,44 @@ export const CompletionModal: React.FC<CompletionModalProps> = ({
 
             <form onSubmit={(e) => void handleApproveSubmit(e)}>
               <div className={forms.formGroup}>
-                <label className={forms.label}>
-                  {t.reportSignatureTitle} <span className={forms.required}>*</span>
+                <label className={styles.noSignatureToggle}>
+                  <input
+                    type="checkbox"
+                    checked={noSignature}
+                    onChange={(e) => { setNoSignature(e.target.checked); setError(null); }}
+                  />
+                  {t.reportNoSignatureToggle}
                 </label>
-                <SignatureCanvas
-                  ref={signatureRef}
-                  onSignatureChange={setHasSignature}
-                  width={500}
-                  height={150}
-                />
               </div>
+              {noSignature ? (
+                <div className={forms.formGroup}>
+                  <label htmlFor="cr-noSignatureReason" className={forms.label}>
+                    {t.reportNoSignatureReason} <span className={forms.required}>*</span>
+                  </label>
+                  <textarea
+                    id="cr-noSignatureReason"
+                    value={noSignatureReason}
+                    onChange={(e) => setNoSignatureReason(e.target.value)}
+                    required
+                    maxLength={500}
+                    rows={3}
+                    className={forms.textarea}
+                    placeholder={t.reportNoSignatureReasonPlaceholder}
+                  />
+                </div>
+              ) : (
+                <div className={forms.formGroup}>
+                  <label className={forms.label}>
+                    {t.reportSignatureTitle} <span className={forms.required}>*</span>
+                  </label>
+                  <SignatureCanvas
+                    ref={signatureRef}
+                    onSignatureChange={setHasSignature}
+                    width={500}
+                    height={150}
+                  />
+                </div>
+              )}
               <div className={forms.formGroup}>
                 <label htmlFor="cr-customerName" className={forms.label}>
                   {t.reportCustomerName} <span className={forms.required}>*</span>
@@ -332,6 +372,9 @@ export const CompletionModal: React.FC<CompletionModalProps> = ({
                   placeholder={t.reportCustomerNamePlaceholder}
                 />
               </div>
+              {noSignature && (
+                <div className={styles.noSignatureNotice}>{t.reportNoSignatureNotice}</div>
+              )}
               <div className={styles.actions}>
                 <button
                   type="button"
@@ -343,9 +386,18 @@ export const CompletionModal: React.FC<CompletionModalProps> = ({
                 <button
                   type="submit"
                   className={`${buttons.btn} ${buttons.btnSuccess}`}
-                  disabled={isLocked || loading || !customerName.trim() || !hasSignature}
+                  disabled={
+                    isLocked ||
+                    loading ||
+                    !customerName.trim() ||
+                    (noSignature ? !noSignatureReason.trim() : !hasSignature)
+                  }
                 >
-                  {loading ? t.reportApproving : t.reportApproveSign}
+                  {loading
+                    ? t.reportApproving
+                    : noSignature
+                      ? t.reportSubmitNoSignature
+                      : t.reportApproveSign}
                 </button>
               </div>
             </form>

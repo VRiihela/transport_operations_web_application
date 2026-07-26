@@ -253,6 +253,17 @@ export interface AppTranslations {
   crTime: string;
   crHours: string;
   crCustomer: string;
+  crNoSignature: string;
+  crApproveButton: string;
+  crApproving: string;
+
+  // Completion modal: no-signature override
+  reportNoSignatureToggle: string;
+  reportNoSignatureReason: string;
+  reportNoSignatureReasonPlaceholder: string;
+  reportNoSignatureNotice: string;
+  reportSubmitNoSignature: string;
+  myJobsPendingApproval: string;
 }
 
 export const en: AppTranslations = {
@@ -487,6 +498,16 @@ export const en: AppTranslations = {
   crTime: 'Time',
   crHours: 'Hours',
   crCustomer: 'Customer',
+  crNoSignature: 'No customer signature',
+  crApproveButton: 'Approve',
+  crApproving: 'Approving…',
+
+  reportNoSignatureToggle: 'Customer unable or refuses to sign',
+  reportNoSignatureReason: 'Reason',
+  reportNoSignatureReasonPlaceholder: 'e.g. customer not present, refused to sign…',
+  reportNoSignatureNotice: 'This report will be sent to a dispatcher or admin for approval without a customer signature.',
+  reportSubmitNoSignature: 'Submit without signature',
+  myJobsPendingApproval: 'Waiting for dispatcher/admin approval',
 };
 
 export const fi: AppTranslations = {
@@ -721,6 +742,16 @@ export const fi: AppTranslations = {
   crTime: 'Aika',
   crHours: 'Tunnit',
   crCustomer: 'Asiakas',
+  crNoSignature: 'Ei asiakkaan allekirjoitusta',
+  crApproveButton: 'Hyväksy',
+  crApproving: 'Hyväksytään…',
+
+  reportNoSignatureToggle: 'Asiakas ei voi tai kieltäytyy allekirjoittamasta',
+  reportNoSignatureReason: 'Syy',
+  reportNoSignatureReasonPlaceholder: 'esim. asiakas ei paikalla, kieltäytyi allekirjoittamasta…',
+  reportNoSignatureNotice: 'Tämä raportti lähetetään lähettäjälle tai ylläpitäjälle hyväksyttäväksi ilman asiakkaan allekirjoitusta.',
+  reportSubmitNoSignature: 'Lähetä ilman allekirjoitusta',
+  myJobsPendingApproval: 'Odottaa lähettäjän/ylläpitäjän hyväksyntää',
 };
 
 export const translations: Record<Lang, AppTranslations> = { en, fi };

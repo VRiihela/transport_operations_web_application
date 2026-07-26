@@ -20,6 +20,7 @@ interface CompletionReport {
   actualEnd: string;
   totalHours: number;
   customerName: string;
+  customerSignature: string | null;
   approvedAt: string | null;
 }
 
@@ -375,6 +376,8 @@ const MyJobsPage: React.FC = () => {
                       >
                         {updatingJobs.has(job.id) ? t.myJobsCompleting : t.myJobsMarkCompleted}
                       </button>
+                    ) : job.completionReport && !job.completionReport.customerSignature ? (
+                      <span className={styles.pendingApproval}>{t.myJobsPendingApproval}</span>
                     ) : (
                       <button
                         onClick={() => { setCompletionModalJob(job); }}

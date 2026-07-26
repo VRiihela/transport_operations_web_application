@@ -91,6 +91,27 @@
   text-align: right;
 }
 
+.noSignatureToggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+}
+
+.noSignatureNotice {
+  background: #fefce8;
+  border: 1px solid #fef08a;
+  border-left: 4px solid #eab308;
+  color: #854d0e;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  font-size: 0.8125rem;
+}
+
 .timeRow {
   display: grid;
   grid-template-columns: 1fr 1fr;

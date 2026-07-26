@@ -116,6 +116,17 @@
   gap: 0.5rem;
 }
 
+.pendingApproval {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 0.9rem;
+  background: #fef9c3;
+  color: #854d0e;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
 /* ── Driver notes ───────────────────────────────────────── */
 .notesSection {
   margin-top: 1rem;

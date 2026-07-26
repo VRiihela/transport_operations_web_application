@@ -50,7 +50,8 @@ export interface Job {
     actualEnd: string;
     totalHours: number;
     customerName: string;
-    customerSignature: string;
+    customerSignature: string | null;
+    noSignatureReason: string | null;
     approvedAt: string | null;
   } | null;
 }

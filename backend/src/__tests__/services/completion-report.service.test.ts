@@ -125,7 +125,7 @@ describe('CompletionReportService', () => {
   describe('approve', () => {
     it('throws REPORT_NOT_FOUND when no report exists', async () => {
       mockReportFindUnique.mockResolvedValue(null);
-      await expect(service.approve('job-1')).rejects.toThrow('REPORT_NOT_FOUND');
+      await expect(service.approve('job-1', UserRole.Driver)).rejects.toThrow('REPORT_NOT_FOUND');
       expect(mockReportUpdate).not.toHaveBeenCalled();
     });
 
@@ -134,7 +134,7 @@ describe('CompletionReportService', () => {
       const approvedReport = { ...baseReport, approvedAt: new Date() };
       mockReportUpdate.mockResolvedValue(approvedReport);
 
-      const result = await service.approve('job-1');
+      const result = await service.approve('job-1', UserRole.Driver);
       expect(result.approvedAt).toBeTruthy();
       expect(mockReportUpdate).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -142,6 +142,30 @@ describe('CompletionReportService', () => {
           data: expect.objectContaining({ approvedAt: expect.any(Date) }),
         })
       );
+    });
+
+    it('throws SIGNATURE_REQUIRED when Driver approves a report with no signature', async () => {
+      mockReportFindUnique.mockResolvedValue({ ...baseReport, customerSignature: null });
+      await expect(service.approve('job-1', UserRole.Driver)).rejects.toThrow('SIGNATURE_REQUIRED');
+      expect(mockReportUpdate).not.toHaveBeenCalled();
+    });
+
+    it('allows Dispatcher to approve a report with no signature', async () => {
+      mockReportFindUnique.mockResolvedValue({ ...baseReport, customerSignature: null });
+      const approvedReport = { ...baseReport, customerSignature: null, approvedAt: new Date() };
+      mockReportUpdate.mockResolvedValue(approvedReport);
+
+      const result = await service.approve('job-1', UserRole.Dispatcher);
+      expect(result.approvedAt).toBeTruthy();
+    });
+
+    it('allows Admin to approve a report with no signature', async () => {
+      mockReportFindUnique.mockResolvedValue({ ...baseReport, customerSignature: null });
+      const approvedReport = { ...baseReport, customerSignature: null, approvedAt: new Date() };
+      mockReportUpdate.mockResolvedValue(approvedReport);
+
+      const result = await service.approve('job-1', UserRole.Admin);
+      expect(result.approvedAt).toBeTruthy();
     });
   });
 });

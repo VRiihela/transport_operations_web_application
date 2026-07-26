@@ -210,7 +210,12 @@ export const approveCompletionReport = async (req: AuthenticatedRequest, res: Re
       res.status(403).json({ error: 'Not authorized to approve completion report for this job' });
       return;
     }
-    const report = await completionReportService.approve(jobId);
+    const report = await completionReportService.approve(jobId, req.user!.role as UserRole);
+    if (!report.customerSignature) {
+      await AuditService.logFromRequest(req, AuditEvent.COMPLETION_REPORT_APPROVED_WITHOUT_SIGNATURE, req.user!.id, {
+        jobId,
+      });
+    }
     res.json({ data: report });
   } catch (error) {
     if (error instanceof Error && error.message === 'REPORT_NOT_FOUND') {

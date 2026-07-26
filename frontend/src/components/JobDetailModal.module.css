@@ -120,6 +120,15 @@
   border-radius: 12px;
 }
 
+.pendingBadge {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #854d0e;
+  background: #fef9c3;
+  padding: 0.15rem 0.5rem;
+  border-radius: 12px;
+}
+
 .signatureImage {
   max-width: 100%;
   max-height: 120px;
@@ -128,8 +137,25 @@
   background: #fff;
 }
 
-.downloadButton {
+.noSignature {
+  color: #6b7280;
+  font-style: italic;
+}
+
+.approveError {
+  margin-top: 0.75rem;
+  color: #b91c1c;
+  font-size: 0.85rem;
+}
+
+.completionActions {
+  display: flex;
+  gap: 0.5rem;
   margin-top: 1rem;
+}
+
+.downloadButton {
+  margin-top: 0;
 }
 
 @media (max-width: 480px) {

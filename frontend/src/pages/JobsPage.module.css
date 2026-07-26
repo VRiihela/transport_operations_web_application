@@ -198,6 +198,10 @@
   font-weight: 600;
 }
 
+.completionReport button {
+  margin-top: 0.4rem;
+}
+
 .completionReportRow {
   color: #374151;
   margin-bottom: 0.2rem;
