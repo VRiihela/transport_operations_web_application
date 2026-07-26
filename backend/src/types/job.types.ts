@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { JobStatus, JobType } from '@prisma/client';
+import { JobStatus, JobType, ScheduleType } from '@prisma/client';
 
 const schedulingDateRefinement = (data: { scheduledStart?: string | null; scheduledEnd?: string | null }) => {
   if (data.scheduledStart && data.scheduledEnd) {
@@ -7,6 +7,15 @@ const schedulingDateRefinement = (data: { scheduledStart?: string | null; schedu
   }
   return true;
 };
+
+function requireScheduledEndForWindow<
+  T extends { scheduleType?: string | null | undefined; scheduledEnd?: string | Date | null | undefined }
+>(data: T): boolean {
+  if (data.scheduleType === ScheduleType.WINDOW) {
+    return data.scheduledEnd !== null && data.scheduledEnd !== undefined;
+  }
+  return true;
+}
 
 export const createJobSchema = z
   .object({
@@ -22,6 +31,7 @@ export const createJobSchema = z
     scheduledAt: z.string().datetime().optional(),
     scheduledStart: z.string().datetime().nullish(),
     scheduledEnd: z.string().datetime().nullish(),
+    scheduleType: z.nativeEnum(ScheduleType).optional(),
     schedulingNote: z.string().trim().max(500).optional(),
     location: z.string().max(255, 'Location too long').trim().optional(),
     notes: z.string().max(1000, 'Notes too long').trim().optional(),
@@ -53,6 +63,10 @@ export const createJobSchema = z
     message: 'scheduledEnd must be after scheduledStart',
     path: ['scheduledEnd'],
   })
+  .refine(requireScheduledEndForWindow, {
+    message: 'scheduledEnd is required when scheduleType is WINDOW',
+    path: ['scheduledEnd'],
+  })
   .refine(
     (data) => !(data.assignedDriverId && data.teamId),
     { message: 'Job cannot be assigned to both a driver and a team', path: ['teamId'] }
@@ -74,6 +88,7 @@ export const updateJobSchema = z
     scheduledAt: z.string().datetime().nullable().optional(),
     scheduledStart: z.string().datetime().nullish(),
     scheduledEnd: z.string().datetime().nullish(),
+    scheduleType: z.nativeEnum(ScheduleType).optional(),
     schedulingNote: z.string().trim().max(500).optional(),
     location: z.string().max(255, 'Location too long').trim().optional(),
     notes: z.string().max(1000, 'Notes too long').trim().optional(),
@@ -106,6 +121,10 @@ export const updateJobSchema = z
   )
   .refine(schedulingDateRefinement, {
     message: 'scheduledEnd must be after scheduledStart',
+    path: ['scheduledEnd'],
+  })
+  .refine(requireScheduledEndForWindow, {
+    message: 'scheduledEnd is required when scheduleType is WINDOW',
     path: ['scheduledEnd'],
   })
   .refine(
@@ -180,6 +199,7 @@ export interface JobWithDetails {
   id: string;
   status: JobStatus;
   jobType: JobType;
+  scheduleType: ScheduleType;
   services: string[] | null;
   scheduledStart: Date | null;
   scheduledEnd: Date | null;
