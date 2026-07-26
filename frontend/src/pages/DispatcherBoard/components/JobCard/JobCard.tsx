@@ -1,8 +1,8 @@
 import React from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
-import { parseISO, isValid, format } from 'date-fns';
 import { Job } from '../../types';
+import { formatSchedule } from '../../formatSchedule';
 import { useLanguage } from '../../../../i18n/LanguageContext';
 import styles from './JobCard.module.css';
 
@@ -13,12 +13,6 @@ interface JobCardProps {
   onCardClick?: (job: Job) => void;
 }
 
-function formatTime(scheduledStart: string | null | undefined): string | null {
-  if (!scheduledStart) return null;
-  const d = parseISO(scheduledStart);
-  return isValid(d) ? format(d, 'HH:mm') : null;
-}
-
 const JobCard: React.FC<JobCardProps> = ({ job, draggable = false, overlay = false, onCardClick }) => {
   const { statusLabel } = useLanguage();
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
@@ -26,7 +20,7 @@ const JobCard: React.FC<JobCardProps> = ({ job, draggable = false, overlay = fal
     disabled: !draggable,
   });
 
-  const time = formatTime(job.scheduledStart);
+  const schedule = formatSchedule(job);
   const address = [job.street, job.houseNumber].filter(Boolean).join(' ');
   const addressCity = [job.postalCode, job.city].filter(Boolean).join(' ');
   const metaLine = [address, addressCity].filter(Boolean).join(', ')
@@ -63,7 +57,10 @@ const JobCard: React.FC<JobCardProps> = ({ job, draggable = false, overlay = fal
       }
     >
       <div className={styles.headerRow}>
-        {time ? <span className={styles.time}>{time}</span> : <span />}
+        <span className={styles.time}>
+          {schedule.primary}
+          <span className={styles.scheduleLabel}>{schedule.label}</span>
+        </span>
         <span className={`${styles.badge} ${styles[`status${job.status}`]}`}>
           {statusLabel(job.status)}
         </span>

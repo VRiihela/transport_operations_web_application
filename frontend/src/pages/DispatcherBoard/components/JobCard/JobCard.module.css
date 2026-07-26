@@ -54,6 +54,15 @@
   font-variant-numeric: tabular-nums;
 }
 
+.scheduleLabel {
+  display: block;
+  font-size: 9px;
+  font-weight: 500;
+  color: #6b7280;
+  text-transform: none;
+  letter-spacing: 0.01em;
+}
+
 .title {
   font-size: 12px;
   font-weight: 500;

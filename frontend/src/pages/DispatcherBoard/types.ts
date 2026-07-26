@@ -26,6 +26,7 @@ export interface Job {
   description?: string | null;
   scheduledStart?: string | null;
   scheduledEnd?: string | null;
+  scheduleType?: 'FIXED' | 'WINDOW' | 'DURATION' | null;
   schedulingNote?: string | null;
   street?: string | null;
   houseNumber?: string | null;
