@@ -5,6 +5,7 @@ import {
   JOB_TYPE_LABELS,
   ServiceType,
   SchedulingType,
+  ScheduleType,
   ServicesData,
   AddressData,
   SchedulingData,
@@ -59,6 +60,12 @@ const createEmptyAddress = (): AddressData => ({
   doorCode: '',
   accessNotes: '',
 });
+
+/** Combines a date + time input pair into an ISO string, or null if either fails to parse. */
+const toIsoLocal = (date: string, time: string): string | null => {
+  const d = new Date(`${date}T${time}`);
+  return Number.isNaN(d.getTime()) ? null : d.toISOString();
+};
 
 const initialScheduling = (initialDate?: Date): SchedulingData => {
   if (initialDate) {
@@ -201,12 +208,32 @@ export const JobCreateModal: React.FC<JobCreateModalProps> = ({ isOpen, onClose,
     let scheduledStart: string | null = null;
     let scheduledEnd: string | null = null;
     let schedulingNote: string | undefined;
+    let scheduleType: ScheduleType | undefined;
 
     if (scheduling.type === SchedulingType.EXACT_TIME && scheduling.date && scheduling.exactTime) {
-      scheduledStart = new Date(`${scheduling.date}T${scheduling.exactTime}`).toISOString();
-    } else if (scheduling.type === SchedulingType.TIME_WINDOW && scheduling.date) {
-      if (scheduling.windowStart) scheduledStart = new Date(`${scheduling.date}T${scheduling.windowStart}`).toISOString();
-      if (scheduling.windowEnd) scheduledEnd = new Date(`${scheduling.date}T${scheduling.windowEnd}`).toISOString();
+      const start = toIsoLocal(scheduling.date, scheduling.exactTime);
+      if (!start) { setSubmitError('Start time is invalid. Please check the date and time.'); return; }
+      scheduledStart = start;
+      scheduleType = 'FIXED';
+    } else if (
+      (scheduling.type === SchedulingType.ARRIVAL_WINDOW || scheduling.type === SchedulingType.DURATION) &&
+      scheduling.date
+    ) {
+      if (scheduling.windowStart) {
+        const start = toIsoLocal(scheduling.date, scheduling.windowStart);
+        if (!start) { setSubmitError('Start time is invalid. Please check the date and time.'); return; }
+        scheduledStart = start;
+      }
+      if (scheduling.windowEnd) {
+        const end = toIsoLocal(scheduling.date, scheduling.windowEnd);
+        if (!end) { setSubmitError('End time is invalid. Please check the date and time.'); return; }
+        scheduledEnd = end;
+      }
+      if (scheduling.type === SchedulingType.ARRIVAL_WINDOW && !scheduledEnd) {
+        setSubmitError(t.schedArrivalWindowEndRequired);
+        return;
+      }
+      scheduleType = scheduling.type === SchedulingType.ARRIVAL_WINDOW ? 'WINDOW' : 'DURATION';
     } else if (scheduling.type === SchedulingType.TBC) {
       schedulingNote = scheduling.schedulingNote || undefined;
     }
@@ -218,6 +245,7 @@ export const JobCreateModal: React.FC<JobCreateModalProps> = ({ isOpen, onClose,
       services: services.selectedServices,
       scheduledStart,
       scheduledEnd,
+      scheduleType,
       schedulingNote,
       ...(hasDelivery && {
         deliveryStreet: deliveryAddress.street || undefined,

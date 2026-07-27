@@ -4,6 +4,7 @@ import {
   JOB_TYPE_LABELS,
   ServiceType,
   SchedulingType,
+  ScheduleType,
   ServicesData,
   AddressData,
   SchedulingData,
@@ -26,6 +27,7 @@ interface Job {
   services?: string[] | null;
   scheduledStart?: string | null;
   scheduledEnd?: string | null;
+  scheduleType: ScheduleType;
   schedulingNote?: string | null;
   street?: string | null;
   postalCode?: string | null;
@@ -52,6 +54,7 @@ export interface JobUpdatePayload {
   description?: string;
   scheduledStart?: string | null;
   scheduledEnd?: string | null;
+  scheduleType?: ScheduleType;
   schedulingNote?: string;
   street?: string;
   postalCode?: string;
@@ -90,6 +93,12 @@ const createEmptyAddress = (): AddressData => ({
 const parseJobType = (jt: string | null | undefined): JobType =>
   Object.values(JobType).includes(jt as JobType) ? (jt as JobType) : JobType.DELIVERY;
 
+/** Combines a date + time input pair into an ISO string, or null if either fails to parse. */
+const toIsoLocal = (date: string, time: string): string | null => {
+  const d = new Date(`${date}T${time}`);
+  return Number.isNaN(d.getTime()) ? null : d.toISOString();
+};
+
 const parseServices = (raw: string[] | null | undefined, jobType: JobType): ServiceType[] => {
   if (raw && raw.length > 0) {
     return raw.filter((s) => Object.values(ServiceType).includes(s as ServiceType)) as ServiceType[];
@@ -98,7 +107,7 @@ const parseServices = (raw: string[] | null | undefined, jobType: JobType): Serv
 };
 
 const parseScheduling = (
-  start?: string | null, end?: string | null, note?: string | null,
+  start?: string | null, end?: string | null, note?: string | null, scheduleType?: ScheduleType,
 ): SchedulingData => {
   if (start) {
     const d = new Date(start);
@@ -107,7 +116,8 @@ const parseScheduling = (
     if (end) {
       const e = new Date(end);
       const endTime = `${String(e.getHours()).padStart(2, '0')}:${String(e.getMinutes()).padStart(2, '0')}`;
-      return { type: SchedulingType.TIME_WINDOW, date, exactTime: '', windowStart: startTime, windowEnd: endTime, schedulingNote: '' };
+      const type = scheduleType === 'WINDOW' ? SchedulingType.ARRIVAL_WINDOW : SchedulingType.DURATION;
+      return { type, date, exactTime: '', windowStart: startTime, windowEnd: endTime, schedulingNote: '' };
     }
     return { type: SchedulingType.EXACT_TIME, date, exactTime: startTime, windowStart: '', windowEnd: '', schedulingNote: '' };
   }
@@ -163,11 +173,11 @@ export const JobEditModal: React.FC<JobEditModalProps> = ({ job, isOpen, onClose
     } else {
       setServiceAddress(createEmptyAddress());
     }
-    setScheduling(parseScheduling(job.scheduledStart, job.scheduledEnd, job.schedulingNote));
+    setScheduling(parseScheduling(job.scheduledStart, job.scheduledEnd, job.schedulingNote, job.scheduleType));
     setCustomerData({ name: '', phone: '', companyName: '', type: 'PRIVATE' });
     setPhoneInput('');
     setSubmitError('');
-  }, [isOpen, job]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isOpen, job.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleCustomerSearch = useCallback(async (phone: string) => {
     if (phone.length < 3) { setSearchResults([]); setShowDropdown(false); return; }
@@ -229,12 +239,32 @@ export const JobEditModal: React.FC<JobEditModalProps> = ({ job, isOpen, onClose
     let scheduledStart: string | null = null;
     let scheduledEnd: string | null = null;
     let schedulingNote: string | undefined;
+    let scheduleType: ScheduleType | undefined;
 
     if (scheduling.type === SchedulingType.EXACT_TIME && scheduling.date && scheduling.exactTime) {
-      scheduledStart = new Date(`${scheduling.date}T${scheduling.exactTime}`).toISOString();
-    } else if (scheduling.type === SchedulingType.TIME_WINDOW && scheduling.date) {
-      if (scheduling.windowStart) scheduledStart = new Date(`${scheduling.date}T${scheduling.windowStart}`).toISOString();
-      if (scheduling.windowEnd) scheduledEnd = new Date(`${scheduling.date}T${scheduling.windowEnd}`).toISOString();
+      const start = toIsoLocal(scheduling.date, scheduling.exactTime);
+      if (!start) { setSubmitError('Start time is invalid. Please check the date and time.'); return; }
+      scheduledStart = start;
+      scheduleType = 'FIXED';
+    } else if (
+      (scheduling.type === SchedulingType.ARRIVAL_WINDOW || scheduling.type === SchedulingType.DURATION) &&
+      scheduling.date
+    ) {
+      if (scheduling.windowStart) {
+        const start = toIsoLocal(scheduling.date, scheduling.windowStart);
+        if (!start) { setSubmitError('Start time is invalid. Please check the date and time.'); return; }
+        scheduledStart = start;
+      }
+      if (scheduling.windowEnd) {
+        const end = toIsoLocal(scheduling.date, scheduling.windowEnd);
+        if (!end) { setSubmitError('End time is invalid. Please check the date and time.'); return; }
+        scheduledEnd = end;
+      }
+      if (scheduling.type === SchedulingType.ARRIVAL_WINDOW && !scheduledEnd) {
+        setSubmitError('An arrival window needs a latest-arrival time.');
+        return;
+      }
+      scheduleType = scheduling.type === SchedulingType.ARRIVAL_WINDOW ? 'WINDOW' : 'DURATION';
     } else if (scheduling.type === SchedulingType.TBC) {
       schedulingNote = scheduling.schedulingNote || undefined;
     }
@@ -245,6 +275,7 @@ export const JobEditModal: React.FC<JobEditModalProps> = ({ job, isOpen, onClose
       services: services.selectedServices,
       scheduledStart,
       scheduledEnd,
+      scheduleType,
       schedulingNote,
       customerName: customerName.trim() || null,
       customerPhone: customerPhone.trim() || null,

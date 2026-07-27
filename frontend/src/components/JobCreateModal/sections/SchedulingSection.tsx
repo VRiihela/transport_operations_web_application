@@ -11,14 +11,17 @@ interface SchedulingSectionProps {
 
 export const SchedulingSection: React.FC<SchedulingSectionProps> = ({ data, onChange }) => {
   const { t } = useLanguage();
+  const hasWindowFields = (type: SchedulingType): boolean =>
+    type === SchedulingType.ARRIVAL_WINDOW || type === SchedulingType.DURATION;
+
   const handleTypeChange = (type: SchedulingType) => {
     onChange({
       ...data,
       type,
       // Preserve date across all types; only clear type-specific fields
       exactTime: type === SchedulingType.EXACT_TIME ? data.exactTime : '',
-      windowStart: type === SchedulingType.TIME_WINDOW ? data.windowStart : '',
-      windowEnd: type === SchedulingType.TIME_WINDOW ? data.windowEnd : '',
+      windowStart: hasWindowFields(type) ? data.windowStart : '',
+      windowEnd: hasWindowFields(type) ? data.windowEnd : '',
       schedulingNote: type === SchedulingType.TBC ? data.schedulingNote : '',
     });
   };
@@ -31,7 +34,8 @@ export const SchedulingSection: React.FC<SchedulingSectionProps> = ({ data, onCh
 
   const segmentOptions = [
     { value: SchedulingType.EXACT_TIME, label: t.schedExactTime },
-    { value: SchedulingType.TIME_WINDOW, label: t.schedTimeWindow },
+    { value: SchedulingType.ARRIVAL_WINDOW, label: t.schedArrivalWindow },
+    { value: SchedulingType.DURATION, label: t.schedDuration },
     { value: SchedulingType.TBC, label: t.schedTbc },
   ];
 
@@ -67,7 +71,10 @@ export const SchedulingSection: React.FC<SchedulingSectionProps> = ({ data, onCh
           </div>
         );
 
-      case SchedulingType.TIME_WINDOW:
+      case SchedulingType.ARRIVAL_WINDOW:
+      case SchedulingType.DURATION: {
+        const windowEndLabel =
+          data.type === SchedulingType.ARRIVAL_WINDOW ? t.schedArrivalWindowEnd : t.schedWindowEnd;
         return (
           <div className={styles.schedulingInputs}>
             <div className={styles.inputGroup}>
@@ -97,7 +104,7 @@ export const SchedulingSection: React.FC<SchedulingSectionProps> = ({ data, onCh
               </div>
               <div className={styles.inputGroup}>
                 <label className={forms.label}>
-                  {t.schedWindowEnd} <span className={forms.required}>*</span>
+                  {windowEndLabel} <span className={forms.required}>*</span>
                 </label>
                 <input
                   type="time"
@@ -110,6 +117,7 @@ export const SchedulingSection: React.FC<SchedulingSectionProps> = ({ data, onCh
             </div>
           </div>
         );
+      }
 
       case SchedulingType.TBC:
         return (

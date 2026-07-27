@@ -34,7 +34,7 @@ function diffWholeHours(startIso: string, endIso: string): number {
  *   2. scheduledEnd null (scheduledStart set)     → fixed single time, regardless of scheduleType
  *   3. scheduleType WINDOW                        → arrival window range with en dash
  *   4. scheduleType DURATION                      → range with arrow and computed whole hours
- *   5. scheduleType FIXED (or null/undefined)     → fixed single time
+ *   5. scheduleType FIXED                          → fixed single time
  */
 export function formatSchedule(job: ScheduleFields): FormatScheduleResult {
   const { scheduledStart, scheduledEnd, scheduleType, schedulingNote } = job;
@@ -77,8 +77,6 @@ export function formatSchedule(job: ScheduleFields): FormatScheduleResult {
       };
     }
     case 'FIXED':
-    case null:
-    case undefined:
       return {
         primary: toHHMM(start),
         label: 'kiinteä aika',

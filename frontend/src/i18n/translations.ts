@@ -237,14 +237,17 @@ export interface AppTranslations {
   // Scheduling section
   schedTitle: string;
   schedExactTime: string;
-  schedTimeWindow: string;
+  schedArrivalWindow: string;
+  schedDuration: string;
   schedTbc: string;
   schedDate: string;
   schedStartTime: string;
   schedWindowStart: string;
   schedWindowEnd: string;
+  schedArrivalWindowEnd: string;
   schedNote: string;
   schedNotePlaceholder: string;
+  schedArrivalWindowEndRequired: string;
 
   // Completion report inline (JobsPage)
   crApprovedAt: string;
@@ -482,15 +485,18 @@ export const en: AppTranslations = {
   addrAccessNotes: 'Access Notes',
 
   schedTitle: 'Scheduling',
-  schedExactTime: 'Exact time',
-  schedTimeWindow: 'Time window',
+  schedExactTime: 'Fixed time',
+  schedArrivalWindow: 'Arrival window',
+  schedDuration: 'Duration',
   schedTbc: 'TBC',
   schedDate: 'Date',
   schedStartTime: 'Start Time',
   schedWindowStart: 'Window Start',
-  schedWindowEnd: 'Window End',
+  schedWindowEnd: 'Ends',
+  schedArrivalWindowEnd: 'Latest arrival',
   schedNote: 'Scheduling Note',
   schedNotePlaceholder: 'Please provide details about timing preferences or constraints',
+  schedArrivalWindowEndRequired: 'An arrival window needs a latest-arrival time.',
 
   crApprovedAt: 'Approved',
   crPending: 'Pending approval',
@@ -726,15 +732,18 @@ export const fi: AppTranslations = {
   addrAccessNotes: 'Kulkuohjeet',
 
   schedTitle: 'Ajastus',
-  schedExactTime: 'Tarkka aika',
-  schedTimeWindow: 'Aikaikkuna',
+  schedExactTime: 'Kiinteä aika',
+  schedArrivalWindow: 'Saapumisaika',
+  schedDuration: 'Kesto',
   schedTbc: 'Myöhemmin',
   schedDate: 'Päivämäärä',
   schedStartTime: 'Aloitusaika',
   schedWindowStart: 'Ikkunan alku',
-  schedWindowEnd: 'Ikkunan loppu',
+  schedWindowEnd: 'Päättyy',
+  schedArrivalWindowEnd: 'Viimeisin saapumisaika',
   schedNote: 'Ajastushuomio',
   schedNotePlaceholder: 'Anna tietoja ajoitustoiveista tai rajoituksista',
+  schedArrivalWindowEndRequired: 'Saapumisaika vaatii viimeisimmän saapumisajan.',
 
   crApprovedAt: 'Hyväksytty',
   crPending: 'Odottaa hyväksyntää',

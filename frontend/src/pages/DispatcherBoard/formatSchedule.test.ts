@@ -14,7 +14,7 @@ function makeJob(overrides: Partial<ScheduleFields>): ScheduleFields {
   return {
     scheduledStart: null,
     scheduledEnd: null,
-    scheduleType: null,
+    scheduleType: 'DURATION',
     schedulingNote: null,
     ...overrides,
   };
@@ -45,7 +45,7 @@ describe('formatSchedule', () => {
     expect(result).toEqual({ primary: '09:00', label: 'kiinteä aika' });
   });
 
-  it('returns fixed single time when scheduledEnd is null and scheduleType is null', () => {
+  it('returns fixed single time when scheduledEnd is null, using the default scheduleType', () => {
     const result = formatSchedule(makeJob({ scheduledStart: START_ISO }));
     expect(result).toEqual({ primary: '09:00', label: 'kiinteä aika' });
   });
@@ -87,18 +87,11 @@ describe('formatSchedule', () => {
     expect(result).toEqual({ primary: '09:00 → 10:30', label: 'kesto · 2 h' });
   });
 
-  // ── FIXED / null scheduleType with both times present ──────────────────────
+  // ── FIXED with both times present ───────────────────────────────────────────
 
   it('returns fixed single time for scheduleType FIXED when both times are present', () => {
     const result = formatSchedule(
       makeJob({ scheduledStart: START_ISO, scheduledEnd: END_WINDOW_ISO, scheduleType: 'FIXED' })
-    );
-    expect(result).toEqual({ primary: '09:00', label: 'kiinteä aika' });
-  });
-
-  it('returns fixed single time when scheduleType is null and both times are present', () => {
-    const result = formatSchedule(
-      makeJob({ scheduledStart: START_ISO, scheduledEnd: END_WINDOW_ISO, scheduleType: null })
     );
     expect(result).toEqual({ primary: '09:00', label: 'kiinteä aika' });
   });

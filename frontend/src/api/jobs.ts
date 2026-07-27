@@ -7,6 +7,7 @@ export interface JobCreatePayload {
   description?: string | null;
   scheduledStart?: string | null;
   scheduledEnd?: string | null;
+  scheduleType?: string;
   schedulingNote?: string | null;
   services?: string[] | null;
   street?: string | null;

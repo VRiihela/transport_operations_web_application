@@ -25,9 +25,20 @@ export enum ServiceType {
 
 export enum SchedulingType {
   EXACT_TIME = 'EXACT_TIME',
-  TIME_WINDOW = 'TIME_WINDOW',
+  ARRIVAL_WINDOW = 'ARRIVAL_WINDOW',
+  DURATION = 'DURATION',
   TBC = 'TBC',
 }
+
+/**
+ * Backend-persisted semantic tag for what scheduledStart/scheduledEnd mean.
+ * FIXED = single exact appointment (scheduledEnd is expected to be null).
+ * WINDOW = scheduledStart-scheduledEnd is a customer-promised arrival window.
+ * DURATION = scheduledStart-scheduledEnd is the span the job occupies.
+ * A plain string-literal union (not a TS enum) so it matches the Job.scheduleType
+ * shape already used in jobApi.ts / DispatcherBoard/types.ts without a cast.
+ */
+export type ScheduleType = 'FIXED' | 'WINDOW' | 'DURATION';
 
 export interface ServicesData {
   selectedServices: ServiceType[];

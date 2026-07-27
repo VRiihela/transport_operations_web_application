@@ -36,6 +36,7 @@ export interface Job {
   scheduledAt: string | null;
   scheduledStart: string | null;
   scheduledEnd: string | null;
+  scheduleType: 'FIXED' | 'WINDOW' | 'DURATION';
   schedulingNote: string | null;
   driverNotes: string | null;
   street?: string | null;
