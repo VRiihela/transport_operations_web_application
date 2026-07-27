@@ -241,15 +241,14 @@ export const JobEditModal: React.FC<JobEditModalProps> = ({ job, isOpen, onClose
     let schedulingNote: string | undefined;
     let scheduleType: ScheduleType | undefined;
 
-    if (scheduling.type === SchedulingType.EXACT_TIME && scheduling.date && scheduling.exactTime) {
+    if (scheduling.type === SchedulingType.EXACT_TIME) {
+      if (!scheduling.date) { setSubmitError('Please select a date.'); return; }
       const start = toIsoLocal(scheduling.date, scheduling.exactTime);
       if (!start) { setSubmitError('Start time is invalid. Please check the date and time.'); return; }
       scheduledStart = start;
       scheduleType = 'FIXED';
-    } else if (
-      (scheduling.type === SchedulingType.ARRIVAL_WINDOW || scheduling.type === SchedulingType.DURATION) &&
-      scheduling.date
-    ) {
+    } else if (scheduling.type === SchedulingType.ARRIVAL_WINDOW || scheduling.type === SchedulingType.DURATION) {
+      if (!scheduling.date) { setSubmitError('Please select a date.'); return; }
       if (scheduling.windowStart) {
         const start = toIsoLocal(scheduling.date, scheduling.windowStart);
         if (!start) { setSubmitError('Start time is invalid. Please check the date and time.'); return; }

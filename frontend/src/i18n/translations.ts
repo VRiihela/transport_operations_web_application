@@ -248,6 +248,7 @@ export interface AppTranslations {
   schedNote: string;
   schedNotePlaceholder: string;
   schedArrivalWindowEndRequired: string;
+  schedDateRequired: string;
 
   // Completion report inline (JobsPage)
   crApprovedAt: string;
@@ -497,6 +498,7 @@ export const en: AppTranslations = {
   schedNote: 'Scheduling Note',
   schedNotePlaceholder: 'Please provide details about timing preferences or constraints',
   schedArrivalWindowEndRequired: 'An arrival window needs a latest-arrival time.',
+  schedDateRequired: 'Please select a date.',
 
   crApprovedAt: 'Approved',
   crPending: 'Pending approval',
@@ -744,6 +746,7 @@ export const fi: AppTranslations = {
   schedNote: 'Ajastushuomio',
   schedNotePlaceholder: 'Anna tietoja ajoitustoiveista tai rajoituksista',
   schedArrivalWindowEndRequired: 'Saapumisaika vaatii viimeisimmän saapumisajan.',
+  schedDateRequired: 'Valitse päivämäärä.',
 
   crApprovedAt: 'Hyväksytty',
   crPending: 'Odottaa hyväksyntää',
