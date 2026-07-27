@@ -443,6 +443,7 @@ const DispatcherBoard: React.FC = () => {
               >←</button>
               <input
                 type="date"
+                lang="fi-FI"
                 value={selectedDate}
                 min={dateOffset(-365)}
                 max={dateOffset(365)}
@@ -535,6 +536,7 @@ const DispatcherBoard: React.FC = () => {
               </button>
               <input
                 type="date"
+                lang="fi-FI"
                 className={styles.datePicker}
                 value={datePickerValue}
                 onChange={handleDatePicker}

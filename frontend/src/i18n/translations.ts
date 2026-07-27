@@ -271,9 +271,9 @@ export interface AppTranslations {
 }
 
 export const en: AppTranslations = {
-  dateLocale: 'en-GB',
-  dateDayMonth: 'd/M',
-  dateDayMonthYear: 'd/M/yyyy',
+  dateLocale: 'fi-FI',
+  dateDayMonth: 'd.M.',
+  dateDayMonthYear: 'd.M.yyyy',
   weekdays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
 
   navJobsList: 'Jobs List',

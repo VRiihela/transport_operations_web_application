@@ -366,6 +366,7 @@ const JobsPage: React.FC = () => {
           <button className={styles.navBtn} onClick={handleNextWeek} aria-label={t.nextWeek}>→</button>
           <input
             type="date"
+            lang="fi-FI"
             className={styles.datePicker}
             value={datePickerValue}
             onChange={handleDatePicker}

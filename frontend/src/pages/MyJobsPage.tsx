@@ -250,6 +250,7 @@ const MyJobsPage: React.FC = () => {
       <div className={styles.headerRight}>
         <input
           type="date"
+          lang="fi-FI"
           value={selectedDate}
           onChange={handleDateChange}
           className={styles.datePicker}

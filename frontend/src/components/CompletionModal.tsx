@@ -250,6 +250,7 @@ export const CompletionModal: React.FC<CompletionModalProps> = ({
                 <input
                   id="cr-actualStart"
                   type="datetime-local"
+                  lang="fi-FI"
                   value={actualStart}
                   onChange={(e) => setActualStart(e.target.value)}
                   required
@@ -263,6 +264,7 @@ export const CompletionModal: React.FC<CompletionModalProps> = ({
                 <input
                   id="cr-actualEnd"
                   type="datetime-local"
+                  lang="fi-FI"
                   value={actualEnd}
                   onChange={(e) => setActualEnd(e.target.value)}
                   required

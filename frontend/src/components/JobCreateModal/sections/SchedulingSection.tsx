@@ -50,6 +50,7 @@ export const SchedulingSection: React.FC<SchedulingSectionProps> = ({ data, onCh
               </label>
               <input
                 type="date"
+                lang="fi-FI"
                 value={data.date}
                 onChange={handleInputChange('date')}
                 className={forms.input}
@@ -62,6 +63,7 @@ export const SchedulingSection: React.FC<SchedulingSectionProps> = ({ data, onCh
               </label>
               <input
                 type="time"
+                lang="fi-FI"
                 value={data.exactTime}
                 onChange={handleInputChange('exactTime')}
                 className={forms.input}
@@ -83,6 +85,7 @@ export const SchedulingSection: React.FC<SchedulingSectionProps> = ({ data, onCh
               </label>
               <input
                 type="date"
+                lang="fi-FI"
                 value={data.date}
                 onChange={handleInputChange('date')}
                 className={forms.input}
@@ -96,6 +99,7 @@ export const SchedulingSection: React.FC<SchedulingSectionProps> = ({ data, onCh
                 </label>
                 <input
                   type="time"
+                  lang="fi-FI"
                   value={data.windowStart}
                   onChange={handleInputChange('windowStart')}
                   className={forms.input}
@@ -108,6 +112,7 @@ export const SchedulingSection: React.FC<SchedulingSectionProps> = ({ data, onCh
                 </label>
                 <input
                   type="time"
+                  lang="fi-FI"
                   value={data.windowEnd}
                   onChange={handleInputChange('windowEnd')}
                   className={forms.input}
