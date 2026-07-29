@@ -4,6 +4,7 @@ import axiosInstance from '../api/axios';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../i18n/LanguageContext';
 import { JOB_TYPE_LABELS, JobType } from '../types/job';
+import type { Parcel } from '../types/jobApi';
 import { downloadCompletionReportPdf } from '../utils/downloadPdf';
 import styles from './JobDetailModal.module.css';
 import buttons from '../styles/buttons.module.css';
@@ -42,6 +43,7 @@ export interface DetailJob {
   status: string;
   jobType?: string | null;
   services?: string[] | null;
+  parcels?: Parcel[];
   customer?: Customer | null;
   description?: string | null;
   assignedDriverId?: string | null;
@@ -169,6 +171,21 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({ job, isOpen, onC
               <dd className={styles.value}>{job.services.join(', ')}</dd>
             </div>
           )}
+
+          <div className={styles.field}>
+            <dt className={styles.label}>{t.detailParcels}</dt>
+            <dd className={styles.value}>
+              {(job.parcels ?? []).length === 0 ? (
+                t.detailParcelsEmpty
+              ) : (
+                <ul className={styles.parcelList}>
+                  {(job.parcels ?? []).map((parcel) => (
+                    <li key={parcel.id}>{parcel.description} × {parcel.quantity}</li>
+                  ))}
+                </ul>
+              )}
+            </dd>
+          </div>
 
           {job.customer && (
             <div className={styles.field}>

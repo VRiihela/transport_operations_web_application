@@ -44,6 +44,10 @@
   flex: 1;
 }
 
+.fieldRow > .houseNumberField {
+  flex: 0 0 100px;
+}
+
 .field {
   display: flex;
   flex-direction: column;

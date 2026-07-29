@@ -22,6 +22,7 @@ interface AddressBlockProps {
 
 const createEmptyAddress = (): AddressData => ({
   street: '',
+  houseNumber: '',
   postalCode: '',
   city: '',
   floorStair: '',
@@ -52,6 +53,15 @@ const AddressBlock: React.FC<AddressBlockProps> = ({ title, data, onChange }) =>
               onChange={handleInputChange('street')}
               className={forms.input}
               required
+            />
+          </div>
+          <div className={`${styles.field} ${styles.houseNumberField}`}>
+            <label className={forms.label}>{t.addrHouseNumber}</label>
+            <input
+              type="text"
+              value={data.houseNumber}
+              onChange={handleInputChange('houseNumber')}
+              className={forms.input}
             />
           </div>
         </div>
@@ -130,7 +140,6 @@ export const AddressSection: React.FC<AddressSectionProps> = ({
   const hasPickup = selectedServices.includes(ServiceType.PICKUP_COLLECTION);
   const hasDelivery = selectedServices.includes(ServiceType.DELIVERY);
   const hasNeitherPickupNorDelivery = !hasPickup && !hasDelivery;
-  const hasAnyService = selectedServices.length > 0;
 
   return (
     <div className={styles.addressSection}>
@@ -150,7 +159,7 @@ export const AddressSection: React.FC<AddressSectionProps> = ({
             onChange={onDeliveryChange!}
           />
         )}
-        {hasNeitherPickupNorDelivery && hasAnyService && (
+        {hasNeitherPickupNorDelivery && (
           <AddressBlock
             title={t.addrService}
             data={serviceAddress ?? createEmptyAddress()}

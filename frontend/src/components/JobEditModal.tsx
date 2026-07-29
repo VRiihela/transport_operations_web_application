@@ -10,9 +10,11 @@ import {
   SchedulingData,
 } from '../types/job';
 import { CustomerSearchResult } from '../types/customer';
+import type { Parcel } from '../types/jobApi';
 import { customerService } from '../services/customerService';
 import { useDebounce } from '../hooks/useDebounce';
-import { ServicesSection, AddressSection, SchedulingSection } from './JobCreateModal/sections';
+import { useLanguage } from '../i18n/LanguageContext';
+import { ServicesSection, AddressSection, SchedulingSection, ParcelsSection } from './JobCreateModal/sections';
 import styles from './JobCreateModal/JobCreateModal.module.css';
 import buttons from '../styles/buttons.module.css';
 import forms from '../styles/forms.module.css';
@@ -30,13 +32,16 @@ interface Job {
   scheduleType: ScheduleType;
   schedulingNote?: string | null;
   street?: string | null;
+  houseNumber?: string | null;
   postalCode?: string | null;
   city?: string | null;
   deliveryStreet?: string | null;
+  deliveryHouseNumber?: string | null;
   deliveryPostalCode?: string | null;
   deliveryCity?: string | null;
   customerName?: string | null;
   customerPhone?: string | null;
+  parcels?: Parcel[];
 }
 
 interface CustomerData {
@@ -57,9 +62,11 @@ export interface JobUpdatePayload {
   scheduleType?: ScheduleType;
   schedulingNote?: string;
   street?: string;
+  houseNumber?: string;
   postalCode?: string;
   city?: string;
   deliveryStreet?: string;
+  deliveryHouseNumber?: string;
   deliveryPostalCode?: string;
   deliveryCity?: string;
   floorStair?: string;
@@ -69,11 +76,23 @@ export interface JobUpdatePayload {
   customerPhone?: string | null;
 }
 
+export interface ParcelChanges {
+  added: { description: string; quantity: number }[];
+  updated: { id: string; description: string; quantity: number }[];
+  removed: string[];
+}
+
 interface JobEditModalProps {
   job: Job;
   isOpen: boolean;
   onClose: () => void;
   onSave: (updates: JobUpdatePayload) => Promise<void>;
+  /**
+   * Parcels are a separate task-04 sub-resource (POST/PATCH/DELETE /jobs/:id/parcels),
+   * not part of the job PATCH payload, so they're reported as a diff and delegated
+   * to the parent — same pattern as onSave for the rest of the job fields.
+   */
+  onSaveParcels?: (changes: ParcelChanges) => Promise<void>;
 }
 
 const getDefaultServices = (jobType: JobType): ServiceType[] => {
@@ -87,7 +106,7 @@ const getDefaultServices = (jobType: JobType): ServiceType[] => {
 };
 
 const createEmptyAddress = (): AddressData => ({
-  street: '', postalCode: '', city: '', floorStair: '', doorCode: '', accessNotes: '',
+  street: '', houseNumber: '', postalCode: '', city: '', floorStair: '', doorCode: '', accessNotes: '',
 });
 
 const parseJobType = (jt: string | null | undefined): JobType =>
@@ -124,7 +143,8 @@ const parseScheduling = (
   return { type: SchedulingType.TBC, date: '', exactTime: '', windowStart: '', windowEnd: '', schedulingNote: note ?? '' };
 };
 
-export const JobEditModal: React.FC<JobEditModalProps> = ({ job, isOpen, onClose, onSave }) => {
+export const JobEditModal: React.FC<JobEditModalProps> = ({ job, isOpen, onClose, onSave, onSaveParcels }) => {
+  const { t } = useLanguage();
   const [jobType, setJobType] = useState<JobType>(JobType.DELIVERY);
   const [title, setTitle] = useState('');
   const [customerName, setCustomerName] = useState('');
@@ -144,6 +164,8 @@ export const JobEditModal: React.FC<JobEditModalProps> = ({ job, isOpen, onClose
   const [deliveryAddress, setDeliveryAddress] = useState<AddressData>(createEmptyAddress());
   const [serviceAddress, setServiceAddress] = useState<AddressData>(createEmptyAddress());
   const [scheduling, setScheduling] = useState<SchedulingData>(parseScheduling());
+  const [parcels, setParcels] = useState<Parcel[]>([]);
+  const [originalParcels, setOriginalParcels] = useState<Parcel[]>([]);
 
   const debouncedPhone = useDebounce(phoneInput, 400);
 
@@ -159,17 +181,17 @@ export const JobEditModal: React.FC<JobEditModalProps> = ({ job, isOpen, onClose
     const hasPickup = svc.includes(ServiceType.PICKUP_COLLECTION);
     const hasDelivery = svc.includes(ServiceType.DELIVERY);
     if (hasPickup) {
-      setPickupAddress({ street: job.street ?? '', postalCode: job.postalCode ?? '', city: job.city ?? '', floorStair: '', doorCode: '', accessNotes: '' });
+      setPickupAddress({ street: job.street ?? '', houseNumber: job.houseNumber ?? '', postalCode: job.postalCode ?? '', city: job.city ?? '', floorStair: '', doorCode: '', accessNotes: '' });
     } else {
       setPickupAddress(createEmptyAddress());
     }
     if (hasDelivery) {
-      setDeliveryAddress({ street: job.deliveryStreet ?? '', postalCode: job.deliveryPostalCode ?? '', city: job.deliveryCity ?? '', floorStair: '', doorCode: '', accessNotes: '' });
+      setDeliveryAddress({ street: job.deliveryStreet ?? '', houseNumber: job.deliveryHouseNumber ?? '', postalCode: job.deliveryPostalCode ?? '', city: job.deliveryCity ?? '', floorStair: '', doorCode: '', accessNotes: '' });
     } else {
       setDeliveryAddress(createEmptyAddress());
     }
     if (!hasPickup && !hasDelivery) {
-      setServiceAddress({ street: job.street ?? '', postalCode: job.postalCode ?? '', city: job.city ?? '', floorStair: '', doorCode: '', accessNotes: '' });
+      setServiceAddress({ street: job.street ?? '', houseNumber: job.houseNumber ?? '', postalCode: job.postalCode ?? '', city: job.city ?? '', floorStair: '', doorCode: '', accessNotes: '' });
     } else {
       setServiceAddress(createEmptyAddress());
     }
@@ -177,6 +199,9 @@ export const JobEditModal: React.FC<JobEditModalProps> = ({ job, isOpen, onClose
     setCustomerData({ name: '', phone: '', companyName: '', type: 'PRIVATE' });
     setPhoneInput('');
     setSubmitError('');
+    const jobParcels = job.parcels ?? [];
+    setParcels(jobParcels);
+    setOriginalParcels(jobParcels);
   }, [isOpen, job.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleCustomerSearch = useCallback(async (phone: string) => {
@@ -232,6 +257,9 @@ export const JobEditModal: React.FC<JobEditModalProps> = ({ job, isOpen, onClose
     setSubmitError('');
     if (!title.trim()) { setSubmitError('Title is required'); return; }
 
+    const invalidParcel = parcels.find((p) => !p.description.trim());
+    if (invalidParcel) { setSubmitError(t.parcelDescriptionRequired); return; }
+
     const hasPickup = services.selectedServices.includes(ServiceType.PICKUP_COLLECTION);
     const hasDelivery = services.selectedServices.includes(ServiceType.DELIVERY);
     const hasServiceAddress = !hasPickup && !hasDelivery && services.selectedServices.length > 0;
@@ -280,6 +308,7 @@ export const JobEditModal: React.FC<JobEditModalProps> = ({ job, isOpen, onClose
       customerPhone: customerPhone.trim() || null,
       ...(hasPickup && {
         street: pickupAddress.street || undefined,
+        houseNumber: pickupAddress.houseNumber || undefined,
         postalCode: pickupAddress.postalCode || undefined,
         city: pickupAddress.city || undefined,
         floorStair: pickupAddress.floorStair || undefined,
@@ -288,6 +317,7 @@ export const JobEditModal: React.FC<JobEditModalProps> = ({ job, isOpen, onClose
       }),
       ...(hasDelivery && {
         deliveryStreet: deliveryAddress.street || undefined,
+        deliveryHouseNumber: deliveryAddress.houseNumber || undefined,
         deliveryPostalCode: deliveryAddress.postalCode || undefined,
         deliveryCity: deliveryAddress.city || undefined,
         floorStair: deliveryAddress.floorStair || undefined,
@@ -296,6 +326,7 @@ export const JobEditModal: React.FC<JobEditModalProps> = ({ job, isOpen, onClose
       }),
       ...(hasServiceAddress && {
         street: serviceAddress.street || undefined,
+        houseNumber: serviceAddress.houseNumber || undefined,
         postalCode: serviceAddress.postalCode || undefined,
         city: serviceAddress.city || undefined,
         floorStair: serviceAddress.floorStair || undefined,
@@ -307,6 +338,22 @@ export const JobEditModal: React.FC<JobEditModalProps> = ({ job, isOpen, onClose
     try {
       setSubmitting(true);
       await onSave(payload);
+
+      const originalIds = new Set(originalParcels.map((p) => p.id));
+      const currentIds = new Set(parcels.map((p) => p.id));
+      const removed = originalParcels.filter((p) => !currentIds.has(p.id)).map((p) => p.id);
+      const added = parcels
+        .filter((p) => !originalIds.has(p.id))
+        .map((p) => ({ description: p.description.trim(), quantity: p.quantity }));
+      const updated = parcels.filter((p) => {
+        const original = originalParcels.find((o) => o.id === p.id);
+        return original && (original.description !== p.description.trim() || original.quantity !== p.quantity);
+      }).map((p) => ({ id: p.id, description: p.description.trim(), quantity: p.quantity }));
+
+      if (onSaveParcels && (added.length > 0 || updated.length > 0 || removed.length > 0)) {
+        await onSaveParcels({ added, updated, removed });
+      }
+
       handleClose();
     } catch {
       setSubmitError('Failed to save changes. Please try again.');
@@ -483,6 +530,8 @@ export const JobEditModal: React.FC<JobEditModalProps> = ({ job, isOpen, onClose
           </section>
 
           <ServicesSection jobType={jobType} data={services} onChange={setServices} />
+
+          <ParcelsSection parcels={parcels} onChange={setParcels} />
 
           <AddressSection
             selectedServices={services.selectedServices}

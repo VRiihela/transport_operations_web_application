@@ -84,6 +84,8 @@ export interface AppTranslations {
   detailHeading: string;
   detailJobType: string;
   detailServices: string;
+  detailParcels: string;
+  detailParcelsEmpty: string;
   detailCustomer: string;
   detailDescription: string;
   detailAssignedDriver: string;
@@ -222,12 +224,21 @@ export interface AppTranslations {
   serviceOther: string;
   serviceOtherPlaceholder: string;
 
+  // Parcels section
+  parcelsTitle: string;
+  parcelDescriptionLabel: string;
+  parcelQuantityLabel: string;
+  addParcel: string;
+  removeParcel: string;
+  parcelDescriptionRequired: string;
+
   // Address section
   addrTitle: string;
   addrPickup: string;
   addrDelivery: string;
   addrService: string;
   addrStreet: string;
+  addrHouseNumber: string;
   addrPostal: string;
   addrCity: string;
   addrFloorStair: string;
@@ -343,6 +354,8 @@ export const en: AppTranslations = {
   detailHeading: 'Job Details',
   detailJobType: 'Job type',
   detailServices: 'Services',
+  detailParcels: 'Parcels',
+  detailParcelsEmpty: 'No parcels for this job.',
   detailCustomer: 'Customer',
   detailDescription: 'Description',
   detailAssignedDriver: 'Assigned driver',
@@ -474,11 +487,19 @@ export const en: AppTranslations = {
   serviceOther: 'Other',
   serviceOtherPlaceholder: 'Please specify',
 
+  parcelsTitle: 'Parcels',
+  parcelDescriptionLabel: 'Description',
+  parcelQuantityLabel: 'Quantity',
+  addParcel: 'Add Parcel',
+  removeParcel: 'Remove parcel',
+  parcelDescriptionRequired: 'Every parcel needs a description.',
+
   addrTitle: 'Address Information',
   addrPickup: 'Pickup Address',
   addrDelivery: 'Delivery Address',
   addrService: 'Service Address',
   addrStreet: 'Street Address',
+  addrHouseNumber: 'House Number',
   addrPostal: 'Postal Code',
   addrCity: 'City',
   addrFloorStair: 'Floor/Stair',
@@ -591,6 +612,8 @@ export const fi: AppTranslations = {
   detailHeading: 'Työn tiedot',
   detailJobType: 'Tyyppi',
   detailServices: 'Palvelut',
+  detailParcels: 'Kolli',
+  detailParcelsEmpty: 'Ei kolleja tälle työlle.',
   detailCustomer: 'Asiakas',
   detailDescription: 'Kuvaus',
   detailAssignedDriver: 'Määritetty kuljettaja',
@@ -722,11 +745,19 @@ export const fi: AppTranslations = {
   serviceOther: 'Muu',
   serviceOtherPlaceholder: 'Tarkenna',
 
+  parcelsTitle: 'Kollit',
+  parcelDescriptionLabel: 'Kuvaus',
+  parcelQuantityLabel: 'Määrä',
+  addParcel: 'Lisää kolli',
+  removeParcel: 'Poista kolli',
+  parcelDescriptionRequired: 'Jokaisella kollilla täytyy olla kuvaus.',
+
   addrTitle: 'Osoitetiedot',
   addrPickup: 'Nouto-osoite',
   addrDelivery: 'Toimitusosoite',
   addrService: 'Palveluosoite',
   addrStreet: 'Katuosoite',
+  addrHouseNumber: 'Talon numero',
   addrPostal: 'Postinumero',
   addrCity: 'Kaupunki',
   addrFloorStair: 'Kerros/porras',

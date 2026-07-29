@@ -11,10 +11,11 @@ import {
   SchedulingData,
 } from '../../types/job';
 import { CustomerSearchResult } from '../../types/customer';
+import type { Parcel } from '../../types/jobApi';
 import { customerService } from '../../services/customerService';
-import { createJob } from '../../api/jobs';
+import { createJob, createParcel } from '../../api/jobs';
 import { useDebounce } from '../../hooks/useDebounce';
-import { ServicesSection, AddressSection, SchedulingSection } from './sections';
+import { ServicesSection, AddressSection, SchedulingSection, ParcelsSection } from './sections';
 import { useLanguage } from '../../i18n/LanguageContext';
 import styles from './JobCreateModal.module.css';
 import buttons from '../../styles/buttons.module.css';
@@ -54,6 +55,7 @@ const getDefaultServices = (jobType: JobType): ServiceType[] => {
 
 const createEmptyAddress = (): AddressData => ({
   street: '',
+  houseNumber: '',
   postalCode: '',
   city: '',
   floorStair: '',
@@ -116,6 +118,7 @@ export const JobCreateModal: React.FC<JobCreateModalProps> = ({ isOpen, onClose,
   const [deliveryAddress, setDeliveryAddress] = useState<AddressData>(createEmptyAddress());
   const [serviceAddress, setServiceAddress] = useState<AddressData>(createEmptyAddress());
   const [scheduling, setScheduling] = useState<SchedulingData>(() => initialScheduling(initialDate));
+  const [parcels, setParcels] = useState<Parcel[]>([]);
 
   const debouncedPhone = useDebounce(phoneInput, 400);
 
@@ -191,6 +194,7 @@ export const JobCreateModal: React.FC<JobCreateModalProps> = ({ isOpen, onClose,
     setDeliveryAddress(createEmptyAddress());
     setServiceAddress(createEmptyAddress());
     setScheduling(initialScheduling());
+    setParcels([]);
     onClose();
   };
 
@@ -198,6 +202,12 @@ export const JobCreateModal: React.FC<JobCreateModalProps> = ({ isOpen, onClose,
     setSubmitError('');
     if (!title.trim()) {
       setSubmitError(t.createTitleRequired);
+      return;
+    }
+
+    const invalidParcel = parcels.find((p) => !p.description.trim());
+    if (invalidParcel) {
+      setSubmitError(t.parcelDescriptionRequired);
       return;
     }
 
@@ -248,6 +258,7 @@ export const JobCreateModal: React.FC<JobCreateModalProps> = ({ isOpen, onClose,
       schedulingNote,
       ...(hasDelivery && {
         deliveryStreet: deliveryAddress.street || undefined,
+        deliveryHouseNumber: deliveryAddress.houseNumber || undefined,
         deliveryPostalCode: deliveryAddress.postalCode || undefined,
         deliveryCity: deliveryAddress.city || undefined,
         floorStair: deliveryAddress.floorStair || undefined,
@@ -256,6 +267,7 @@ export const JobCreateModal: React.FC<JobCreateModalProps> = ({ isOpen, onClose,
       }),
       ...(hasPickup && {
         street: pickupAddress.street || undefined,
+        houseNumber: pickupAddress.houseNumber || undefined,
         postalCode: pickupAddress.postalCode || undefined,
         city: pickupAddress.city || undefined,
         floorStair: pickupAddress.floorStair || undefined,
@@ -264,6 +276,7 @@ export const JobCreateModal: React.FC<JobCreateModalProps> = ({ isOpen, onClose,
       }),
       ...(hasServiceAddress && {
         street: serviceAddress.street || undefined,
+        houseNumber: serviceAddress.houseNumber || undefined,
         postalCode: serviceAddress.postalCode || undefined,
         city: serviceAddress.city || undefined,
         floorStair: serviceAddress.floorStair || undefined,
@@ -274,7 +287,13 @@ export const JobCreateModal: React.FC<JobCreateModalProps> = ({ isOpen, onClose,
 
     try {
       setSubmitting(true);
-      await createJob(payload);
+      const created = await createJob(payload);
+      const newJobId = (created.data as { id: string }).id;
+      if (parcels.length > 0) {
+        await Promise.all(
+          parcels.map((p) => createParcel(newJobId, { description: p.description.trim(), quantity: p.quantity }))
+        );
+      }
       onSuccess?.();
       handleClose();
     } catch {
@@ -445,6 +464,8 @@ export const JobCreateModal: React.FC<JobCreateModalProps> = ({ isOpen, onClose,
           </section>
 
           <ServicesSection jobType={jobType} data={services} onChange={setServices} />
+
+          <ParcelsSection parcels={parcels} onChange={setParcels} />
 
           <AddressSection
             selectedServices={services.selectedServices}

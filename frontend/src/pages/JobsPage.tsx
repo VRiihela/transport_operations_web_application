@@ -7,8 +7,9 @@ import { useLanguage } from '../i18n/LanguageContext';
 import { TopBar } from '../components/TopBar/TopBar';
 import { JobDetailModal } from '../components/JobDetailModal';
 import { JobCreateModal } from '../components/JobCreateModal/JobCreateModal';
-import { JobEditModal, JobUpdatePayload } from '../components/JobEditModal';
+import { JobEditModal, JobUpdatePayload, ParcelChanges } from '../components/JobEditModal';
 import { WeekGrid } from './WeekView/WeekGrid';
+import { createParcel, updateParcel, deleteParcel } from '../api/jobs';
 import type { Job, JobStatus, AssignedDriver } from '../types/jobApi';
 import styles from './JobsPage.module.css';
 import buttons from '../styles/buttons.module.css';
@@ -263,6 +264,16 @@ const JobsPage: React.FC = () => {
     setEditingJob(null);
   };
 
+  const handleSaveParcels = async (changes: ParcelChanges): Promise<void> => {
+    if (!editingJob) return;
+    await Promise.all([
+      ...changes.removed.map((parcelId) => deleteParcel(editingJob.id, parcelId)),
+      ...changes.added.map((p) => createParcel(editingJob.id, p)),
+      ...changes.updated.map((p) => updateParcel(editingJob.id, p.id, { description: p.description, quantity: p.quantity })),
+    ]);
+    void fetchJobs(statusFilter, page, viewMode, weekStart, sortBy, sortDir);
+  };
+
   const formatSchedulingInfo = (start: string | null, end: string | null, note: string | null): string => {
     if (start || end) {
       if (start && end) {
@@ -381,6 +392,7 @@ const JobsPage: React.FC = () => {
           isOpen={true}
           onClose={() => setEditingJob(null)}
           onSave={handleEditSave}
+          onSaveParcels={handleSaveParcels}
         />
       )}
 

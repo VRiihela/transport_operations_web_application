@@ -24,6 +24,12 @@ export interface Team {
   name: string;
 }
 
+export interface Parcel {
+  id: string;
+  description: string;
+  quantity: number;
+}
+
 export interface Job {
   id: string;
   title: string;
@@ -54,6 +60,7 @@ export interface Job {
   customer?: { id: string; name: string; phone: string; email: string | null; companyName: string | null } | null;
   location?: string | null;
   completionReport?: CompletionReport | null;
+  parcels: Parcel[];
   createdAt: string;
   updatedAt: string;
 }

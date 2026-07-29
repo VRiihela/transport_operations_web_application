@@ -1,0 +1,46 @@
+{
+  "id": "task-05-parcel-list-ui",
+  "title": "Parcel list UI — view, add, edit, remove parcels on a job",
+  "context": "Recon found no existing list-of-cards pattern anywhere in the frontend for a one-to-many child collection. `services` and `customer` are both rendered as a single flat <dl> row (services is joined into one comma string, customer is one nested object). Neither is a usable template for an addable/removable multi-row list. The closest structural precedent is JobCreateModal/sections/ServicesSection.tsx — a dedicated section component pattern already exists for compound fields on the create modal, even though the field it manages (services) is a flat string under the hood. This task is genuinely new UI, not a reuse of an existing list pattern — budget more review scrutiny than a typical field addition.",
+  "dependsOn": ["task-04-parcel-model"],
+  "affectedFiles": [
+    {
+      "path": "frontend/src/components/JobDetailModal.tsx",
+      "action": "edit",
+      "notes": "Replace/extend the single-<dl>-row pattern currently used for `services` (around the block rendering job.services.join(', ')) with a rendered list of parcels: description × quantity, one line per parcel. Render nothing (or an explicit empty state) when job.parcels is empty."
+    },
+    {
+      "path": "frontend/src/components/JobEditModal.tsx",
+      "action": "edit",
+      "notes": "Wire in add/edit/remove of parcels for an existing job, calling the task-04 PATCH/POST/DELETE endpoints. Confirm first whether JobEditModal makes its own API calls directly or delegates to JobsPage for the PATCH (per prior FleetFlow work, the job PATCH itself is built in JobsPage, not the modal — parcel mutations may need to follow the same delegation rather than the modal calling the API directly)."
+    },
+    {
+      "path": "frontend/src/components/JobCreateModal/JobCreateModal.tsx",
+      "action": "edit",
+      "notes": "Wire in the new ParcelsSection so parcels can be added while creating a job. Since Parcel creation is a separate POST /jobs/:id/parcels call (parcels are not nested in the job create payload per task-04), this likely means: create the job first, then fire parcel POSTs for each added row — confirm this sequencing against how JobCreateModal currently handles submission before assuming it."
+    },
+    {
+      "path": "frontend/src/components/JobCreateModal/sections/ParcelsSection.tsx",
+      "action": "create",
+      "notes": "New file. Read ServicesSection.tsx FIRST and match its structural conventions (props shape, styling approach, how it reports changes back to the parent form) — don't invent an unrelated pattern. Needs: add row (description + quantity inputs), remove row, inline edit. This is the first multi-row addable/removable list in the codebase; keep it simple (plain rows, no drag-reorder, no dimensions/weight fields — those weren't asked for)."
+    }
+  ],
+  "keyConstraints": [
+    "Read frontend/src/components/JobCreateModal/sections/ServicesSection.tsx in full before writing ParcelsSection.tsx — match its conventions rather than inventing a new one, even though the underlying data shape differs (string vs relation).",
+    "Locate the frontend TypeScript type/interface for Job (grep -rn \"interface Job\\|type Job\" frontend/src) and add a `parcels: Parcel[]` field to it. Do not guess the path — find it.",
+    "Check whether user-facing strings in this codebase go through a translation table (JobDetailModal already uses a `t.xxx` pattern, e.g. t.detailServices) before adding any new hardcoded label. New parcel-related strings must go through the same mechanism if one exists.",
+    "Do not touch how `services` or `customer` are rendered in JobDetailModal beyond the specific block being replaced for parcels — no drive-by refactors.",
+    "This task depends on task-04 being implemented and its migration applied first. The Parcel shape used here ({ id, description, quantity }) must be read from the real, running backend response — not assumed from this spec alone.",
+    "Do not list test files in affectedFiles — tests for these three components are a separate follow-up, per the truncation lesson from tasks 01-03.",
+    "affectedFiles above is ordered with existing-file edits first and the new file last, per the same truncation lesson — existing-file edits are what came out templated in prior runs."
+  ],
+  "acceptanceCriteria": [
+    "JobDetailModal shows every parcel for a job (description × quantity); shows an explicit empty state, not a blank gap, when there are zero parcels",
+    "JobEditModal supports adding, editing, and removing parcels on an existing job",
+    "JobCreateModal supports adding parcels while creating a new job, and they are actually persisted (verify a created job shows its parcels on reload, not just in local form state)",
+    "All new user-facing strings use the existing translation mechanism if one exists in this codebase",
+    "npx tsc --noEmit is clean",
+    "Existing tests for JobDetailModal, JobEditModal, and JobCreateModal still pass unmodified"
+  ],
+  "runOrder": "Run only after task-04-parcel-model has been implemented, reviewed, and committed — including the migration actually applied against a real database, so the Architect for this task can inspect the true API response shape."
+}
