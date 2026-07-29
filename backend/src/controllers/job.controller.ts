@@ -3,12 +3,15 @@ import { PrismaClient, UserRole, AuditEvent } from '@prisma/client';
 import { JobService } from '../services/job.service';
 import { createJobSchema, updateJobSchema, updateJobStatusSchema, jobQuerySchema, updateDriverNotesSchema, updateJobScheduleSchema, UpdateJobRequest } from '../types/job.types';
 import { upsertCompletionReportSchema } from '../types/completion-report.types';
+import { createParcelSchema, updateParcelSchema } from '../types/parcel.types';
 import { CompletionReportService } from '../services/completion-report.service';
+import { ParcelService } from '../services/parcel.service';
 import { AuditService } from '../services/audit.service';
 import { AuthenticatedRequest } from '../types/auth.types';
 
 const jobService = new JobService(new PrismaClient());
 const completionReportService = new CompletionReportService(new PrismaClient());
+const parcelService = new ParcelService(new PrismaClient());
 
 export const createJob = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const parsed = createJobSchema.safeParse(req.body);
@@ -314,6 +317,64 @@ export const scheduleJob = async (req: AuthenticatedRequest, res: Response): Pro
       return;
     }
     console.error('Schedule job error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const createParcel = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  const parsed = createParcelSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: 'Invalid request data' });
+    return;
+  }
+
+  try {
+    const parcel = await parcelService.create(req.params['id'] as string, parsed.data);
+    res.status(201).json({ data: parcel });
+  } catch (error) {
+    if (error instanceof Error && error.message === 'JOB_NOT_FOUND') {
+      res.status(404).json({ error: 'Job not found' });
+      return;
+    }
+    console.error('Create parcel error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const updateParcel = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  const parsed = updateParcelSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: 'Invalid request data' });
+    return;
+  }
+
+  try {
+    const parcel = await parcelService.update(
+      req.params['id'] as string,
+      req.params['parcelId'] as string,
+      parsed.data
+    );
+    res.json({ data: parcel });
+  } catch (error) {
+    if (error instanceof Error && error.message === 'PARCEL_NOT_FOUND') {
+      res.status(404).json({ error: 'Parcel not found' });
+      return;
+    }
+    console.error('Update parcel error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const deleteParcel = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    await parcelService.remove(req.params['id'] as string, req.params['parcelId'] as string);
+    res.json({ data: { message: 'Parcel deleted successfully' } });
+  } catch (error) {
+    if (error instanceof Error && error.message === 'PARCEL_NOT_FOUND') {
+      res.status(404).json({ error: 'Parcel not found' });
+      return;
+    }
+    console.error('Delete parcel error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

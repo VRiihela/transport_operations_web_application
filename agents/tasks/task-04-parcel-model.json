@@ -1,0 +1,59 @@
+{
+  "id": "task-04-parcel-model",
+  "title": "Add Parcel model (backend: schema, migration, CRUD API)",
+  "context": "Job currently has no parcel/cargo concept. A job can carry multiple distinct parcels (e.g. washing machine + dryer on one move). Recon confirmed Job.services is an unrelated flat `String?` column (not a table) — Parcel must NOT be merged with or model itself after `services`. The closest real precedent in this codebase is CompletionReport: its own table with `id` + `jobId` FK, managed through dedicated sub-resource routes under `/jobs/:id/...`, not nested inside the job create/update payload. Parcel should follow that same shape.",
+  "dependsOn": [],
+  "affectedFiles": [
+    {
+      "path": "backend/prisma/schema.prisma",
+      "action": "edit",
+      "notes": "Add `model Parcel` (id, jobId FK with onDelete: Cascade, description String, quantity Int @default(1), createdAt, updatedAt). Add `parcels Parcel[]` relation field to `model Job`."
+    },
+    {
+      "path": "backend/src/services/job.service.ts",
+      "action": "edit",
+      "notes": "Add `parcels: true` inside the `include` block of the `jobInclude` constant (around line 8-22). Unlike `services` (a scalar column, returned automatically), `parcels` is a relation and will return empty/undefined on every job fetch unless explicitly included here. Do not touch the `services` field or convert jobInclude's type annotation — leave `satisfies Prisma.JobDefaultArgs` as-is."
+    },
+    {
+      "path": "backend/src/routes/job.routes.ts",
+      "action": "edit",
+      "notes": "Add three routes, same style as the existing completion-report routes: POST /:id/parcels, PATCH /:id/parcels/:parcelId, DELETE /:id/parcels/:parcelId. Apply requireRole(UserRole.Admin, UserRole.Dispatcher) to all three (see default decision in keyConstraints)."
+    },
+    {
+      "path": "backend/src/controllers/job.controller.ts",
+      "action": "edit",
+      "notes": "Add createParcel, updateParcel, deleteParcel handlers, following the exact structure of upsertCompletionReport (parse with Zod → safeParse → 400 on failure → call service → map JOB_NOT_FOUND/PARCEL_NOT_FOUND errors to 404 → 500 on unexpected error)."
+    },
+    {
+      "path": "backend/src/types/parcel.types.ts",
+      "action": "create",
+      "notes": "New file. createParcelSchema: { description: z.string().min(1).max(200).trim(), quantity: z.number().int().min(1).default(1) }. updateParcelSchema: same shape but all fields optional (.partial()). Export inferred types CreateParcelRequest / UpdateParcelRequest, matching the naming convention in completion-report.types.ts."
+    },
+    {
+      "path": "backend/src/services/parcel.service.ts",
+      "action": "create",
+      "notes": "New file, sibling to completion-report.service.ts. Functions: create(jobId, data), update(parcelId, data), remove(parcelId). Verify the job exists before creating (throw 'JOB_NOT_FOUND' like completionReportService does); verify the parcel exists and belongs to the job before update/delete (throw 'PARCEL_NOT_FOUND')."
+    }
+  ],
+  "keyConstraints": [
+    "Do NOT touch Job.services or attempt to unify it with Parcel — confirmed via recon to be a flat, unrelated String? column with no table, no FK, no price/duration/assignedTo fields. Any future 'services on a parcel' work is a separate, later decision — not this task.",
+    "Do NOT modify completion-report.service.ts's pdfJobInclude constant. Whether the completion-report PDF should list parcels is an open product question, deliberately out of scope here.",
+    "Prisma is pinned to ^6.19.3 in backend/package.json — do not upgrade to v7 as part of this task.",
+    "Parcels are NOT nested inside the job create/update payload — they are managed exclusively through their own /jobs/:id/parcels sub-resource routes, mirroring CompletionReport.",
+    "Default authorization decision (confirm with product owner before running): only Admin and Dispatcher roles can create/update/delete parcels; Driver is read-only (parcels arrive via jobInclude on any job fetch the driver already has access to). If drivers should be able to report an extra parcel found on-site, add UserRole.Driver to the requireRole call — this was not confirmed, do not assume.",
+    "Migration must be generated with the CLI, not hand-written: `npx prisma migrate dev --name add_parcel_model`, run from backend/. It will land in backend/prisma/migrations/<timestamp>_add_parcel_model/.",
+    "Do not list test files in affectedFiles or have the Implementer write them inline — tests are a separate follow-up task (task-04-tests) or written directly in Claude Code after this task lands, per the truncation lesson from tasks 01-03.",
+    "affectedFiles above is ordered with existing-file edits first and new-file creations last — edits to existing files are the ones that came out templated/truncated in prior runs; keep that ordering when the Architect finalizes the task JSON."
+  ],
+  "acceptanceCriteria": [
+    "npx prisma migrate dev applies cleanly with no manual schema drift",
+    "npx tsc --noEmit passes with zero errors",
+    "GET /jobs/:id response includes a `parcels` array (verify jobInclude actually returns it, not just that the field compiles)",
+    "POST /jobs/:id/parcels creates a parcel scoped to that job, rejects invalid payloads with 400, returns 201 with the created parcel",
+    "PATCH /jobs/:id/parcels/:parcelId updates description and/or quantity, 404 if the parcel doesn't exist or doesn't belong to the given job",
+    "DELETE /jobs/:id/parcels/:parcelId removes it, 404 if not found",
+    "Deleting a Job cascades to delete its Parcels (onDelete: Cascade) — verify with an actual delete, not just schema inspection",
+    "No changes present in the diff to Job.services, pdfJobInclude, or the Prisma version"
+  ],
+  "runOrder": "Implement and commit this task in full, including the applied migration, before starting task-05-parcel-list-ui. The frontend task's Architect needs the real Parcel API response shape, not an assumed one."
+}

@@ -140,11 +140,26 @@ model Job {
   completionReport CompletionReport?
   team             Team?             @relation(fields: [teamId], references: [id])
   customer         Customer?         @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  parcels          Parcel[]
 
   @@index([status])
   @@index([assignedDriverId])
   @@index([createdById])
   @@map("jobs")
+}
+
+model Parcel {
+  id          String   @id @default(cuid())
+  jobId       String
+  description String
+  quantity    Int      @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  job Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([jobId])
+  @@map("parcels")
 }
 
 model CompletionReport {

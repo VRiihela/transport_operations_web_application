@@ -11,6 +11,7 @@ const jobInclude = {
     assignedDriver: userSelect,
     completionReport: true,
     customer: true,
+    parcels: { orderBy: { createdAt: 'asc' } },
     team: {
       include: {
         members: {
