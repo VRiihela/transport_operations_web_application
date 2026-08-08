@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useDroppable } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { Team, Job } from '../../types';
-import JobCard from '../JobCard/JobCard';
+import SortableJobCard from '../JobCard/SortableJobCard';
 import styles from './TeamColumn.module.css';
 import buttons from '../../../../styles/buttons.module.css';
 
@@ -51,15 +52,17 @@ const TeamColumn: React.FC<TeamColumnProps> = ({ team, jobs, onDelete, onCardCli
         </button>
       </div>
 
-      <div className={styles.jobs}>
-        {jobs.length === 0 ? (
-          <p className={styles.empty}>No assigned jobs.</p>
-        ) : (
-          jobs.map((job) => (
-            <JobCard key={job.id} job={job} draggable onCardClick={onCardClick} />
-          ))
-        )}
-      </div>
+      <SortableContext items={jobs.map((j) => j.id)} strategy={verticalListSortingStrategy}>
+        <div className={styles.jobs}>
+          {jobs.length === 0 ? (
+            <p className={styles.empty}>No assigned jobs.</p>
+          ) : (
+            jobs.map((job) => (
+              <SortableJobCard key={job.id} job={job} onCardClick={onCardClick} />
+            ))
+          )}
+        </div>
+      </SortableContext>
 
       {confirmDelete && (
         <div className={styles.confirmOverlay}>

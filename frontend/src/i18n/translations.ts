@@ -50,6 +50,10 @@ export interface AppTranslations {
   jobsAssignDriver: string;
   jobsAssigning: string;
   jobsUpdating: string;
+  jobsStatusUpdateFailed: string;
+  jobsCompletionReportRequired: string;
+  jobsCompleteWithoutSignature: string;
+  jobsCompleteSubmit: string;
   jobsFilterActive: string;
   jobsFilterCompleted: string;
   jobsFilterAll: string;
@@ -324,6 +328,10 @@ export const en: AppTranslations = {
   jobsAssignDriver: 'Assign Driver',
   jobsAssigning: 'Assigning…',
   jobsUpdating: 'Updating…',
+  jobsStatusUpdateFailed: 'Failed to update job status. Please try again.',
+  jobsCompletionReportRequired: 'This job needs an approved completion report (with customer sign-off) before it can be marked complete.',
+  jobsCompleteWithoutSignature: 'Complete without signature',
+  jobsCompleteSubmit: 'Complete job',
   jobsFilterActive: 'Active',
   jobsFilterCompleted: 'Completed',
   jobsFilterAll: 'All',
@@ -582,6 +590,10 @@ export const fi: AppTranslations = {
   jobsAssignDriver: 'Määritä kuljettaja',
   jobsAssigning: 'Määritetään…',
   jobsUpdating: 'Päivitetään…',
+  jobsStatusUpdateFailed: 'Työn tilan päivitys epäonnistui. Yritä uudelleen.',
+  jobsCompletionReportRequired: 'Tämä työ vaatii hyväksytyn loppuraportin (asiakkaan kuittauksella) ennen kuin sen voi merkitä valmiiksi.',
+  jobsCompleteWithoutSignature: 'Merkitse valmiiksi ilman allekirjoitusta',
+  jobsCompleteSubmit: 'Merkitse työ valmiiksi',
   jobsFilterActive: 'Aktiiviset',
   jobsFilterCompleted: 'Valmiit',
   jobsFilterAll: 'Kaikki',

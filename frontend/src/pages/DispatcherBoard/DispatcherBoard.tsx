@@ -218,13 +218,17 @@ const DispatcherBoard: React.FC = () => {
 
       const isWithinColumn =
         overJobData !== undefined &&
-        overJobData.assignedDriverId !== null &&
-        overJobData.assignedDriverId === activeJobData.assignedDriverId;
+        ((overJobData.assignedDriverId !== null &&
+          overJobData.assignedDriverId === activeJobData.assignedDriverId) ||
+          (overJobData.teamId != null && overJobData.teamId === activeJobData.teamId));
 
       if (isWithinColumn) {
-        // Reorder within driver column — use the same date filter as the column display
+        // Reorder within driver/team column — use the same lane + date filter as the column display
         const colJobs = sortByOrder(jobs.filter((j) => {
-          if (j.assignedDriverId !== activeJobData.assignedDriverId) return false;
+          const sameLane = activeJobData.teamId
+            ? j.teamId === activeJobData.teamId
+            : j.assignedDriverId === activeJobData.assignedDriverId;
+          if (!sameLane) return false;
           const d = parseJobDate(j.scheduledStart);
           return d ? isSameDay(d, parseISO(selectedDate)) : false;
         }));
@@ -251,8 +255,13 @@ const DispatcherBoard: React.FC = () => {
           setJobs(snapshot);
         }
       } else {
-        // Cross-column: pool, team column, or driver column
-        const targetTeam = teams.find((t) => t.id === overId);
+        // Cross-column: pool, team column, or driver column.
+        // `overId` is either the column's own droppable id, or — now that team
+        // columns are sortable too — the id of a job card inside it, so fall back
+        // to that card's teamId.
+        const targetTeam =
+          teams.find((t) => t.id === overId) ??
+          teams.find((t) => t.id === overJobData?.teamId);
 
         let newAssignedDriverId: string | null;
         let newTeamId: string | null;
@@ -348,7 +357,21 @@ const DispatcherBoard: React.FC = () => {
   const handleSave = async (updates: JobUpdatePayload): Promise<void> => {
     if (!editingJob) return;
     const res = await apiService.axios.patch<{ data: Job }>(`/api/jobs/${editingJob.id}`, updates);
-    setJobs((prev) => prev.map((j) => (j.id === editingJob.id ? { ...j, ...res.data.data } : j)));
+    const updated = res.data.data;
+    setJobs((prev) => prev.map((j) => (j.id === editingJob.id ? { ...j, ...updated } : j)));
+
+    // Follow the job to wherever it landed, so a date edit visibly "moves" it on the board
+    // instead of it just disappearing from the currently viewed day/week.
+    const newDate = parseJobDate(updated.scheduledStart);
+    if (newDate) {
+      if (view === 'assign') {
+        const newDateStr = format(newDate, 'yyyy-MM-dd');
+        if (newDateStr !== selectedDate) setSelectedDate(newDateStr);
+      } else {
+        const isInCurrentWeek = getWeekDays(weekStart).some((d) => isSameDay(d, newDate));
+        if (!isInCurrentWeek) setWeekStart(startOfWeek(newDate, { weekStartsOn: 1 }));
+      }
+    }
   };
 
   const handleAssignDriver = async (jobId: string, driverId: string): Promise<void> => {
