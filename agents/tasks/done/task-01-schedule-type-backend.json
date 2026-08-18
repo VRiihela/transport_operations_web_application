@@ -1,0 +1,43 @@
+{
+  "taskId": "schedule-type-backend",
+  "title": "Add scheduleType to Job so arrival windows are distinguishable from job durations",
+  "profile": "Node/TypeScript Backend",
+  "repo": "work_management_system",
+  "tech": "Node.js, TypeScript, Express, PostgreSQL, Prisma 6, Zod, Vitest, React 18, Vite, CSS Modules, Axios",
+  "keyConstraints": "TypeScript strict mode, Zod validation server-side, .nullish() not .optional().nullable(), Prisma selects must include all returned fields (jobInclude is source of truth), no UI component libraries, CSS Modules only",
+
+  "description": "The Job model stores scheduledStart and scheduledEnd but nothing records what that pair means. A delivery with a customer-promised arrival window of 09:00-11:00 and a move job that occupies the driver from 09:00-15:00 are stored identically, so the dispatcher board cannot tell tolerance apart from occupancy. Add a ScheduleType enum (FIXED, WINDOW, DURATION) and a scheduleType field on Job defaulting to DURATION, so existing rows keep their current meaning and no backfill migration is required. WINDOW means scheduledStart-scheduledEnd is a customer promise the driver may arrive anywhere inside. DURATION means the job consumes that span. FIXED means an exact appointment and scheduledEnd is expected to be null. Expose the field through create and update endpoints and through jobInclude so it reaches all job responses.",
+
+  "acceptanceCriteria": [
+    "backend/prisma/schema.prisma declares enum ScheduleType { FIXED WINDOW DURATION } and Job.scheduleType ScheduleType @default(DURATION), and a migration is generated",
+    "POST /api/jobs accepts optional scheduleType and returns { data: Job } with status 201 including scheduleType; Zod rejects an unknown value such as \"ASAP\" with status 400",
+    "PATCH /api/jobs/:id accepts scheduleType and returns { data: Job } with status 200 reflecting the new value",
+    "Zod rejects scheduleType WINDOW when scheduledEnd is null with status 400 and an { error: string } body, because a window requires both bounds",
+    "GET /api/jobs and GET /api/jobs/:id return scheduleType for every job because it is present in jobInclude in job.service.ts",
+    "npx tsc --noEmit passes with no errors"
+  ],
+
+  "affectedFiles": [
+    "backend/prisma/schema.prisma",
+    "backend/src/services/job.service.ts",
+    "backend/src/routes/job.routes.ts",
+    "backend/src/types/job.types.ts"
+  ],
+
+  "implementationNotes": [
+    "Do not rewrite working code — only add what is missing.",
+    "Default MUST be DURATION so every existing row keeps its present meaning; do not write a data backfill script.",
+    "Do not add new DateTime columns. scheduledStart and scheduledEnd are reused; scheduleType only reinterprets them.",
+    "jobInclude in job.service.ts is the source of truth for job response shape — add scheduleType there.",
+    "Every new field saved to DB must also appear in jobInclude or it returns null from all job endpoints.",
+    "Prisma: after schema change run npx prisma generate before starting the server.",
+    "Zod: use z.nativeEnum(ScheduleType) for the enum, imported from @prisma/client.",
+    "Zod: use .nullish() not .optional().nullable().",
+    "Implement the WINDOW-requires-scheduledEnd rule with .superRefine() on the existing job create and update schemas; do not create a separate endpoint for it.",
+    "Do not validate FIXED against scheduledEnd — leave FIXED permissive for now so existing rows and the TBC flow are unaffected.",
+    "createdById must be taken from req.user.id (JWT), never from request body.",
+    "Add PATCH and DELETE to CORS allowed methods in app.ts if not already present."
+  ],
+
+  "securityConsiderations": "scheduleType is dispatcher-controlled metadata; keep the existing adminOrDispatcher guard on create and update routes so drivers cannot change a customer promise. Reject unknown enum values at the Zod layer rather than passing raw strings to Prisma. Do not widen any existing route's role guard while adding this field."
+}

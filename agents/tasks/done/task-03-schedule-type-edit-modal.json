@@ -1,0 +1,40 @@
+{
+  "taskId": "schedule-type-edit-modal",
+  "title": "Let the dispatcher set schedule type when editing a job",
+  "profile": "React/TypeScript Frontend",
+  "repo": "work_management_system",
+  "tech": "Node.js, TypeScript, Express, PostgreSQL, Prisma 6, Zod, Vitest, React 18, Vite, CSS Modules, Axios",
+  "keyConstraints": "TypeScript strict mode, Zod validation server-side, .nullish() not .optional().nullable(), Prisma selects must include all returned fields (jobInclude is source of truth), no UI component libraries, CSS Modules only",
+
+  "description": "The backend now stores scheduleType but nothing in the UI can set it, so every job stays on the DURATION default and the new job card display never shows an arrival window. Add a schedule type control to JobEditModal as three radio inputs labelled Kiinteä aika, Saapumisaika and Kesto, pre-populated from the job prop and submitted on the existing PATCH request. The control must make the meaning of the two datetime fields obvious: when Saapumisaika is selected the end field is labelled as the latest acceptable arrival, and selecting Kiinteä aika clears and disables the end field because a fixed appointment has no second bound.",
+
+  "acceptanceCriteria": [
+    "JobEditModal renders three radio inputs named scheduleType with values FIXED, WINDOW, DURATION and pre-selects the value from the job prop on open",
+    "Selecting FIXED clears the scheduledEnd input value and renders it disabled; selecting WINDOW or DURATION re-enables it",
+    "Submitting the form sends scheduleType in the existing PATCH /api/jobs/:id body alongside scheduledStart and scheduledEnd converted with .toISOString()",
+    "Selecting WINDOW with an empty scheduledEnd shows an inline validation message and does not fire the PATCH request",
+    "After a successful save the dispatcher board job card reflects the new schedule type without a page reload, because the modal's existing onSuccess refetch is reused",
+    "npx tsc --noEmit passes with no errors"
+  ],
+
+  "affectedFiles": [
+    "frontend/src/components/JobEditModal.tsx",
+    "frontend/src/pages/DispatcherBoard/types.ts"
+  ],
+
+  "implementationNotes": [
+    "Do not rewrite working code — only add what is missing. JobEditModal already handles open state, pre-population and submit; extend it, do not restructure it.",
+    "CSS Modules only — no inline styles. Reuse the modal's existing form field and label classes rather than adding new ones where possible.",
+    "Do not use a UI component library for the radio group — plain input type=\"radio\" elements sharing a name attribute.",
+    "Radio labels are Finnish and user-facing: FIXED = \"Kiinteä aika\", WINDOW = \"Saapumisaika\", DURATION = \"Kesto\". The enum values sent to the API stay uppercase English.",
+    "Change the scheduledEnd field's visible label based on selection: \"Viimeisin saapumisaika\" for WINDOW and \"Päättyy\" for DURATION.",
+    "Client-side validation is a convenience only — the backend superRefine already rejects WINDOW without scheduledEnd. Do not remove or duplicate server validation.",
+    "Datetime inputs: convert to .toISOString() before sending to the API.",
+    "Use axiosInstance from api/axios.ts — JobEditModal lives in components/, not in DispatcherBoard, so it does not use apiService.",
+    "Use axios.isAxiosError() to narrow errors in the catch block.",
+    "Do not touch the TBC flow: leaving both datetime fields empty with a schedulingNote must still save exactly as it does today.",
+    "No localStorage or sessionStorage — tokens stay in React state only."
+  ],
+
+  "securityConsiderations": "scheduleType is a customer promise, so the modal must remain reachable only from Admin and Dispatcher views behind the existing RoleRoute guard; do not add it to any driver-facing component. Rely on the server's Zod enum validation as the authoritative check and never send a raw free-text value for this field."
+}

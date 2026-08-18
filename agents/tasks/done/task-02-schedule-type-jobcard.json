@@ -1,0 +1,43 @@
+{
+  "taskId": "schedule-type-jobcard",
+  "title": "Show arrival window, fixed time or duration on dispatcher board job cards",
+  "profile": "React/TypeScript Frontend",
+  "repo": "work_management_system",
+  "tech": "Node.js, TypeScript, Express, PostgreSQL, Prisma 6, Zod, Vitest, React 18, Vite, CSS Modules, Axios",
+  "keyConstraints": "TypeScript strict mode, Zod validation server-side, .nullish() not .optional().nullable(), Prisma selects must include all returned fields (jobInclude is source of truth), no UI component libraries, CSS Modules only",
+
+  "description": "JobCard currently renders only the scheduled start time, so a delivery promised for a 09:00-11:00 arrival window looks identical to a 09:00 fixed appointment, and a dispatcher checking the board at 10:30 believes an on-time driver is 90 minutes late. Add a pure formatting helper and render its output on the card so the dispatcher can tell the three cases apart at a glance. Arrival window renders as a range with an en dash and the label \"saapumisaika\". Fixed time renders as a single time with the label \"kiinteä aika\". Duration renders with an arrow separator plus computed length and the label \"kesto\". No risk colouring, no countdown and no timeline in this task — text and labels only. Colour stays reserved for the existing status badges.",
+
+  "acceptanceCriteria": [
+    "New file frontend/src/pages/DispatcherBoard/formatSchedule.ts exports formatSchedule(job) returning { primary: string, label: string } and is a pure function with no React or Axios imports",
+    "formatSchedule returns { primary: \"09:00\", label: \"kiinteä aika\" } when scheduledEnd is null, regardless of scheduleType, so legacy rows never render a broken range",
+    "formatSchedule returns { primary: \"09:00–11:00\", label: \"saapumisaika\" } for scheduleType WINDOW and { primary: \"09:00 → 15:00\", label: \"kesto · 6 h\" } for scheduleType DURATION",
+    "formatSchedule returns the existing schedulingNote text with label \"TBC\" when both scheduledStart and scheduledEnd are null, so TBC jobs are unchanged",
+    "JobCard and SortableJobCard both render primary in the existing time position and label beneath it in a muted style from JobCard.module.css",
+    "npx tsc --noEmit passes with no errors"
+  ],
+
+  "affectedFiles": [
+    "frontend/src/pages/DispatcherBoard/formatSchedule.ts",
+    "frontend/src/pages/DispatcherBoard/types.ts",
+    "frontend/src/pages/DispatcherBoard/components/JobCard/JobCard.tsx",
+    "frontend/src/pages/DispatcherBoard/components/JobCard/SortableJobCard.tsx",
+    "frontend/src/pages/DispatcherBoard/components/JobCard/JobCard.module.css"
+  ],
+
+  "implementationNotes": [
+    "Do not rewrite working code — only add what is missing.",
+    "CSS Modules only — no inline styles.",
+    "Add scheduleType: 'FIXED' | 'WINDOW' | 'DURATION' to the Job interface in DispatcherBoard/types.ts — that file is the board's local type source, not the backend types.",
+    "Never call formatSchedule logic inline in JSX — both JobCard and SortableJobCard must import the single helper so the two cards cannot drift apart.",
+    "Use an en dash (–) for WINDOW and an arrow (→) for DURATION. These are the only distinguishing glyphs; do not add icons.",
+    "Duration length is computed from scheduledEnd minus scheduledStart, rounded to whole hours when the remainder is zero and otherwise shown as e.g. \"6 h 30 min\". Round every displayed number.",
+    "Do not add colour, risk states, countdowns or at-risk styling in this task. Existing status badge colours stay as they are: DRAFT=gray, ASSIGNED=blue, IN_PROGRESS=yellow, COMPLETED=green.",
+    "Times are formatted with toLocaleTimeString('fi-FI', { hour: '2-digit', minute: '2-digit' }) so they render as 24-hour HH:MM.",
+    "Do not change any dnd-kit wiring. Never call both useDraggable and useSortable on the same element ID — JobCard stays draggable-only and SortableJobCard stays sortable-only.",
+    "DispatcherBoard uses apiService.axios from services/api.ts, not axiosInstance — but this task adds no API calls, so do not import either.",
+    "No localStorage or sessionStorage."
+  ],
+
+  "securityConsiderations": "Display-only change with no new API calls and no new user input. Render schedulingNote as text content only, never via dangerouslySetInnerHTML, since it is dispatcher-supplied free text. Do not log job or customer data to the console."
+}

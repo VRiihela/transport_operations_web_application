@@ -8,7 +8,8 @@
     "start": "node dist/server.js",
     "test": "vitest",
     "migrate:deploy": "npx prisma migrate deploy",
-    "cleanup:tokens": "npx tsx src/jobs/cleanupTokens.ts"
+    "cleanup:tokens": "npx tsx src/jobs/cleanupTokens.ts",
+    "seed:admin": "npx tsx src/jobs/seedAdmin.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",
@@ -36,7 +37,7 @@
     "typescript": "^5.7.0",
     "vitest": "^4.1.2"
   },
-    "overrides": {
-    "tar": "^7.4.3"
+  "overrides": {
+    "tar": "^7.5.22"
   }
 }
